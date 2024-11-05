@@ -1,0 +1,232 @@
+﻿@model TeamLeaderDashboardViewModel
+@{
+    ViewData["Title"] = "Team Leader Dashboard";
+}
+
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <div class="user-info">
+            <span>Department: @Model.Department</span>
+            <span>Line: @Model.Line</span>
+            <span>Shift: @Model.Shift</span>
+        </div>
+    </div>
+
+    <div class="dashboard-content">
+        <div class="scrap-table-container">
+            <h3>Pending Approvals</h3>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Part Number</th>
+                        <th>Quantity</th>
+                        <th>Reason</th>
+                        <th>Submitted By</th>
+                        <th>Submission Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.ScrapItems.Where(s => s.Status == "Submitted"))
+                    {
+                        <tr>
+                            <td>@item.PartNumber</td>
+                            <td>@item.Quantity</td>
+                            <td>@item.ScrapReason</td>
+                            <td>@item.SubmittedBy</td>
+                            <td>@item.SubmissionDate.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td>
+                                <button class="btn btn-success btn-sm" onclick="approveScrap(@item.ScrapId)">
+                                    Approve
+                                </button>
+                                <button class="btn btn-danger btn-sm" onclick="rejectScrap(@item.ScrapId)">
+                                    Reject
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (Model.PendingRegistrations.Any())
+        {
+            <div class="registrations-container">
+                <h3>Pending User Registrations</h3>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Clock Number</th>
+                            <th>Name</th>
+                            <th>Department</th>
+                            <th>Line</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var registration in Model.PendingRegistrations)
+                        {
+                            <tr>
+                                <td>@registration.ClockNumber</td>
+                                <td>@registration.FullName</td>
+                                <td>@registration.Department</td>
+                                <td>@registration.Line</td>
+                                <td>
+                                    <button class="btn btn-success btn-sm" onclick="approveRegistration(@registration.RequestId)">
+                                        Approve
+                                    </button>
+                                    <button class="btn btn-danger btn-sm" onclick="rejectRegistration(@registration.RequestId)">
+                                        Reject
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .dashboard-container {
+        padding: 20px;
+        background: #1a1a1a;
+        min-height: 100vh;
+    }
+
+    .dashboard-header {
+        background: rgba(0, 255, 255, 0.1);
+        border: 1px solid #00ffff;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 30px;
+    }
+
+    .user-info {
+        display: flex;
+        gap: 20px;
+    }
+
+    .user-info span {
+        color: #00ffff;
+        background: rgba(0, 255, 255, 0.1);
+        padding: 8px 16px;
+        border-radius: 4px;
+    }
+
+    .table {
+        width: 100%;
+        background: rgba(18, 18, 18, 0.95);
+        border: 1px solid #00ffff;
+        border-radius: 8px;
+        color: #fff;
+        margin-bottom: 30px;
+    }
+
+    .table th {
+        color: #00ffff;
+        border-bottom: 1px solid #00ffff;
+        padding: 12px;
+    }
+
+    .table td {
+        padding: 12px;
+        border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+    }
+
+    h3 {
+        color: #00ffff;
+        margin-bottom: 20px;
+    }
+
+    .btn {
+        padding: 6px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-right: 5px;
+    }
+
+    .btn-success {
+        background: #00ffff;
+        color: #000;
+        border: none;
+    }
+
+    .btn-danger {
+        background: #ff4444;
+        color: #fff;
+        border: none;
+    }
+
+    @@keyframes glow {
+        from {
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+        }
+        to {
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.4);
+        }
+    }
+</style>
+
+@section Scripts {
+    <script>
+        function approveScrap(scrapId) {
+            updateScrapStatus(scrapId, 'Approved');
+        }
+
+        function rejectScrap(scrapId) {
+            const reason = prompt('Please enter rejection reason:');
+            if (reason) {
+                updateScrapStatus(scrapId, 'Rejected', reason);
+            }
+        }
+
+        function updateScrapStatus(scrapId, status, reason = '') {
+            $.post('/Team_Leader/ApproveScrap', {
+                scrapId: scrapId,
+                decision: status,
+                reason: reason
+            })
+            .done(function(response) {
+                if (response.success) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + (response.message || 'Failed to update status'));
+                }
+            })
+            .fail(function() {
+                alert('Error processing request');
+            });
+        }
+
+        function approveRegistration(requestId) {
+            updateRegistration(requestId, 'Approved');
+        }
+
+        function rejectRegistration(requestId) {
+            const reason = prompt('Please enter rejection reason:');
+            if (reason) {
+                updateRegistration(requestId, 'Rejected', reason);
+            }
+        }
+
+        function updateRegistration(requestId, status, reason = '') {
+            $.post('/Team_Leader/ProcessRegistration', {
+                requestId: requestId,
+                decision: status,
+                reason: reason
+            })
+            .done(function(response) {
+                if (response.success) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + (response.message || 'Failed to process registration'));
+                }
+            })
+            .fail(function() {
+                alert('Error processing request');
+            });
+        }
+    </script>
+}

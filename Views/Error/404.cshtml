@@ -1,0 +1,162 @@
+﻿<!-- Views/Error/404.cshtml -->
+@{
+    ViewData["Title"] = "Page Not Found";
+    Layout = "_Layout";
+}
+
+<div class="error-container">
+    <div class="error-content">
+        <div class="error-icon">
+            <i class="bi bi-question-circle"></i>
+        </div>
+        <div class="error-code">404</div>
+        <h1 class="error-title">Page Not Found</h1>
+        <p class="error-message">The page you are looking for might have been removed, had its name changed, or is temporarily unavailable.</p>
+        <div class="error-actions">
+            <a href="@Url.Action("Login", "Account")" class="error-button">
+                <i class="bi bi-house-door"></i>
+                Return to Login
+            </a>
+        </div>
+    </div>
+</div>
+<style>
+    .error-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #1a1a1a;
+        padding: 20px;
+        margin: 0;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .error-content {
+        text-align: center;
+        background: rgba(18, 18, 18, 0.95);
+        border: 1px solid #00ffff;
+        border-radius: 8px;
+        padding: 40px;
+        max-width: 500px;
+        width: 100%;
+        animation: errorGlow 2s infinite alternate;
+    }
+
+    .error-icon {
+        font-size: 64px;
+        color: #00ffff;
+        margin-bottom: 20px;
+    }
+
+        .error-icon i {
+            animation: pulse 2s infinite;
+        }
+
+    .error-code {
+        font-size: 48px;
+        color: #00ffff;
+        font-weight: bold;
+        margin-bottom: 20px;
+        text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+    }
+
+    .error-title {
+        color: #00ffff;
+        font-size: 24px;
+        margin-bottom: 20px;
+    }
+
+    .error-message {
+        color: #fff;
+        margin-bottom: 30px;
+        line-height: 1.6;
+    }
+
+    .error-actions {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .error-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 24px;
+        background: #00ffff;
+        color: #000;
+        text-decoration: none;
+        border-radius: 4px;
+        font-weight: bold;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+    }
+
+        .error-button.secondary {
+            background: transparent;
+            border: 1px solid #00ffff;
+            color: #00ffff;
+        }
+
+        .error-button:hover {
+            background: #00cccc;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
+        }
+
+        .error-button.secondary:hover {
+            background: rgba(0, 255, 255, 0.1);
+        }
+
+    @@keyframes errorGlow {
+        from {
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+        }
+
+        to {
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.4);
+        }
+    }
+
+    @@keyframes pulse {
+        0% {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        50% {
+            transform: scale(1.1);
+            opacity: 0.7;
+        }
+
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+
+    @@media (max-width: 480px) {
+        .error-code {
+            font-size: 36px;
+        }
+
+        .error-title {
+            font-size: 20px;
+        }
+
+        .error-icon {
+            font-size: 48px;
+        }
+
+        .error-actions {
+            flex-direction: column;
+        }
+
+        .error-button {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>

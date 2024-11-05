@@ -1,0 +1,204 @@
+﻿@model ScrapEntryViewModel
+@{
+    ViewData["Title"] = "Scan Part - SCP Control";
+}
+
+<div class="scan-container">
+    <div class="scan-header">
+        <div class="operator-info">
+            <span class="department">@Model.Department</span>
+            <span class="line">@Model.Line</span>
+            <span class="shift">Shift: @Model.Shift</span>
+        </div>
+    </div>
+
+    <div class="scan-box">
+        <h2>Scan Part</h2>
+        <form id="scanForm" class="scan-form">
+            <div class="form-group">
+                <label for="partNumber">Part Number</label>
+                <div class="scan-input-group">
+                    <input type="text" id="partNumber" 
+                           class="form-control" 
+                           placeholder="Scan or enter part number"
+                           autofocus required>
+                    <button type="submit" class="scan-button">
+                        <i class="bi bi-upc-scan"></i>
+                        Scan
+                    </button>
+                </div>
+                <div class="invalid-feedback">Please enter a valid part number</div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .scan-container {
+        min-height: 100vh;
+        background: #1a1a1a;
+        padding: 20px;
+    }
+
+    .scan-header {
+        background: rgba(0, 255, 255, 0.1);
+        border: 1px solid #00ffff;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 30px;
+    }
+
+    .operator-info {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .operator-info span {
+        background: rgba(0, 255, 255, 0.1);
+        padding: 8px 16px;
+        border-radius: 4px;
+        color: #00ffff;
+        font-size: 14px;
+    }
+
+    .scan-box {
+        background: rgba(18, 18, 18, 0.95);
+        border: 1px solid #00ffff;
+        border-radius: 8px;
+        padding: 30px;
+        max-width: 600px;
+        margin: 0 auto;
+        animation: glow 2s infinite alternate;
+    }
+
+    .scan-box h2 {
+        color: #00ffff;
+        text-align: center;
+        margin-bottom: 30px;
+        font-size: 24px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .scan-input-group {
+        display: flex;
+        gap: 10px;
+    }
+
+    .form-group label {
+        display: block;
+        color: #00ffff;
+        margin-bottom: 8px;
+        font-weight: 500;
+    }
+
+    .form-control {
+        flex: 1;
+        padding: 12px;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid #00ffff;
+        border-radius: 4px;
+        color: #fff;
+        font-size: 18px;
+        letter-spacing: 1px;
+    }
+
+    .form-control:focus {
+        outline: none;
+        box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+    }
+
+    .scan-button {
+        padding: 12px 24px;
+        background: #00ffff;
+        color: #000;
+        border: none;
+        border-radius: 4px;
+        font-weight: bold;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .scan-button:hover {
+        background: #00cccc;
+        box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
+    }
+
+    .invalid-feedback {
+        color: #ff4444;
+        font-size: 12px;
+        margin-top: 5px;
+        display: none;
+    }
+
+    @@keyframes glow {
+        from {
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+        }
+        to {
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.4);
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .scan-header {
+            text-align: center;
+        }
+
+        .operator-info {
+            justify-content: center;
+        }
+
+        .scan-input-group {
+            flex-direction: column;
+        }
+
+        .scan-button {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            const $form = $('#scanForm');
+            const $input = $('#partNumber');
+
+            $form.on('submit', function(e) {
+                e.preventDefault();
+                const partNumber = $input.val().trim();
+                
+                if (!partNumber) {
+                    $('.invalid-feedback').show();
+                    return;
+                }
+
+                // Redirect to the scrap entry page with the part number
+                window.location.href = `/Operator/ScrapEntry?partNumber=${encodeURIComponent(partNumber)}`;
+            });
+
+            // Auto-submit on barcode scan
+            let lastInput = '';
+            let inputTimeout;
+
+            $input.on('input', function() {
+                clearTimeout(inputTimeout);
+                const currentInput = $(this).val();
+
+                if (currentInput.length > lastInput.length) {
+                    inputTimeout = setTimeout(function() {
+                        if (currentInput === $input.val()) {
+                            $form.submit();
+                        }
+                    }, 100);
+                }
+                lastInput = currentInput;
+            });
+        });
+    </script>
+}

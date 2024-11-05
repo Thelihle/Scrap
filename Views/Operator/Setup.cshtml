@@ -1,0 +1,251 @@
+﻿@model OperatorSetupViewModel
+@{
+    ViewData["Title"] = "Operator Setup - SCP Control";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/font/bootstrap-icons.css" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background: #1a1a1a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .setup-container {
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+        }
+
+        .setup-box {
+            background: rgba(18, 18, 18, 0.95);
+            border: 1px solid #00ffff;
+            border-radius: 8px;
+            padding: 30px;
+            animation: glow 2s infinite alternate;
+        }
+
+        .setup-title {
+            color: #00ffff;
+            text-align: center;
+            font-size: 28px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .setup-subtitle {
+            color: #00ffff;
+            text-align: center;
+            font-size: 14px;
+            margin-bottom: 30px;
+            opacity: 0.8;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #00ffff;
+            margin-bottom: 8px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid #00ffff;
+            border-radius: 4px;
+            color: #fff;
+        }
+
+        .form-control:focus {
+            outline: none;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+
+        .form-control:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .save-button {
+            width: 100%;
+            padding: 12px;
+            background: #00ffff;
+            color: #000;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        .save-button:hover {
+            background: #00cccc;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
+        }
+
+        @@keyframes glow {
+            from {
+                box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+            }
+            to {
+                box-shadow: 0 0 30px rgba(0, 255, 255, 0.4);
+            }
+        }
+
+        .validation-message {
+            display: none;
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid #ff4444;
+            color: #ff4444;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="setup-container">
+        <div class="setup-box">
+            <h1 class="setup-title">Operator Setup</h1>
+            <p class="setup-subtitle">Please configure your department, line, and shift</p>
+
+            <form id="setupForm">
+                @Html.AntiForgeryToken()
+                <div class="validation-message"></div>
+
+                <div class="form-group">
+                    <label for="department">Department</label>
+                    <select id="department" class="form-control" required>
+                        <option value="">Select Department</option>
+                        @foreach (var dept in Model.Departments)
+                        {
+                            <option value="@dept.DepartmentId">@dept.DepartmentName</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="line">Line</label>
+                    <select id="line" class="form-control" required disabled>
+                        <option value="">Select Line</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="shift">Shift</label>
+                    <select id="shift" class="form-control" required>
+                        <option value="">Select Shift</option>
+                        @foreach (var shift in Model.Shifts)
+                        {
+                            <option value="@shift">@shift</option>
+                        }
+                    </select>
+                </div>
+
+                <button type="submit" class="save-button">
+                    <span class="button-text">Save Details</span>
+                    <div class="spinner-border spinner-border-sm d-none" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            const $form = $('#setupForm');
+            const $department = $('#department');
+            const $line = $('#line');
+            const $shift = $('#shift');
+            const $submitButton = $('.save-button');
+            const $spinner = $('.spinner-border');
+            const $buttonText = $('.button-text');
+            const $validationMessage = $('.validation-message');
+
+            // Handle department change
+            $department.change(function() {
+                const departmentId = $(this).val();
+                $line.prop('disabled', true).empty().append('<option value="">Select Line</option>');
+                
+                if (departmentId) {
+                    $.get('/Operator/GetLinesByDepartment', { departmentId: departmentId })
+                        .done(function(data) {
+                            if (data.success) {
+                                data.lines.forEach(function(line) {
+                                    $line.append(`<option value="${line.id}">${line.name}</option>`);
+                                });
+                                $line.prop('disabled', false);
+                            }
+                        });
+                }
+            });
+
+            // Form submission
+            $form.on('submit', function(e) {
+                e.preventDefault();
+
+                if (!this.checkValidity()) {
+                    return;
+                }
+
+                const data = {
+                    department: $department.val(),
+                    line: $line.val(),
+                    shift: $shift.val()
+                };
+
+                $submitButton.prop('disabled', true);
+                $spinner.removeClass('d-none');
+                $buttonText.text('Saving...');
+                $validationMessage.hide();
+
+                $.post('/Operator/UpdateDetails', data)
+                    .done(function(response) {
+                        if (response.success) {
+                            window.location.href = response.redirectUrl;
+                        } else {
+                            $validationMessage.html(response.message).show();
+                            $submitButton.prop('disabled', false);
+                            $spinner.addClass('d-none');
+                            $buttonText.text('Save Details');
+                        }
+                    })
+                    .fail(function() {
+                        $validationMessage.html('An error occurred. Please try again.').show();
+                        $submitButton.prop('disabled', false);
+                        $spinner.addClass('d-none');
+                        $buttonText.text('Save Details');
+                    });
+            });
+        });
+    </script>
+</body>
+</html>

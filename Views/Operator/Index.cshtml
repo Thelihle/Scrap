@@ -1,0 +1,137 @@
+﻿@model OperatorDetailsViewModel
+@{
+    ViewData["Title"] = "Operator Dashboard";
+}
+
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1 class="portal-title">Scrap Control Portal</h1>
+        <div class="user-details">
+            <div class="detail-item department">
+                <i class="bi bi-building"></i>
+                @Model.Department
+            </div>
+            <div class="detail-item line">
+                <i class="bi bi-gear"></i>
+                @Model.Line
+            </div>
+            <div class="detail-item shift">
+                <i class="bi bi-clock"></i>
+                Shift: @Model.Shift
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-content">
+        <a href="@Url.Action("ScanPart")" class="action-card">
+            <div class="icon-container">
+                <i class="bi bi-upc-scan"></i>
+            </div>
+            <h3>Scan Part</h3>
+            <p>Scan or enter part number to log scrap</p>
+        </a>
+
+        <a href="@Url.Action("Setup")" class="action-card">
+            <div class="icon-container">
+                <i class="bi bi-gear"></i>
+            </div>
+            <h3>Update Details</h3>
+            <p>Update your department, line, or shift</p>
+        </a>
+    </div>
+</div>
+
+<style>
+    .dashboard-container {
+        min-height: 100vh;
+        background: #1a1a1a;
+        padding: 20px;
+    }
+
+    .dashboard-header {
+        background: rgba(0, 255, 255, 0.1);
+        border: 1px solid #00ffff;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .portal-title {
+        color: #00ffff;
+        margin: 0;
+        font-size: 24px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .user-details {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
+
+    .detail-item {
+        background: rgba(0, 255, 255, 0.1);
+        padding: 8px 16px;
+        border-radius: 4px;
+        color: #00ffff;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .dashboard-content {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+    }
+
+    .action-card {
+        background: rgba(18, 18, 18, 0.95);
+        border: 1px solid #00ffff;
+        border-radius: 8px;
+        padding: 30px;
+        text-align: center;
+        text-decoration: none;
+        color: #00ffff;
+        transition: all 0.3s ease;
+    }
+
+    .action-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+    }
+
+    .icon-container {
+        font-size: 48px;
+        margin-bottom: 20px;
+    }
+
+    .action-card h3 {
+        margin: 0 0 10px;
+        font-size: 20px;
+    }
+
+    .action-card p {
+        margin: 0;
+        color: #fff;
+        opacity: 0.8;
+    }
+
+    @@media (max-width: 768px) {
+        .dashboard-header {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .user-details {
+            justify-content: center;
+            width: 100%;
+        }
+    }
+</style>

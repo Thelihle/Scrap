@@ -1,0 +1,3 @@
+﻿<Project>
+  <Import Project="..\build\SCP_Control.props" />
+</Project>

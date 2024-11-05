@@ -1,0 +1,415 @@
+﻿@model ScrapEntryViewModel
+@{
+    ViewData["Title"] = "Scrap Entry - SCP Control";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/font/bootstrap-icons.css" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            background: #1a1a1a;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .scrap-container {
+            padding: 20px;
+        }
+
+        .header-info {
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid #00ffff;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .header-info span {
+            color: #00ffff;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .scrap-content {
+            background: rgba(18, 18, 18, 0.95);
+            border: 1px solid #00ffff;
+            border-radius: 8px;
+            padding: 30px;
+            animation: glow 2s infinite alternate;
+        }
+
+        .steps-container {
+            margin-bottom: 30px;
+        }
+
+        .step {
+            display: none;
+        }
+
+        .step.active {
+            display: block;
+        }
+
+        .step-title {
+            color: #00ffff;
+            font-size: 24px;
+            margin-bottom: 20px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #00ffff;
+            margin-bottom: 8px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid #00ffff;
+            border-radius: 4px;
+            color: #fff;
+        }
+
+        .form-control:focus {
+            outline: none;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+
+        .form-control:disabled {
+            opacity: 0.5;
+        }
+
+        .part-info {
+            background: rgba(0, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .part-info .label {
+            color: #00ffff;
+            font-size: 14px;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+
+        .part-info .value {
+            color: #fff;
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .navigation-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            gap: 15px;
+        }
+
+        .nav-button {
+            padding: 12px 24px;
+            border: 1px solid #00ffff;
+            background: transparent;
+            color: #00ffff;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .nav-button:hover {
+            background: rgba(0, 255, 255, 0.1);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
+        }
+
+        .nav-button.submit-button {
+            background: #00ffff;
+            color: #000;
+            border: none;
+        }
+
+        .nav-button.submit-button:hover {
+            background: #00cccc;
+        }
+
+        .review-table {
+            width: 100%;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+
+        .review-table th {
+            color: #00ffff;
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+        }
+
+        .review-table td {
+            padding: 12px;
+            border-bottom: 1px solid rgba(0, 255, 255, 0.1);
+        }
+
+        .validation-message {
+            display: none;
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid #ff4444;
+            color: #ff4444;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        @@keyframes glow {
+            from {
+                box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+            }
+            to {
+                box-shadow: 0 0 30px rgba(0, 255, 255, 0.4);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="scrap-container">
+        <div class="header-info">
+            <span>Department: @Model.Department</span>
+            <span>Line: @Model.Line</span>
+            <span>Shift: @Model.Shift</span>
+        </div>
+
+        <div class="scrap-content">
+            <div class="validation-message"></div>
+
+            <div class="steps-container">
+                <!-- Step 1: Initial Entry -->
+                <div class="step active" id="step1">
+                    <h2 class="step-title">Scrap Entry</h2>
+                    
+                    <div class="part-info">
+                        <div class="label">Part Number</div>
+                        <div class="value">@Model.PartNumber</div>
+                    </div>
+
+                    <form id="scrapForm">
+                        <input type="hidden" id="partNumber" value="@Model.PartNumber" />
+                        
+                        <div class="form-group">
+    <label>Scrap Section</label>
+    <select id="scrapSection" class="form-control" required>
+        <option value="">Select Section</option>
+        @foreach (var scrapSec in Model.ScrapSections)
+        {
+            <option value="@scrapSec.ScrapSectionId"
+                    data-requires-position="@scrapSec.RequiresPosition.ToString().ToLower()">
+                @scrapSec.SectionName
+            </option>
+        }
+    </select>
+</div>
+
+                        <div class="form-group">
+                            <label>Error Type</label>
+                            <select id="errorType" class="form-control" disabled required>
+                                <option value="">Select Error Type</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" id="positionGroup" style="display: none;">
+                            <label>Part Position</label>
+                            <input type="text" id="partPosition" class="form-control" />
+                        </div>
+
+                        <div class="form-group">
+                            <label>Quantity</label>
+                            <input type="number" id="quantity" class="form-control" min="1" required />
+                        </div>
+
+                        <div class="navigation-buttons">
+                            <button type="button" class="nav-button" onclick="window.history.back()">
+                                <i class="bi bi-arrow-left"></i> Back
+                            </button>
+                            <button type="button" class="nav-button" onclick="nextStep(1)">
+                                Review <i class="bi bi-arrow-right"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Step 2: Review -->
+                <div class="step" id="step2">
+                    <h2 class="step-title">Review Entry</h2>
+
+                    <table class="review-table">
+                        <tr>
+                            <th>Part Number:</th>
+                            <td id="review-partNumber"></td>
+                        </tr>
+                        <tr>
+                            <th>Section:</th>
+                            <td id="review-section"></td>
+                        </tr>
+                        <tr>
+                            <th>Error Type:</th>
+                            <td id="review-errorType"></td>
+                        </tr>
+                        <tr id="review-position-row" style="display: none;">
+                            <th>Position:</th>
+                            <td id="review-position"></td>
+                        </tr>
+                        <tr>
+                            <th>Quantity:</th>
+                            <td id="review-quantity"></td>
+                        </tr>
+                    </table>
+
+                    <div class="navigation-buttons">
+                        <button type="button" class="nav-button" onclick="previousStep(2)">
+                            <i class="bi bi-arrow-left"></i> Edit
+                        </button>
+                        <button type="button" class="nav-button submit-button" onclick="submitScrap()">
+                            <span class="button-text">Submit Scrap</span>
+                            <div class="spinner-border spinner-border-sm d-none" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            // Handle scrap section change
+            $('#scrapSection').change(function() {
+                const sectionId = $(this).val();
+                const $errorSelect = $('#errorType');
+                const $positionGroup = $('#positionGroup');
+                const requiresPosition = $(this).find(':selected').data('requires-position');
+                
+                $errorSelect.prop('disabled', true)
+                    .empty()
+                    .append('<option value="">Select Error Type</option>');
+                
+                if (sectionId) {
+                    $.get('/Operator/GetScrapErrors', { sectionId: sectionId })
+                        .done(function(data) {
+                            if (data.success) {
+                                data.errors.forEach(function(error) {
+                                    $errorSelect.append(`<option value="${error.errorId}">${error.errorName}</option>`);
+                                });
+                                $errorSelect.prop('disabled', false);
+                                
+                                // Show/hide position input based on section requirement
+                                $positionGroup.toggle(requiresPosition === 'true');
+                                $('#partPosition').prop('required', requiresPosition === 'true');
+                            }
+                        });
+                } else {
+                    $positionGroup.hide();
+                    $('#partPosition').prop('required', false);
+                }
+            });
+        });
+
+        function nextStep(currentStep) {
+            if (currentStep === 1) {
+                const form = document.getElementById('scrapForm');
+                if (!form.checkValidity()) {
+                    form.reportValidity();
+                    return;
+                }
+                
+                // Update review information
+                $('#review-partNumber').text($('#partNumber').val());
+                $('#review-section').text($('#scrapSection option:selected').text());
+                $('#review-errorType').text($('#errorType option:selected').text());
+                $('#review-quantity').text($('#quantity').val());
+                
+                const position = $('#partPosition').val();
+                if (position) {
+                    $('#review-position').text(position);
+                    $('#review-position-row').show();
+                } else {
+                    $('#review-position-row').hide();
+                }
+            }
+            
+            $(`#step${currentStep}`).removeClass('active');
+            $(`#step${currentStep + 1}`).addClass('active');
+        }
+
+        function previousStep(currentStep) {
+            $(`#step${currentStep}`).removeClass('active');
+            $(`#step${currentStep - 1}`).addClass('active');
+        }
+
+        function submitScrap() {
+            const submitButton = $('.submit-button');
+            const spinner = $('.spinner-border');
+            const buttonText = $('.button-text');
+            const validationMessage = $('.validation-message');
+
+            const data = {
+                partNumber: $('#partNumber').val(),
+                scrapSectionId: $('#scrapSection').val(),
+                errorTypeId: $('#errorType').val(),
+                partPosition: $('#partPosition').val(),
+                quantity: $('#quantity').val()
+            };
+
+            submitButton.prop('disabled', true);
+            spinner.removeClass('d-none');
+            buttonText.text('Submitting...');
+            validationMessage.hide();
+
+            $.post('/Operator/SubmitScrap', data)
+                .done(function(response) {
+                    if (response.success) {
+                        window.location.href = response.redirectUrl;
+                    } else {
+                        validationMessage.html(response.message).show();
+                        submitButton.prop('disabled', false);
+                        spinner.addClass('d-none');
+                        buttonText.text('Submit Scrap');
+                    }
+                })
+                .fail(function() {
+                    validationMessage.html('An error occurred. Please try again.').show();
+                    submitButton.prop('disabled', false);
+                    spinner.addClass('d-none');
+                    buttonText.text('Submit Scrap');
+                });
+        }
+    </script>
+</body>
+</html>
