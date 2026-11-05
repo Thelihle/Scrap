@@ -151,6 +151,164 @@ ws.Column(8).Style.NumberFormat.Format = "R #,##0.00";   // Total Cost — was C
         }
 
         // ══════════════════════════════════════════════════════════════════
+        //  WEIGHT EXPORT (ADMIN ONLY) — sourced from scpWeightHistory
+        // ══════════════════════════════════════════════════════════════════
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ExportWeightToExcel(
+            DateTime? startDate, DateTime? endDate,
+            string department = "All Departments",
+            string line = "All Lines",
+            string shift = "All Shifts")
+        {
+            try
+            {
+                if (!await IsCurrentUserAdminAsync())
+                {
+                    TempData["ErrorMessage"] = "Weight export is available to administrators only.";
+                    return RedirectToAction("Index", "Analytics");
+                }
+
+                var (start, end) = ResolveDates(startDate, endDate);
+                var data = (await FetchWeightRows(start, end, department, line, shift)).ToList();
+
+                using var workbook = new XLWorkbook();
+
+                // ── Sheet 1: Weight records ──────────────────────────────
+                var ws = workbook.Worksheets.Add("Weight Records");
+
+                var infoRows = new[] {
+                    ("Department", department), ("Line", line), ("Shift", shift),
+                    ("Date Range", $"{start:dd MMM yyyy} – {end.AddDays(-1):dd MMM yyyy}"),
+                    ("Generated",  DateTime.Now.ToString("dd MMM yyyy HH:mm")),
+                    ("Total Records", data.Count.ToString()),
+                    ("Total Weight (kg)", data.Sum(d => d.Weight).ToString("N3"))
+                };
+
+                int r = 1;
+                foreach (var (lbl, val) in infoRows)
+                {
+                    ws.Cell(r, 1).Value = lbl;
+                    ws.Cell(r, 1).Style.Font.Bold = true;
+                    ws.Cell(r, 1).Style.Fill.BackgroundColor = XLColor.FromHtml("#428bca");
+                    ws.Cell(r, 1).Style.Font.FontColor = XLColor.White;
+                    ws.Cell(r, 2).Value = val;
+                    r++;
+                }
+                r += 2;
+
+                var headers = new[] {
+                    "WeightId","Recorded At","Department","Line","Shift","Weight (kg)",
+                    "Gross (kg)","Tare (kg)","Source","Batch #","Items In Batch",
+                    "Category","Bin #","Plant","Captured By","Description",
+                    "Modified By","Modified At"
+                };
+                int headerRow = r;
+                for (int i = 0; i < headers.Length; i++)
+                {
+                    var cell = ws.Cell(r, i + 1);
+                    cell.Value = headers[i];
+                    cell.Style.Fill.BackgroundColor = XLColor.FromHtml("#1a1a2e");
+                    cell.Style.Font.FontColor = XLColor.White;
+                    cell.Style.Font.Bold = true;
+                }
+                r++;
+
+                bool alt = false;
+                foreach (var d in data)
+                {
+                    ws.Cell(r, 1).Value = d.WeightId;
+                    ws.Cell(r, 2).Value = d.CreatedAt;
+                    ws.Cell(r, 3).Value = d.Department ?? "";
+                    ws.Cell(r, 4).Value = d.Line ?? "";
+                    ws.Cell(r, 5).Value = d.Shift ?? "";
+                    ws.Cell(r, 6).Value = (double)d.Weight;
+                    if (d.GrossWeightKg.HasValue) ws.Cell(r, 7).Value = (double)d.GrossWeightKg.Value;
+                    if (d.TareWeightKg.HasValue) ws.Cell(r, 8).Value = (double)d.TareWeightKg.Value;
+                    ws.Cell(r, 9).Value = d.Source ?? "";
+                    if (d.BatchScrapId.HasValue) ws.Cell(r, 10).Value = d.BatchScrapId.Value;
+                    if (d.BatchScrapId.HasValue) ws.Cell(r, 11).Value = d.ItemsInBatch;
+                    ws.Cell(r, 12).Value = d.CategoryName ?? "";
+                    ws.Cell(r, 13).Value = d.BinNumber ?? "";
+                    ws.Cell(r, 14).Value = d.Plant ?? "";
+                    ws.Cell(r, 15).Value = d.CreatedBy ?? "";
+                    ws.Cell(r, 16).Value = d.Description ?? "";
+                    ws.Cell(r, 17).Value = d.ModifiedBy ?? "";
+                    if (d.ModifiedAt.HasValue) ws.Cell(r, 18).Value = d.ModifiedAt.Value;
+
+                    if (alt)
+                        ws.Range(r, 1, r, headers.Length).Style.Fill.BackgroundColor = XLColor.FromHtml("#f8f9fa");
+                    r++;
+                    alt = !alt;
+                }
+
+                ws.Column(2).Style.DateFormat.Format = "yyyy-mm-dd hh:mm";
+                ws.Column(18).Style.DateFormat.Format = "yyyy-mm-dd hh:mm";
+                ws.Column(6).Style.NumberFormat.Format = "#,##0.000";
+                ws.Column(7).Style.NumberFormat.Format = "#,##0.000";
+                ws.Column(8).Style.NumberFormat.Format = "#,##0.000";
+                if (data.Count > 0)
+                    ws.Range(headerRow, 1, r - 1, headers.Length).SetAutoFilter();
+                ws.Columns().AdjustToContents();
+                ws.Column(16).Width = Math.Min(ws.Column(16).Width, 60);
+
+                // ── Sheet 2: Summary by Department / Line / Shift ────────
+                var sum = workbook.Worksheets.Add("Summary");
+                var sumHeaders = new[] { "Department", "Line", "Shift", "Records", "Total (kg)", "Average (kg)", "Max (kg)" };
+                for (int i = 0; i < sumHeaders.Length; i++)
+                {
+                    var cell = sum.Cell(1, i + 1);
+                    cell.Value = sumHeaders[i];
+                    cell.Style.Fill.BackgroundColor = XLColor.FromHtml("#1a1a2e");
+                    cell.Style.Font.FontColor = XLColor.White;
+                    cell.Style.Font.Bold = true;
+                }
+
+                int sr = 2;
+                foreach (var g in data
+                    .GroupBy(d => new { d.Department, d.Line, d.Shift })
+                    .OrderBy(g => g.Key.Department).ThenBy(g => g.Key.Line).ThenBy(g => g.Key.Shift))
+                {
+                    sum.Cell(sr, 1).Value = g.Key.Department ?? "";
+                    sum.Cell(sr, 2).Value = g.Key.Line ?? "";
+                    sum.Cell(sr, 3).Value = g.Key.Shift ?? "";
+                    sum.Cell(sr, 4).Value = g.Count();
+                    sum.Cell(sr, 5).Value = (double)g.Sum(x => x.Weight);
+                    sum.Cell(sr, 6).Value = (double)g.Average(x => x.Weight);
+                    sum.Cell(sr, 7).Value = (double)g.Max(x => x.Weight);
+                    sr++;
+                }
+
+                if (data.Count > 0)
+                {
+                    sum.Cell(sr, 1).Value = "TOTAL";
+                    sum.Cell(sr, 4).Value = data.Count;
+                    sum.Cell(sr, 5).Value = (double)data.Sum(x => x.Weight);
+                    sum.Cell(sr, 6).Value = (double)data.Average(x => x.Weight);
+                    sum.Cell(sr, 7).Value = (double)data.Max(x => x.Weight);
+                    sum.Row(sr).Style.Font.Bold = true;
+                    sum.Range(sr, 1, sr, sumHeaders.Length).Style.Border.TopBorder = XLBorderStyleValues.Thin;
+                }
+
+                sum.Columns(5, 7).Style.NumberFormat.Format = "#,##0.000";
+                sum.Columns().AdjustToContents();
+
+                using var stream = new MemoryStream();
+                workbook.SaveAs(stream);
+
+                var fileName = $"WeightReport_{Safe(department)}_{start:yyyyMMdd}_{end.AddDays(-1):yyyyMMdd}.xlsx";
+                return File(stream.ToArray(),
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Weight export failed");
+                TempData["ErrorMessage"] = "Weight export failed: " + ex.Message;
+                return RedirectToAction("Index", "Analytics");
+            }
+        }
+
+        // ══════════════════════════════════════════════════════════════════
         //  PDF EXPORT — returns styled HTML (print-ready)
         // ══════════════════════════════════════════════════════════════════
         [HttpPost]
@@ -699,6 +857,83 @@ WHERE CreatedAt >= @Start AND CreatedAt < @End
   AND (@Line  IS NULL OR Line = @Line OR Line LIKE @Line + ' - %')
   AND (@Shift IS NULL OR Shift = @Shift)";
             return await conn.QueryFirstOrDefaultAsync(sql, P(start, end, dept, line, shift));
+        }
+
+        private sealed class WeightExportRow
+        {
+            public int WeightId { get; set; }
+            public DateTime CreatedAt { get; set; }
+            public string? Department { get; set; }
+            public string? Line { get; set; }
+            public string? Shift { get; set; }
+            public decimal Weight { get; set; }
+            public decimal? GrossWeightKg { get; set; }
+            public decimal? TareWeightKg { get; set; }
+            public string? Source { get; set; }
+            public int? BatchScrapId { get; set; }
+            public int ItemsInBatch { get; set; }
+            public string? CategoryName { get; set; }
+            public string? BinNumber { get; set; }
+            public string? Plant { get; set; }
+            public string? CreatedBy { get; set; }
+            public string? Description { get; set; }
+            public string? ModifiedBy { get; set; }
+            public DateTime? ModifiedAt { get; set; }
+        }
+
+        private async Task<IEnumerable<WeightExportRow>> FetchWeightRows(
+            DateTime start, DateTime end, string dept, string line, string shift)
+        {
+            using var conn = new SqlConnection(_connectionString);
+            // Casts keep Dapper's typed mapping safe regardless of the exact
+            // column types on the optional columns added over time.
+            const string sql = @"
+SELECT
+    w.WeightId,
+    w.CreatedAt,
+    w.Department, w.Line, w.Shift,
+    CAST(w.Weight AS decimal(18,3))        AS Weight,
+    CAST(w.GrossWeightKg AS decimal(18,3)) AS GrossWeightKg,
+    CAST(w.TareWeightKg AS decimal(18,3))  AS TareWeightKg,
+    CASE
+        WHEN w.BatchScrapId IS NOT NULL THEN 'Operator (label print)'
+        WHEN w.IsBulkWeighing = 1        THEN 'Admin bulk'
+        ELSE 'Manual entry'
+    END AS Source,
+    CAST(w.BatchScrapId AS int)            AS BatchScrapId,
+    ISNULL(b.ItemsInBatch, 0)              AS ItemsInBatch,
+    CAST(w.CategoryName AS nvarchar(200))  AS CategoryName,
+    CAST(w.BinNumber AS nvarchar(50))      AS BinNumber,
+    CAST(w.Plant AS nvarchar(100))         AS Plant,
+    w.CreatedBy, w.Description, w.ModifiedBy, w.ModifiedAt
+FROM [IntegrationCompanyB].[dbo].[scpWeightHistory] w
+OUTER APPLY (
+    SELECT COUNT(*) AS ItemsInBatch
+    FROM [IntegrationCompanyB].[dbo].[scpScrapData] s
+    WHERE w.BatchScrapId IS NOT NULL AND s.BatchScrapId = w.BatchScrapId
+) b
+WHERE w.CreatedAt >= @Start AND w.CreatedAt < @End
+  AND (@Dept  IS NULL OR w.Department = @Dept)
+  AND (@Line  IS NULL OR w.Line = @Line OR w.Line LIKE @Line + ' - %')
+  AND (@Shift IS NULL OR w.Shift = @Shift)
+ORDER BY w.CreatedAt DESC";
+            return await conn.QueryAsync<WeightExportRow>(sql, P(start, end, dept, line, shift));
+        }
+
+        // Same rule as AnalyticsController.ExportToExcelWithCharts
+        private async Task<bool> IsCurrentUserAdminAsync()
+        {
+            var name = User?.Identity?.Name;
+            if (string.IsNullOrEmpty(name)) return false;
+
+            using var conn = new SqlConnection(_connectionString);
+            var userType = await conn.QueryFirstOrDefaultAsync<string?>(@"
+SELECT TOP 1 UserType
+FROM [IntegrationCompanyB].[dbo].[scpUser]
+WHERE (ClockNumber = @Name OR UserName = @Name) AND IsActive = 1",
+                new { Name = name });
+
+            return string.Equals(userType?.Trim(), "admin", StringComparison.OrdinalIgnoreCase);
         }
 
         private async Task<IEnumerable<dynamic>> FetchApprovalSummary(

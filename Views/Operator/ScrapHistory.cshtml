@@ -482,6 +482,185 @@
             font-size: 15px;
         }
 
+        /* Labels & weights (reprint) */
+        .section-title {
+            color: rgba(255,255,255,0.85);
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 4px 0 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .batch-toggle {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.3);
+            color: rgba(255,255,255,0.8);
+            border-radius: 14px;
+            padding: 3px 10px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        .batch-card {
+            background: rgba(255,255,255,0.97);
+            border-radius: 12px;
+            padding: 12px 14px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            border-left: 4px solid #28a745;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+            .batch-card.no-weight {
+                border-left-color: #dc3545;
+            }
+
+        .batch-title {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .batch-sub {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 3px;
+        }
+
+        .weight-ok {
+            color: #28a745;
+            font-weight: 700;
+            font-size: 12px;
+        }
+
+        .weight-missing {
+            color: #dc3545;
+            font-weight: 700;
+            font-size: 12px;
+        }
+
+        .reprint-btn {
+            border: 2px solid #428bca;
+            color: #428bca;
+            background: transparent;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+            .reprint-btn:hover {
+                background: #428bca;
+                color: white;
+            }
+
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 16px;
+        }
+
+            .modal-backdrop.open {
+                display: flex;
+            }
+
+        .modal-box {
+            background: white;
+            border-radius: 14px;
+            padding: 20px;
+            width: 100%;
+            max-width: 440px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+            .modal-box h3 {
+                font-size: 17px;
+                margin-bottom: 12px;
+            }
+
+        .modal-info {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 13px;
+            margin-bottom: 14px;
+            line-height: 1.7;
+        }
+
+        .modal-field {
+            margin-bottom: 12px;
+        }
+
+            .modal-field label {
+                display: block;
+                font-size: 11px;
+                font-weight: 700;
+                color: #6c757d;
+                text-transform: uppercase;
+                margin-bottom: 4px;
+            }
+
+            .modal-field input, .modal-field select {
+                width: 100%;
+                padding: 10px 12px;
+                border: 2px solid #dee2e6;
+                border-radius: 8px;
+                font-size: 14px;
+            }
+
+        .modal-error {
+            display: none;
+            background: rgba(220,53,69,0.1);
+            color: #dc3545;
+            border-radius: 8px;
+            padding: 8px 10px;
+            font-size: 13px;
+            margin-bottom: 12px;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+            .modal-actions button {
+                flex: 1;
+                padding: 11px;
+                border-radius: 8px;
+                font-weight: 700;
+                font-size: 14px;
+                cursor: pointer;
+                border: none;
+            }
+
+        .btn-confirm {
+            background: #428bca;
+            color: white;
+        }
+
+            .btn-confirm:disabled {
+                opacity: 0.6;
+                cursor: wait;
+            }
+
+        .btn-cancel {
+            background: #e9ecef;
+            color: #495057;
+        }
+
         @@media (max-width: 480px) {
             .page {
                 padding: 10px;
@@ -519,6 +698,50 @@
                     <i class="bi bi-box-arrow-right"></i> Logout
                 </button>
             </form>
+        </div>
+
+        <!-- Labels & weights (reprint) -->
+        <div class="section-title">
+            <span><i class="bi bi-printer"></i> My Labels &amp; Weights (last 30 days)</span>
+            <button type="button" class="batch-toggle" id="batchToggle" onclick="toggleBatchList()">Show</button>
+        </div>
+        <div id="batchList" class="hidden">
+            <div class="no-filter-results" id="batchLoading">Loading...</div>
+        </div>
+
+        <!-- Reprint modal -->
+        <div class="modal-backdrop" id="reprintModal">
+            <div class="modal-box">
+                <h3><i class="bi bi-printer"></i> Reprint Label — Batch #<span id="rpBatchId"></span></h3>
+                <div class="modal-info" id="rpInfo"></div>
+
+                <div class="modal-field">
+                    <label for="rpPrinter">Printer</label>
+                    <select id="rpPrinter"><option value="">Loading printers...</option></select>
+                </div>
+
+                <div class="modal-field hidden" id="rpWeightField">
+                    <label for="rpWeight">Weight (kg) — not saved for this batch, weigh and enter it</label>
+                    <input type="number" id="rpWeight" min="0.001" step="0.001" inputmode="decimal" />
+                </div>
+
+                <div class="modal-field">
+                    <label for="rpAuth">Authorised by — TL / GL / Manager / Admin clock number</label>
+                    <input type="text" id="rpAuth" autocomplete="off" />
+                </div>
+
+                <div class="modal-field">
+                    <label for="rpAuthPassword">Authoriser password</label>
+                    <input type="password" id="rpAuthPassword" autocomplete="new-password" />
+                </div>
+
+                <div class="modal-error" id="rpError"></div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-cancel" onclick="closeReprint()">Cancel</button>
+                    <button type="button" class="btn-confirm" id="rpConfirm" onclick="submitReprint()">Authorise &amp; Reprint</button>
+                </div>
+            </div>
         </div>
 
         @if (!Model.Any())
@@ -789,6 +1012,183 @@
 
         function toggleCard(card) {
             card.classList.toggle('expanded');
+        }
+
+        // ── Labels & weights / reprint ─────────────────────────────────────
+        let batches = [];
+        let batchesLoaded = false;
+        let currentBatch = null;
+
+        function toggleBatchList() {
+            const list = document.getElementById('batchList');
+            const btn  = document.getElementById('batchToggle');
+            const show = list.classList.contains('hidden');
+            list.classList.toggle('hidden', !show);
+            btn.textContent = show ? 'Hide' : 'Show';
+            if (show && !batchesLoaded) loadBatches();
+        }
+
+        async function loadBatches() {
+            const list = document.getElementById('batchList');
+            try {
+                const res  = await fetch('/Operator/GetMyBatches?days=30');
+                const data = await res.json();
+                batchesLoaded = true;
+                list.innerHTML = '';
+
+                if (!data.success) {
+                    list.innerHTML = '<div class="no-filter-results"></div>';
+                    list.firstChild.textContent = data.message || 'Could not load batches.';
+                    return;
+                }
+                batches = data.batches || [];
+                if (batches.length === 0) {
+                    list.innerHTML = '<div class="no-filter-results">No batches in the last 30 days.</div>';
+                    return;
+                }
+
+                batches.forEach(b => {
+                    const card = document.createElement('div');
+                    card.className = 'batch-card' + (b.weightSaved ? '' : ' no-weight');
+
+                    const left = document.createElement('div');
+                    const title = document.createElement('div');
+                    title.className = 'batch-title';
+                    title.textContent = `Batch #${b.batchScrapId} · ${b.itemCount} item${b.itemCount === 1 ? '' : 's'}`;
+
+                    const sub = document.createElement('div');
+                    sub.className = 'batch-sub';
+                    sub.textContent = `Scrap: ${b.firstScrapAt}${b.lastScrapAt !== b.firstScrapAt ? ' – ' + b.lastScrapAt.slice(11) : ''} · ${b.line} · ${b.shift}`;
+
+                    const w = document.createElement('div');
+                    w.className = b.weightSaved ? 'weight-ok' : 'weight-missing';
+                    w.style.marginTop = '3px';
+                    w.textContent = b.weightSaved
+                        ? `✅ ${b.weight} kg saved (${b.weightRecordedAt}) · printed ${b.printCount}×`
+                        : '⚠️ Weight NOT saved';
+
+                    left.append(title, sub, w);
+
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'reprint-btn';
+                    btn.innerHTML = '<i class="bi bi-printer"></i> Reprint';
+                    btn.addEventListener('click', () => openReprint(b));
+
+                    card.append(left, btn);
+                    list.appendChild(card);
+                });
+            } catch (err) {
+                list.innerHTML = '<div class="no-filter-results">Error loading batches.</div>';
+            }
+        }
+
+        async function openReprint(b) {
+            currentBatch = b;
+            document.getElementById('rpBatchId').textContent = b.batchScrapId;
+
+            const info = document.getElementById('rpInfo');
+            info.innerHTML = '';
+            [
+                ['Scrap captured', b.firstScrapAt + (b.lastScrapAt !== b.firstScrapAt ? ' – ' + b.lastScrapAt : '')],
+                ['Items / Qty', `${b.itemCount} / ${b.totalQuantity}`],
+                ['Location', `${b.department} · ${b.line} · ${b.shift}`],
+                ['Weight', b.weightSaved ? `✅ ${b.weight} kg saved on ${b.weightRecordedAt}` : '⚠️ NOT saved — enter it below'],
+                ['Times printed', String(b.printCount)]
+            ].forEach(([k, v]) => {
+                const row = document.createElement('div');
+                const strong = document.createElement('strong');
+                strong.textContent = k + ': ';
+                row.append(strong, document.createTextNode(v));
+                info.appendChild(row);
+            });
+
+            document.getElementById('rpWeightField').classList.toggle('hidden', b.weightSaved);
+            document.getElementById('rpWeight').value = '';
+            document.getElementById('rpAuth').value = '';
+            document.getElementById('rpAuthPassword').value = '';
+            document.getElementById('rpError').style.display = 'none';
+            document.getElementById('reprintModal').classList.add('open');
+
+            const sel = document.getElementById('rpPrinter');
+            if (sel.dataset.loaded) return;
+            try {
+                const res  = await fetch('/Operator/GetAvailablePrinters');
+                const data = await res.json();
+                sel.innerHTML = '<option value="">Select Printer</option>';
+                (data.printers || []).forEach(p => {
+                    const opt  = document.createElement('option');
+                    const name = p.printerName ?? p.PrinterName ?? '';
+                    const desc = p.description ?? p.Description ?? '';
+                    opt.value = p.printerConfigId ?? p.PrinterConfigId;
+                    opt.textContent = desc ? `${name} — ${desc}` : name;
+                    sel.appendChild(opt);
+                });
+                sel.dataset.loaded = '1';
+            } catch {
+                sel.innerHTML = '<option value="">Error loading printers</option>';
+            }
+        }
+
+        function closeReprint() {
+            document.getElementById('rpAuthPassword').value = '';
+            document.getElementById('reprintModal').classList.remove('open');
+            currentBatch = null;
+        }
+
+        function showReprintError(msg) {
+            const e = document.getElementById('rpError');
+            e.textContent = msg;
+            e.style.display = 'block';
+        }
+
+        async function submitReprint() {
+            if (!currentBatch) return;
+            const printerConfigId = document.getElementById('rpPrinter').value;
+            const auth   = document.getElementById('rpAuth').value.trim();
+            const pwdEl  = document.getElementById('rpAuthPassword');
+            const pwd    = pwdEl.value;
+            const weight = parseFloat(document.getElementById('rpWeight').value) || 0;
+
+            if (!printerConfigId) return showReprintError('Please select a printer.');
+            if (!currentBatch.weightSaved && weight <= 0) return showReprintError('Please enter the weight for this batch.');
+            if (!auth) return showReprintError('Enter the authoriser\'s clock number.');
+            if (!pwd) return showReprintError('The authoriser must enter their password.');
+
+            const btn = document.getElementById('rpConfirm');
+            btn.disabled = true;
+            btn.textContent = 'Printing...';
+            try {
+                const res = await fetch('/Operator/ReprintLocationLabel', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                    },
+                    body: JSON.stringify({
+                        batchScrapId: currentBatch.batchScrapId,
+                        printerConfigId: parseInt(printerConfigId),
+                        authoriserClockNumber: auth,
+                        authoriserPassword: pwd,
+                        weight: currentBatch.weightSaved ? 0 : weight
+                    })
+                });
+                pwdEl.value = '';   // never leave the authoriser's password on the operator's screen
+                const data = await res.json();
+
+                if (data.success) {
+                    closeReprint();
+                    alert('✅ ' + data.message);
+                } else {
+                    showReprintError(data.message || 'Reprint failed.');
+                }
+                if (data.weightRecorded) loadBatches();   // refresh weight status / print count
+            } catch (err) {
+                showReprintError('Error: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Authorise & Reprint';
+            }
         }
     </script>
 

@@ -41,6 +41,7 @@ namespace SCP_Control.Controllers
         private readonly IActivityLogService _activityLogService;
         private readonly ApplicationDbContext _context;
         private readonly IBatchIdService _batchIdService;
+        private readonly IAuthService _authService;
         public OperatorController(
          ILogger<OperatorController> logger,
          IActivityLogService activityLogService,
@@ -49,8 +50,10 @@ namespace SCP_Control.Controllers
          IInventoryService inventoryService,
         ApplicationDbContext context,
         IConfiguration configuration,
-        IBatchIdService batchIdService)
+        IBatchIdService batchIdService,
+        IAuthService authService)
         {
+            _authService = authService ?? throw new ArgumentNullException(nameof(authService));
             _activityLogService = activityLogService ?? throw new ArgumentNullException(nameof(activityLogService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _operatorService = operatorService ?? throw new ArgumentNullException(nameof(operatorService));
@@ -2548,6 +2551,83 @@ namespace SCP_Control.Controllers
                 if (request.Weight <= 0)
                     return Json(new { success = false, message = "Please enter a valid weight greater than zero." });
 
+                // ── FIX 3: department comes from the request (where the scrap was captured),
+                //    not the operator's home department. Fall back to profile only if blank.
+                var weightDepartment = string.IsNullOrWhiteSpace(request.Department)
+                    ? user.Department
+                    : request.Department.Trim();
+
+                if (string.IsNullOrWhiteSpace(weightDepartment))
+                    return Json(new { success = false, message = "Department is missing. Please update your location before recording weight." });
+
+                // ── FIX 1 + 2: record the weight BEFORE printing, and fail loudly if it can't be saved.
+                //    One weight per batch: a retry (e.g. after a printer failure) updates the
+                //    existing row instead of creating a duplicate.
+                var weightDescription = string.IsNullOrWhiteSpace(request.Notes)
+                    ? $"Weight recorded by {user.ClockNumber} via label print"
+                    : $"Weight recorded by {user.ClockNumber} — {request.Notes}";
+
+                bool weightUpdated;
+                try
+                {
+                    var rowsUpdated = await connection.ExecuteAsync(@"
+        UPDATE [IntegrationCompanyB].[dbo].[scpWeightHistory]
+        SET Department = @Department, Line = @Line, Shift = @Shift, Weight = @Weight,
+            Description = @Description, ModifiedAt = GETDATE(), ModifiedBy = @CreatedBy
+        WHERE BatchScrapId = @BatchScrapId AND CreatedBy = @CreatedBy AND IsBulkWeighing = 0",
+                        new
+                        {
+                            Department = weightDepartment,
+                            Line = request.Line,
+                            Shift = request.Shift,
+                            Weight = request.Weight,
+                            Description = weightDescription,
+                            CreatedBy = user.ClockNumber,
+                            BatchScrapId = request.BatchScrapId
+                        });
+
+                    weightUpdated = rowsUpdated > 0;
+
+                    if (!weightUpdated)
+                    {
+                        await connection.ExecuteAsync(@"
+        INSERT INTO [IntegrationCompanyB].[dbo].[scpWeightHistory]
+        (WeightId, Department, Line, Shift, Weight, Description, CreatedAt, CreatedBy,
+         ModifiedAt, ModifiedBy, IsBulkWeighing, BatchScrapId)
+        VALUES
+        (NEXT VALUE FOR [IntegrationCompanyB].[dbo].[seq_WeightHistoryId],
+         @Department, @Line, @Shift, @Weight, @Description, GETDATE(), @CreatedBy,
+         GETDATE(), @CreatedBy, 0, @BatchScrapId)",
+                            new
+                            {
+                                Department = weightDepartment,
+                                Line = request.Line,
+                                Shift = request.Shift,
+                                Weight = request.Weight,
+                                Description = weightDescription,
+                                CreatedBy = user.ClockNumber,
+                                BatchScrapId = request.BatchScrapId
+                            });
+                    }
+
+                    _logger.LogInformation("✅ Weight {Weight}kg {Action} for Batch #{BatchId} ({Dept}/{Line}/{Shift}) by {User}",
+                        request.Weight, weightUpdated ? "updated" : "saved", request.BatchScrapId,
+                        weightDepartment, request.Line, request.Shift, user.ClockNumber);
+                }
+                catch (Exception weightEx)
+                {
+                    _logger.LogError(weightEx,
+                        "❌ Weight save FAILED for Batch #{BatchId} by {User} — label not printed",
+                        request.BatchScrapId, user.ClockNumber);
+
+                    return Json(new
+                    {
+                        success = false,
+                        weightRecorded = false,
+                        message = "The weight could not be saved, so no label was printed. Please try again or contact your supervisor."
+                    });
+                }
+
                 var printResult = await SendLocationLabelAsync(
                     printer.PrinterIP.ToString(),
                     (int)printer.PrinterPort,
@@ -2574,12 +2654,13 @@ INSERT INTO [IntegrationCompanyB].[dbo].[scpPrintLog]
 VALUES
 ((SELECT ISNULL(MAX(PrintLogId),0)+1 FROM [IntegrationCompanyB].[dbo].[scpPrintLog]),
  @TrackId, @ScrapId, @ClockNumber, @MachineName, NEWID(), @Department, @Line, @Shift,
- 0, @PrinterName, @PrinterIP, @PrinterPort, 'SUCCESS', @StartTime, GETDATE(),
+ @Weight, @PrinterName, @PrinterIP, @PrinterPort, 'SUCCESS', @StartTime, GETDATE(),
  0, GETDATE())",
                             new
                             {
                                 TrackId = $"LOC-{DateTime.Now:yyyyMMddHHmmss}",
-                                ScrapId = $"LOC-{DateTime.Now:yyyyMMddHHmmss}",
+                                ScrapId = $"BATCH-{request.BatchScrapId}",   // links the print to its batch (used by Scrap History)
+                                Weight = request.Weight,
                                 ClockNumber = user.ClockNumber,
                                 MachineName = Environment.MachineName,
                                 Department = request.Department,
@@ -2595,46 +2676,22 @@ VALUES
                     {
                         _logger.LogWarning(logEx, "Print log insert failed (non-critical) — label was printed successfully");
                     }
-
-                    try
-                    {
-                        await connection.ExecuteAsync(@"
-        INSERT INTO [IntegrationCompanyB].[dbo].[scpWeightHistory]
-        (WeightId, Department, Line, Shift, Weight, Description, CreatedAt, CreatedBy,
-         ModifiedAt, ModifiedBy, IsBulkWeighing, BatchScrapId)
-        VALUES
-        (NEXT VALUE FOR [IntegrationCompanyB].[dbo].[seq_WeightHistoryId],
-         @Department, @Line, @Shift, @Weight, @Description, GETDATE(), @CreatedBy,
-         GETDATE(), @CreatedBy, 0, @BatchScrapId)",
-                            new
-                            {
-                                Department = user.Department,
-                                Line = request.Line,
-                                Shift = request.Shift,
-                                Weight = request.Weight,
-                                Description = string.IsNullOrWhiteSpace(request.Notes)
-                                    ? $"Weight recorded by {user.ClockNumber} via label print"
-                                    : $"Weight recorded by {user.ClockNumber} — {request.Notes}",
-                                CreatedBy = user.ClockNumber,
-                                BatchScrapId = request.BatchScrapId
-                            });
-
-                        _logger.LogInformation("✅ Weight {Weight}kg saved for Batch #{BatchId} ({Dept}/{Line}/{Shift}) by {User}",
-                            request.Weight, request.BatchScrapId, user.Department, request.Line, request.Shift, user.ClockNumber);
-                    }
-                    catch (Exception weightEx)
-                    {
-                        _logger.LogWarning(weightEx, "Weight save failed (non-critical) — label was printed successfully");
-                    }
+                }
+                else
+                {
+                    _logger.LogWarning("⚠️ Label print failed for Batch #{BatchId} — weight {Weight}kg is already recorded. Error: {Error}",
+                        request.BatchScrapId, request.Weight, printError);
                 }
 
                 return Json(new
                 {
                     success = printSuccess,
+                    weightRecorded = true,
                     batchScrapId = request.BatchScrapId,
                     message = printSuccess
                         ? $"Label printed and {request.Weight:0.###}kg recorded for Batch #{request.BatchScrapId}"
-                        : printError
+                        : $"{request.Weight:0.###}kg was recorded for Batch #{request.BatchScrapId}, but the label did not print: {printError}. " +
+                          "Check the printer and press Print again — the weight will not be duplicated."
                 });
             }
             catch (Exception ex)
@@ -2728,6 +2785,348 @@ VALUES
             public string MachineNumber { get; set; } = "";
             public decimal Weight { get; set; } = 0;
             public int BatchScrapId { get; set; } = 0;
+        }
+
+        // ============================================================================
+        // REPRINT LOCATION LABEL (from Scrap History) — requires TL/GL/Manager/Admin
+        // ============================================================================
+
+        private static readonly HashSet<string> _reprintAuthoriserRoles =
+            new(StringComparer.OrdinalIgnoreCase) { "teamleader", "groupleader", "manager", "seniormanager", "admin" };
+
+        private static string NormaliseRole(string? userType)
+            => new string((userType ?? "").Where(char.IsLetter).ToArray()).ToLowerInvariant();
+
+        // GET: the operator's recent batches with scrap date/time and weight status
+        [HttpGet]
+        public async Task<IActionResult> GetMyBatches(int days = 30)
+        {
+            try
+            {
+                var user = await GetCurrentUserAsync();
+                if (user == null)
+                    return Json(new { success = false, message = "User not authenticated" });
+
+                days = Math.Clamp(days, 1, 90);
+
+                using var connection = new SqlConnection(_connectionString);
+                const string sql = @"
+SELECT TOP 50
+    s.BatchScrapId,
+    MIN(s.SubmissionDate)                 AS FirstScrapAt,
+    MAX(s.SubmissionDate)                 AS LastScrapAt,
+    COUNT(*)                              AS ItemCount,
+    SUM(s.Quantity)                       AS TotalQuantity,
+    MAX(s.Department)                     AS Department,
+    MAX(s.Line)                           AS Line,
+    MAX(s.Shift)                          AS Shift,
+    w.WeightId,
+    w.Weight,
+    w.CreatedAt                           AS WeightRecordedAt,
+    ISNULL(p.PrintCount, 0)               AS PrintCount
+FROM [IntegrationCompanyB].[dbo].[scpScrapData] s
+OUTER APPLY (
+    SELECT TOP 1 wh.WeightId, CAST(wh.Weight AS decimal(18,3)) AS Weight, wh.CreatedAt
+    FROM [IntegrationCompanyB].[dbo].[scpWeightHistory] wh
+    WHERE wh.BatchScrapId = s.BatchScrapId
+    ORDER BY wh.CreatedAt DESC
+) w
+OUTER APPLY (
+    SELECT COUNT(*) AS PrintCount
+    FROM [IntegrationCompanyB].[dbo].[scpPrintLog] pl
+    WHERE pl.ScrapId = 'BATCH-' + CAST(s.BatchScrapId AS varchar(20))
+) p
+WHERE s.ClockNumber = @ClockNumber
+  AND s.BatchScrapId > 0
+  AND s.SubmissionDate >= DATEADD(day, -@Days, GETDATE())
+GROUP BY s.BatchScrapId, w.WeightId, w.Weight, w.CreatedAt, p.PrintCount
+ORDER BY MAX(s.SubmissionDate) DESC";
+
+                var batches = await connection.QueryAsync(sql, new { ClockNumber = user.ClockNumber, Days = days });
+
+                return Json(new
+                {
+                    success = true,
+                    batches = batches.Select(b => new
+                    {
+                        batchScrapId = (int)b.BatchScrapId,
+                        firstScrapAt = ((DateTime)b.FirstScrapAt).ToString("yyyy-MM-dd HH:mm"),
+                        lastScrapAt = ((DateTime)b.LastScrapAt).ToString("yyyy-MM-dd HH:mm"),
+                        itemCount = (int)b.ItemCount,
+                        totalQuantity = Convert.ToDecimal(b.TotalQuantity ?? 0),
+                        department = (string?)b.Department ?? "",
+                        line = (string?)b.Line ?? "",
+                        shift = (string?)b.Shift ?? "",
+                        weightSaved = b.WeightId != null,
+                        weight = b.Weight == null ? (decimal?)null : (decimal)b.Weight,
+                        weightRecordedAt = b.WeightRecordedAt == null ? null : ((DateTime)b.WeightRecordedAt).ToString("yyyy-MM-dd HH:mm"),
+                        printCount = (int)b.PrintCount
+                    })
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading batches for reprint");
+                return Json(new { success = false, message = "Error loading your batches" });
+            }
+        }
+
+        public class ReprintLocationLabelRequest
+        {
+            public int BatchScrapId { get; set; }
+            public int PrinterConfigId { get; set; }
+            public string AuthoriserClockNumber { get; set; } = "";
+            public string AuthoriserPassword { get; set; } = "";
+            public decimal Weight { get; set; } = 0;   // only used when no weight was saved for the batch
+        }
+
+        // Simple per-operator lockout for failed reprint authorisations (in-memory, single server).
+        private const int ReprintMaxFailures = 5;
+        private static readonly TimeSpan ReprintLockoutWindow = TimeSpan.FromMinutes(15);
+        private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, (int Count, DateTime FirstFailureUtc)>
+            _reprintFailures = new(StringComparer.OrdinalIgnoreCase);
+
+        private static bool IsReprintLockedOut(string operatorClock, out int minutesLeft)
+        {
+            minutesLeft = 0;
+            if (!_reprintFailures.TryGetValue(operatorClock, out var entry)) return false;
+
+            var elapsed = DateTime.UtcNow - entry.FirstFailureUtc;
+            if (elapsed >= ReprintLockoutWindow)
+            {
+                _reprintFailures.TryRemove(operatorClock, out _);
+                return false;
+            }
+            if (entry.Count < ReprintMaxFailures) return false;
+
+            minutesLeft = Math.Max(1, (int)Math.Ceiling((ReprintLockoutWindow - elapsed).TotalMinutes));
+            return true;
+        }
+
+        private static void RegisterReprintFailure(string operatorClock)
+            => _reprintFailures.AddOrUpdate(operatorClock,
+                _ => (1, DateTime.UtcNow),
+                (_, e) => DateTime.UtcNow - e.FirstFailureUtc >= ReprintLockoutWindow
+                    ? (1, DateTime.UtcNow)
+                    : (e.Count + 1, e.FirstFailureUtc));
+
+        private static void ClearReprintFailures(string operatorClock)
+            => _reprintFailures.TryRemove(operatorClock, out _);
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ReprintLocationLabel([FromBody] ReprintLocationLabelRequest request)
+        {
+            try
+            {
+                var user = await GetCurrentUserAsync();
+                if (user == null)
+                    return Json(new { success = false, message = "User not authenticated" });
+
+                if (request.BatchScrapId <= 0)
+                    return Json(new { success = false, message = "No batch selected." });
+
+                var authClock = (request.AuthoriserClockNumber ?? "").Trim();
+                if (string.IsNullOrEmpty(authClock) || string.IsNullOrEmpty(request.AuthoriserPassword))
+                    return Json(new { success = false, message = "The Team Leader, Group Leader, Manager or Admin authorising this reprint must enter their clock number and password." });
+
+                if (string.Equals(authClock, user.ClockNumber, StringComparison.OrdinalIgnoreCase))
+                    return Json(new { success = false, message = "You cannot authorise your own reprint. Ask your Team Leader or Group Leader." });
+
+                // ── Lockout: too many failed authorisations from this operator ──
+                if (IsReprintLockedOut(user.ClockNumber, out var minutesLeft))
+                    return Json(new { success = false, message = $"Too many failed authorisation attempts. Try again in {minutesLeft} minute(s)." });
+
+                using var connection = new SqlConnection(_connectionString);
+
+                // ── Authoriser: correct password first (same check as login), then role ──
+                bool passwordOk = await _authService.VerifyPassword(authClock, request.AuthoriserPassword);
+
+                var authoriser = passwordOk
+                    ? await connection.QueryFirstOrDefaultAsync(@"
+SELECT TOP 1 ClockNumber, UserType
+FROM [IntegrationCompanyB].[dbo].[scpUser]
+WHERE ClockNumber = @ClockNumber AND IsActive = 1",
+                        new { ClockNumber = authClock })
+                    : null;
+
+                if (authoriser == null)
+                {
+                    RegisterReprintFailure(user.ClockNumber);
+                    _logger.LogWarning("⚠️ Reprint authorisation failed (bad clock number/password) — operator {Operator}, authoriser {Auth}, Batch #{BatchId}",
+                        user.ClockNumber, authClock, request.BatchScrapId);
+                    await _activityLogService.LogActivityAsync(user.ClockNumber, "Reprint Label",
+                        $"BatchId: {request.BatchScrapId}, Authoriser: {authClock} — invalid clock number or password", "Failed");
+
+                    return Json(new { success = false, message = "Authoriser clock number or password is incorrect." });
+                }
+
+                string authRole = NormaliseRole((string?)authoriser.UserType);
+                if (!_reprintAuthoriserRoles.Contains(authRole))
+                {
+                    RegisterReprintFailure(user.ClockNumber);
+                    _logger.LogWarning("⚠️ Reprint authorisation rejected (role {Role}) — operator {Operator}, authoriser {Auth}, Batch #{BatchId}",
+                        authRole, user.ClockNumber, authClock, request.BatchScrapId);
+                    await _activityLogService.LogActivityAsync(user.ClockNumber, "Reprint Label",
+                        $"BatchId: {request.BatchScrapId}, Authoriser: {authClock} ({authRole}) — role not allowed", "Failed");
+
+                    return Json(new { success = false, message = "This user is not allowed to authorise reprints. A Team Leader, Group Leader, Manager or Admin is required." });
+                }
+
+                ClearReprintFailures(user.ClockNumber);
+
+                // ── Batch must belong to this operator ──
+                var batch = await connection.QueryFirstOrDefaultAsync(@"
+SELECT TOP 1
+    MIN(SubmissionDate) OVER () AS FirstScrapAt,
+    Department, Line, Shift, ISNULL(MachineNumber, '') AS MachineNumber
+FROM [IntegrationCompanyB].[dbo].[scpScrapData]
+WHERE BatchScrapId = @BatchScrapId AND ClockNumber = @ClockNumber
+ORDER BY SubmissionDate DESC",
+                    new { BatchScrapId = request.BatchScrapId, ClockNumber = user.ClockNumber });
+
+                if (batch == null)
+                    return Json(new { success = false, message = "This batch could not be found in your history." });
+
+                var printer = await connection.QuerySingleOrDefaultAsync(@"
+SELECT PrinterName, PrinterIP, PrinterPort
+FROM [IntegrationCompanyB].[dbo].[scpPrinterConfig]
+WHERE PrinterConfigId = @PrinterConfigId AND IsActive = 1",
+                    new { request.PrinterConfigId });
+
+                if (printer == null)
+                    return Json(new { success = false, message = "Printer not found or inactive." });
+
+                // ── Weight: use the saved one; if none was saved, the authorised reprint records it now ──
+                var saved = await connection.QueryFirstOrDefaultAsync(@"
+SELECT TOP 1 CAST(Weight AS decimal(18,3)) AS Weight, Department, Line, Shift
+FROM [IntegrationCompanyB].[dbo].[scpWeightHistory]
+WHERE BatchScrapId = @BatchScrapId
+ORDER BY CreatedAt DESC",
+                    new { request.BatchScrapId });
+
+                decimal weight;
+                string dept, line, shift;
+                bool weightRecordedNow = false;
+
+                if (saved != null)
+                {
+                    weight = (decimal)saved.Weight;
+                    dept = (string)saved.Department;
+                    line = (string)saved.Line;
+                    shift = (string)saved.Shift;
+                }
+                else
+                {
+                    if (request.Weight <= 0)
+                        return Json(new { success = false, weightMissing = true, message = "No weight was saved for this batch. Weigh the scrap and enter the weight to reprint." });
+
+                    weight = request.Weight;
+                    dept = (string)batch.Department;
+                    line = (string)batch.Line;
+                    shift = (string)batch.Shift;
+
+                    try
+                    {
+                        await connection.ExecuteAsync(@"
+INSERT INTO [IntegrationCompanyB].[dbo].[scpWeightHistory]
+(WeightId, Department, Line, Shift, Weight, Description, CreatedAt, CreatedBy,
+ ModifiedAt, ModifiedBy, IsBulkWeighing, BatchScrapId)
+VALUES
+(NEXT VALUE FOR [IntegrationCompanyB].[dbo].[seq_WeightHistoryId],
+ @Department, @Line, @Shift, @Weight, @Description, GETDATE(), @CreatedBy,
+ GETDATE(), @CreatedBy, 0, @BatchScrapId)",
+                            new
+                            {
+                                Department = dept,
+                                Line = line,
+                                Shift = shift,
+                                Weight = weight,
+                                Description = $"Weight recorded by {user.ClockNumber} on reprint, authorised by {authClock}",
+                                CreatedBy = user.ClockNumber,
+                                request.BatchScrapId
+                            });
+                        weightRecordedNow = true;
+                    }
+                    catch (Exception weightEx)
+                    {
+                        _logger.LogError(weightEx, "❌ Weight save FAILED on reprint for Batch #{BatchId}", request.BatchScrapId);
+                        return Json(new { success = false, message = "The weight could not be saved, so no label was printed. Please try again." });
+                    }
+                }
+
+                string printerIp = (string)printer.PrinterIP.ToString();
+                int printerPort = (int)printer.PrinterPort;
+                string machineNumber = (string)batch.MachineNumber;
+
+                (bool printSuccess, string? printError) = await SendLocationLabelAsync(
+                    printerIp,
+                    printerPort,
+                    user.ClockNumber,
+                    dept, line, shift,
+                    $"REPRINT - Auth {authClock}",
+                    machineNumber,
+                    weight,
+                    request.BatchScrapId);
+
+                try
+                {
+                    await connection.ExecuteAsync(@"
+INSERT INTO [IntegrationCompanyB].[dbo].[scpPrintLog]
+(PrintLogId, TrackId, ScrapId, ClockNumber, MachineName, SessionId, Department, Line, Shift,
+ Weight, PrinterName, PrinterIP, PrinterPort, PrintStatus, PrintStartTime, PrintEndTime,
+ PrintDurationMs, CreatedAt)
+VALUES
+((SELECT ISNULL(MAX(PrintLogId),0)+1 FROM [IntegrationCompanyB].[dbo].[scpPrintLog]),
+ @TrackId, @ScrapId, @ClockNumber, @MachineName, NEWID(), @Department, @Line, @Shift,
+ @Weight, @PrinterName, @PrinterIP, @PrinterPort, @PrintStatus, GETDATE(), GETDATE(),
+ 0, GETDATE())",
+                        new
+                        {
+                            TrackId = $"REPRINT-{authClock}",
+                            ScrapId = $"BATCH-{request.BatchScrapId}",
+                            ClockNumber = user.ClockNumber,
+                            MachineName = Environment.MachineName,
+                            Department = dept,
+                            Line = line,
+                            Shift = shift,
+                            Weight = weight,
+                            PrinterName = printer.PrinterName.ToString(),
+                            PrinterIP = printer.PrinterIP.ToString(),
+                            PrinterPort = (int)printer.PrinterPort,
+                            PrintStatus = printSuccess ? "REPRINT" : "REPRINT_FAILED"
+                        });
+                }
+                catch (Exception logEx)
+                {
+                    _logger.LogWarning(logEx, "Reprint log insert failed (non-critical)");
+                }
+
+                await _activityLogService.LogActivityAsync(user.ClockNumber, "Reprint Label",
+                    $"BatchId: {request.BatchScrapId}, Weight: {weight:0.###}kg, Authoriser: {authClock} ({authRole})" +
+                    (weightRecordedNow ? ", weight recorded on reprint" : "") +
+                    (printSuccess ? "" : $", print error: {printError}"),
+                    printSuccess ? "Success" : "Failed");
+
+                _logger.LogInformation("🖨️ Reprint Batch #{BatchId} by {Operator}, authorised by {Auth} ({Role}) — {Result}",
+                    request.BatchScrapId, user.ClockNumber, authClock, authRole, printSuccess ? "printed" : printError);
+
+                return Json(new
+                {
+                    success = printSuccess,
+                    weightRecorded = true,
+                    message = printSuccess
+                        ? $"Label reprinted for Batch #{request.BatchScrapId} ({weight:0.###} kg)" +
+                          (weightRecordedNow ? " — weight has now been saved." : ".")
+                        : $"The label did not print: {printError}." +
+                          (weightRecordedNow ? $" The weight ({weight:0.###} kg) has been saved." : "")
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error reprinting location label");
+                return Json(new { success = false, message = ex.Message });
+            }
         }
 
 

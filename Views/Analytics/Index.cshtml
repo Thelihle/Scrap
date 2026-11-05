@@ -293,6 +293,10 @@
             content: "📊";
         }
 
+        .icon-weight::before {
+            content: "⚖️";
+        }
+
         /* Form Elements */
         .form-row {
             margin-bottom: 20px;
@@ -681,6 +685,11 @@
                                 <span class="icon-chart"></span> Export Excel + Charts
                                 <span class="admin-badge">ADMIN</span>
                             </button>
+
+                            <button type="button" id="weightExportBtn" class="charts-btn">
+                                <span class="icon-weight"></span> Export Weight Report (Excel)
+                                <span class="admin-badge">ADMIN</span>
+                            </button>
                         }
 
                         <input type="hidden" id="exportAllData" name="exportAllData" value="false" />
@@ -747,6 +756,19 @@
                     const exportForm = document.getElementById('exportForm');
                     if (exportForm) {
                         exportForm.action = '/Analytics/ExportToExcelWithCharts';
+                        exportForm.submit();
+                        if (reportModal) reportModal.style.display = 'none';
+                    }
+                });
+            }
+
+            const weightExportBtn = document.getElementById('weightExportBtn');
+            if (weightExportBtn) {
+                weightExportBtn.addEventListener('click', function () {
+                    showLoadingIndicator('Weight Excel');
+                    const exportForm = document.getElementById('exportForm');
+                    if (exportForm) {
+                        exportForm.action = '/Export/ExportWeightToExcel';
                         exportForm.submit();
                         if (reportModal) reportModal.style.display = 'none';
                     }
