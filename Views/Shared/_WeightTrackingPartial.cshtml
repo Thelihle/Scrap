@@ -1,0 +1,283 @@
+﻿@* _WeightTrackingPartial.cshtml *@
+
+<Style>
+
+    .weight-tracking-section {
+        margin-bottom: 2rem;
+        padding-bottom: 2rem;
+        border-bottom: 1px solid rgba(0, 255, 242, 0.1);
+    }
+
+    .weight-container {
+        margin: 20px 0;
+    }
+
+    .weight-input-group {
+        margin-bottom: 20px;
+        padding: 15px;
+        border: 1px solid var(--neon);
+        border-radius: 4px;
+        background: var(--card-bg);
+    }
+
+    .weight-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--card-bg);
+        margin-top: 1rem;
+    }
+
+        .weight-table th,
+        .weight-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(0, 255, 242, 0.1);
+        }
+
+        .weight-table th {
+            background: rgba(0, 255, 242, 0.1);
+            font-weight: normal;
+            color: var(--neon);
+        }
+
+    .toggle-button {
+        background: transparent;
+        border: 1px solid var(--neon);
+        color: var(--neon);
+        padding: 4px 8px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+        .toggle-button:hover {
+            background: rgba(0, 255, 242, 0.1);
+        }
+
+    .filter-input {
+        background: transparent;
+        border: 1px solid var(--neon);
+        color: var(--neon);
+        padding: 8px;
+        border-radius: 4px;
+    }
+
+        .filter-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(0, 255, 242, 0.2);
+        }
+
+    .error-message {
+        margin-top: 10px;
+        padding: 8px;
+        border-radius: 4px;
+        color: #ff4444;
+        background: rgba(255, 68, 68, 0.1);
+    }
+
+</Style>
+<div class="weight-management">
+    <h2>Weight Management</h2>
+
+    <div class="input-group">
+        <input type="number"
+               id="weightInput"
+               class="form-input"
+               placeholder="Enter weight (kg)"
+               step="0.01" />
+        <button id="addWeightBtn" class="btn-outline">Add Weight</button>
+        <button id="toggleWeightHistory" class="btn-outline">Show Weight History</button>
+    </div>
+
+    <div id="weightError" class="error-message hidden"></div>
+
+    <div id="weightHistorySection" class="hidden">
+        <div id="totalWeightDisplay" class="font-bold mb-2"></div>
+        <table id="weightHistoryTable" class="data-table">
+            <thead>
+                <tr>
+                    <th>Weight (kg)</th>
+                    <th>Date Added</th>
+                    <th>Added By</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+        <script>
+
+    // Weight Tracking Module
+    const weightTracker = {
+        initialize() {
+            this.setupEventListeners();
+            this.loadWeightHistory();
+        },
+
+        setupEventListeners() {
+            const addWeightBtn = document.getElementById('addWeightBtn');
+            const weightInput = document.getElementById('weightInput');
+            const toggleBtn = document.querySelector('.toggle-button');
+
+            if (addWeightBtn) {
+                addWeightBtn.addEventListener('click', () => this.addWeight());
+            }
+
+            if (weightInput) {
+                weightInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        this.addWeight();
+                    }
+                });
+            }
+
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', () => this.toggleWeightHistory());
+            }
+        },
+
+        async loadWeightHistory() {
+            try {
+                const department = document.querySelector('[data-current-department]')?.textContent;
+                const line = document.querySelector('[data-current-line]')?.textContent;
+                const shift = document.querySelector('[data-current-shift]')?.textContent;
+
+                if (!department || !line || !shift) {
+                    throw new Error('Location information not found');
+                }
+
+                const response = await fetch(`/ScrapApproval/GetLocationWeights?department=${encodeURIComponent(department)}&line=${encodeURIComponent(line)}&shift=${encodeURIComponent(shift)}`);
+
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+                const data = await response.json();
+                if (!data.success) throw new Error(data.message || 'Failed to load weights');
+
+                this.updateWeightDisplay(data.weights);
+            } catch (error) {
+                console.error('Error loading weight history:', error);
+                this.showError('Error loading weight history');
+            }
+        },
+
+        async addWeight() {
+            const weightInput = document.getElementById('weightInput');
+            if (!weightInput) return;
+
+            const weight = parseFloat(weightInput.value);
+            if (isNaN(weight) || weight <= 0) {
+                this.showError('Please enter a valid weight');
+                return;
+            }
+
+            try {
+                const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+                if (!token) throw new Error('Security token not found');
+
+                const department = document.querySelector('[data-current-department]')?.textContent;
+                const line = document.querySelector('[data-current-line]')?.textContent;
+                const shift = document.querySelector('[data-current-shift]')?.textContent;
+
+                if (!department || !line || !shift) {
+                    throw new Error('Location information not found');
+                }
+
+                const response = await fetch('/ScrapApproval/AddLocationWeight', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': token
+                    },
+                    body: JSON.stringify({
+                        department,
+                        line,
+                        shift,
+                        weight
+                    })
+                });
+
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+                const result = await response.json();
+                if (!result.success) throw new Error(result.message || 'Failed to add weight');
+
+                weightInput.value = '';
+                this.hideError();
+                await this.loadWeightHistory();
+            } catch (error) {
+                console.error('Error adding weight:', error);
+                this.showError(error.message);
+            }
+        },
+
+        updateWeightDisplay(weights) {
+            const tbody = document.getElementById('weightHistoryBody');
+            if (!tbody) return;
+
+            if (!weights?.length) {
+                tbody.innerHTML = '<tr><td colspan="3" class="text-center">No weight history found</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = weights.map(weight => `
+                <tr>
+                    <td>${weight.weight.toFixed(2)} kg</td>
+                    <td>${this.formatDate(weight.modifiedAt)}</td>
+                    <td>${weight.modifiedBy || 'Unknown'}</td>
+                </tr>
+            `).join('');
+        },
+
+        formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleString('en-ZA', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: false
+                });
+            } catch {
+                return 'N/A';
+            }
+        },
+
+        toggleWeightHistory() {
+            const historySection = document.getElementById('weightHistorySection');
+            const toggleText = document.getElementById('toggleText');
+
+            if (historySection && toggleText) {
+                const isVisible = historySection.style.display !== 'none';
+                historySection.style.display = isVisible ? 'none' : 'block';
+                toggleText.textContent = isVisible ? 'Show History' : 'Hide History';
+            }
+        },
+
+        showError(message) {
+            const errorDiv = document.getElementById('weightError');
+            if (errorDiv) {
+                errorDiv.textContent = message;
+                errorDiv.style.display = 'block';
+            }
+        },
+
+        hideError() {
+            const errorDiv = document.getElementById('weightError');
+            if (errorDiv) {
+                errorDiv.style.display = 'none';
+            }
+        }
+    };
+
+    // Initialize the weight tracker when the DOM is loaded
+    document.addEventListener('DOMContentLoaded', () => {
+        weightTracker.initialize();
+    });
+
+        </script>

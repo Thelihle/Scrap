@@ -1,0 +1,1065 @@
+﻿@model UserRegistrationRequest
+@{
+    Layout = null;  // Set to null since we have a complete HTML document
+    ViewData["Title"] = "HESTO Harnesses - User Registration";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>HESTO Harnesses - User Registration</title>
+    
+    <!-- LOCAL RESOURCES ONLY - No external dependencies -->
+    <link rel="stylesheet" href="~/css/bootstrap-icons.min.css" asp-append-version="true">
+    
+    <style>
+        /* HESTO Harnesses Corporate Registration Theme */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            font-family: -webkit-system-font, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            padding: 15px;
+            width: 100%;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Corporate background pattern */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 25% 25%, rgba(66, 139, 202, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, rgba(40, 167, 69, 0.08) 0%, transparent 50%);
+            z-index: -1;
+        }
+
+        .registration-form {
+            background: rgba(255, 255, 255, 0.98);
+            border: 1px solid #dee2e6;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            padding: 30px;
+            width: 100%;
+            max-width: 700px;
+            position: relative;
+            margin: auto;
+        }
+
+        /* Subtle border glow effect */
+        .registration-form::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #428bca, #28a745, #428bca);
+            border-radius: 14px;
+            z-index: -1;
+            opacity: 0.1;
+        }
+
+        /* Back button */
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            color: #495057;
+            text-decoration: none;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+
+        .back-btn:hover {
+            background: #e9ecef;
+            border-color: #428bca;
+            color: #428bca;
+            transform: translateX(-3px);
+            box-shadow: 0 2px 8px rgba(66, 139, 202, 0.2);
+        }
+
+        .back-btn i {
+            font-size: 16px;
+        }
+
+        /* Brand container */
+        .brand-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .logo-background {
+            background-color: white;
+            padding: 15px 30px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 10px rgba(66, 139, 202, 0.15);
+            border: 1px solid rgba(66, 139, 202, 0.2);
+        }
+
+        .logo-image {
+            height: 55px;
+            width: auto;
+        }
+
+        .tagline {
+            color: #495057;
+            font-size: 16px;
+            text-align: center;
+            letter-spacing: 1px;
+            font-weight: 500;
+        }
+
+        /* Main heading */
+        h2 {
+            color: #1a1a2e;
+            font-size: clamp(22px, 5vw, 32px);
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Form sections */
+        .form-section {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e9ecef;
+            position: relative;
+        }
+
+        .form-section:last-of-type {
+            border-bottom: none;
+            margin-bottom: 20px;
+        }
+
+        .form-section-title {
+            color: #428bca;
+            font-size: 18px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-section-title::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: #428bca;
+            border-radius: 2px;
+        }
+
+        /* Input fields */
+        .input-field {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .input-field.hidden {
+            display: none;
+        }
+
+        .input-field label {
+            display: block;
+            color: #495057;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Form controls */
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            background: #fff;
+            border: 2px solid #dee2e6;
+            color: #495057;
+            outline: none;
+            transition: all 0.3s ease;
+            font-size: 16px;
+            border-radius: 6px;
+            font-family: inherit;
+        }
+
+        input:focus, select:focus {
+            border-color: #428bca;
+            box-shadow: 0 0 0 0.2rem rgba(66, 139, 202, 0.25);
+        }
+
+        select {
+            background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23495057'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+            background-position: right 12px center;
+            background-repeat: no-repeat;
+            padding-right: 40px;
+            cursor: pointer;
+        }
+
+        /* Form rows */
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @@media screen and (max-width: 600px) {
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+        }
+
+        /* Input hints */
+        .input-hint {
+            color: #6c757d;
+            font-size: 0.85em;
+            margin-top: 5px;
+            opacity: 0.9;
+            font-style: italic;
+        }
+
+        /* Buttons */
+        .submit-btn {
+            width: 100%;
+            padding: 15px;
+            background: #428bca;
+            border: 2px solid #428bca;
+            color: #fff;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 16px;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+            border-radius: 6px;
+        }
+
+        .submit-btn:hover {
+            background: #3071a9;
+            border-color: #3071a9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(66, 139, 202, 0.3);
+        }
+
+        .submit-btn:disabled {
+            background: #6c757d;
+            border-color: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Messages */
+        .error-message {
+            color: #dc3545;
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            padding: 12px 15px;
+            margin: 15px 0;
+            border-radius: 6px;
+            text-align: center;
+            display: none;
+            font-weight: 500;
+        }
+
+        .success-message {
+            color: #155724;
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            padding: 12px 15px;
+            margin: 15px 0;
+            border-radius: 6px;
+            text-align: center;
+            display: none;
+            font-weight: 500;
+        }
+
+        .field-validation-error {
+            color: #dc3545;
+            font-size: 0.85em;
+            margin-top: 5px;
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @@keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Modal Styles - Corporate Theme */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .modal-content {
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            padding: 40px;
+            width: 90%;
+            max-width: 520px;
+            position: relative;
+            animation: scaleIn 0.3s ease-out;
+        }
+
+        .modal-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .modal-title {
+            color: #1a1a2e;
+            font-size: 28px;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+        }
+
+        .modal-body {
+            color: #495057;
+            margin-bottom: 25px;
+            line-height: 1.6;
+            text-align: center;
+        }
+
+        .modal-body p {
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+
+        .modal-footer {
+            text-align: center;
+        }
+
+        .close-btn {
+            padding: 12px 30px;
+            background: #428bca;
+            border: 2px solid #428bca;
+            color: #fff;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border-radius: 6px;
+        }
+
+        .close-btn:hover {
+            background: #3071a9;
+            border-color: #3071a9;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(66, 139, 202, 0.3);
+        }
+
+        .success-icon {
+            font-size: 64px;
+            color: #28a745;
+            margin-bottom: 15px;
+            display: block;
+            text-align: center;
+        }
+
+        .user-details {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            text-align: left;
+        }
+
+        .user-details div {
+            margin-bottom: 10px;
+            font-size: 15px;
+        }
+
+        .user-details strong {
+            margin-right: 10px;
+            color: #428bca;
+            font-weight: 600;
+        }
+
+        @@keyframes scaleIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .divider {
+            height: 2px;
+            background: linear-gradient(to right, rgba(66, 139, 202, 0), rgba(66, 139, 202, 0.5), rgba(66, 139, 202, 0));
+            margin: 20px 0;
+        }
+
+        /* Mobile responsiveness */
+        @@media (max-width: 768px) {
+            .registration-form {
+                padding: 20px;
+                margin: 10px;
+            }
+
+            .modal-content {
+                padding: 25px;
+                margin: 20px;
+            }
+
+            .form-section-title {
+                font-size: 16px;
+            }
+
+            h2 {
+                font-size: 24px;
+            }
+        }
+
+        /* Professional loading state */
+        .loading {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(66, 139, 202, 0.2), transparent);
+            animation: loading 1.5s infinite;
+        }
+
+        @@keyframes loading {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        /* Enhanced focus states for accessibility */
+        input:focus, select:focus, button:focus {
+            outline: 2px solid #428bca;
+            outline-offset: 2px;
+        }
+
+        /* Subtle animations */
+        .input-field {
+            transition: transform 0.2s ease;
+        }
+
+        .input-field:focus-within {
+            transform: translateY(-1px);
+        }
+
+        /* Professional gradient accents */
+        .form-section::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 2px;
+            background: linear-gradient(45deg, #428bca, #28a745);
+        }
+    </style>
+</head>
+<body>
+    <div class="registration-form">
+        <a href="/Account/Login" class="back-btn">
+            <i class="bi bi-arrow-left"></i> Back to Login
+        </a>
+
+        <div class="brand-container">
+            <div class="logo-background">
+                <img src="/images/hesto-logo.jpeg" alt="HESTO HARNESSES" class="logo-image">
+            </div>
+            <div class="tagline">User Registration Portal</div>
+        </div>
+
+        <h2>New User Registration</h2>
+
+        <form id="registrationForm" method="post">
+            <!-- Anti-forgery token would go here -->
+            
+            <div class="form-section">
+                <div class="form-section-title">
+                    <i class="bi bi-person-fill"></i>
+                    User Information
+                </div>
+                
+                <div class="form-row">
+                    <div class="input-field">
+                        <label for="ClockNumber">Clock Number</label>
+                        <input type="text" id="ClockNumber" name="ClockNumber" required maxlength="6" pattern="[0-9]*">
+                        <div class="input-hint">Enter your 4-6 digit employee clock number</div>
+                    </div>
+
+                    <div class="input-field">
+                        <label for="UserType">User Type</label>
+                        <select id="UserType" name="UserType" required>
+                            <option value="">Select User Type</option>
+                            <option value="Operator">Operator</option>
+                            <option value="TeamLeader">Team Leader</option>
+                            <option value="GroupLeader">Group Leader</option>
+                            <option value="Manager">Manager</option>
+                            <option value="SeniorManager">Senior Manager</option>
+                            <option value="Admin">Admin</option>
+
+                            <optgroup label="─── Engineering Roles ───">
+                                <option value="Engineer">Engineer</option>
+                                <option value="Engineering TeamLeader">Engineering Team Leader</option>
+                                <option value="Engineering GroupLeader">Engineering Group Leader</option>
+                                <option value="Engineering Manager">Engineering Manager</option>
+                            </optgroup>
+
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="input-field">
+                        <label for="Name">First Name</label>
+                        <input type="text" id="Name" name="Name" required>
+                    </div>
+
+                    <div class="input-field">
+                        <label for="Surname">Surname</label>
+                        <input type="text" id="Surname" name="Surname" required>
+                    </div>
+                </div>
+
+                <div class="input-field" id="emailField">
+                    <label for="Email">Company Email</label>
+                    <input type="email" id="Email" name="Email">
+                    <div class="input-hint" id="emailHint" style="display: none;">
+                        Format: firstname.lastname@hesto.co.za
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="form-section-title">
+                    <i class="bi bi-building"></i>
+                    Department Information
+                </div>
+                
+                <div class="form-row">
+                    <div class="input-field">
+                        <label for="DepartmentId">Department</label>
+                        <select id="DepartmentId" name="DepartmentId" required>
+                            <option value="">Select Department</option>
+                        </select>
+                    </div>
+
+                    <!-- ── ZONE selector — PRE-ASSEMBLY FORD only ── -->
+                    <div class="input-field hidden" id="zoneField">
+                        <label for="ZoneSelect">Zone</label>
+                        <!-- NEW — populated by loadZones() -->
+                        <select id="ZoneSelect">
+                            <option value="">Select Zone</option>
+                        </select>
+                        <div class="input-hint">Select your zone within Pre-Assembly FORD</div>
+                    </div>
+                    <!-- Hidden field carries the zone name to the server -->
+                    <div style="display:none;">
+                        <input type="hidden" id="HiddenZoneName" name="ZoneName" value="" />
+                    </div>
+
+                    <div class="input-field" id="lineIdField">
+                        <label for="LineId">Area / Line</label>
+                        <select id="LineId" name="LineId" required>
+                            <option value="">Select Line</option>
+                        </select>
+                    </div>
+
+                    <!-- Add this after the LineId input-field div -->
+                    <div class="input-field hidden" id="machineNumberField">
+                        <label for="MachineNumber">Machine Number</label>
+                        <select id="MachineNumber" name="MachineNumber">
+                            <option value="">Select Machine Number</option>
+                        </select>
+                        <div class="input-hint">Select the specific machine for this area</div>
+                    </div>
+
+                </div>
+
+                <div class="input-field">
+                    <label for="Shift">Work Shift</label>
+                    <select id="Shift" name="Shift" required>
+                        <option value="">Select Shift</option>
+                        <option value="A">A Shift</option>
+                        <option value="B">B Shift</option>
+                        <option value="Straight">Straight</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="error-message"></div>
+            <div class="success-message"></div>
+
+            <button type="submit" class="submit-btn">
+                Submit Registration Request
+            </button>
+        </form>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <i class="bi bi-check-circle-fill success-icon"></i>
+                <h3 class="modal-title">Registration Successful</h3>
+            </div>
+            <div class="modal-body">
+                <p>Your registration request has been submitted successfully and will be reviewed by management.</p>
+                
+                <div class="divider"></div>
+                
+                <div class="user-details" id="userDetails">
+                    <!-- User details will be populated by JavaScript -->
+                </div>
+                
+                <p><strong>What happens next?</strong></p>
+                <p>Management will review your request and you'll receive login credentials once approved. This process typically takes a few hours during business hours.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="close-btn" id="closeModal">Return to Login</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOCAL JQUERY - No external dependencies -->
+    <script src="~/js/jquery.min.js" asp-append-version="true"></script>
+
+    <script>
+        $(document).ready(function() {
+            console.log('HESTO Registration Form initialized');
+
+            const emailRequiredRoles = ['GroupLeader', 'Manager', 'SeniorManager', 'Admin',
+                'Engineering GroupLeader', 'Engineering Manager', 'Engineering SeniorManager', 'Engineering Admin'];
+
+            const managementRoles = ['TeamLeader', 'GroupLeader', 'Manager', 'SeniorManager', 'Admin',
+                'Engineering TeamLeader', 'Engineering GroupLeader',
+                'Engineering Manager', 'Engineering SeniorManager', 'Engineering Admin'];
+
+            const companyDomain = 'hesto.co.za';
+
+
+
+        let isPreAssemblyDept     = false;  // any PRE-ASSEMBLY dept (FORD, ISUZU, CSUV, TSAM)
+        let isFordPreAssemblyDept = false;  // only FORD (needs zone picker)
+
+            // ── helpers ────────────────────────────────────────────────────
+            function updateEmailVisibility() {
+                const userType = $('#UserType').val();
+                if (emailRequiredRoles.includes(userType)) {
+                    $('#emailField').show();
+                    $('#Email').attr('required', 'required');
+                    $('#emailHint').show();
+                    const name = $('#Name').val().toLowerCase();
+                    const surname = $('#Surname').val().toLowerCase();
+                    if (name && surname) {
+                        $('#Email').val(name + '.' + surname + '@@' + companyDomain);
+                    }
+                } else {
+                    $('#emailField').hide();
+                    $('#Email').removeAttr('required').val('');
+                    $('#emailHint').hide();
+                }
+            }
+
+            function updateLineRequirements() {
+                const userType = $('#UserType').val();
+                const isLineOptional = managementRoles.includes(userType);
+                const lineSelect = $('#LineId');
+                $('#LineId').closest('.input-field').find('label')
+                    .text(isLineOptional ? 'Production Line (Optional)' : 'Production Line');
+                isLineOptional ? lineSelect.removeAttr('required') : lineSelect.attr('required', 'required');
+            }
+
+        function showMachineNumbers(lineName) {
+            const machineField = $('#machineNumberField');
+            const machineSelect = $('#MachineNumber');
+
+            machineSelect.empty().append('<option value="">Select Machine Number</option>');
+            machineField.addClass('hidden');
+            machineSelect.removeAttr('required');
+
+            if (!isPreAssemblyDept || !lineName) return;
+
+            const departmentName = $('#DepartmentId option:selected').text();
+
+            $.get('/Operator/GetMachinesByDepartmentLine', { department: departmentName, line: lineName })
+                .done(function(data) {
+                    if (!data.success || !data.data || data.data.length === 0) {
+                        // No machines defined for this line — leave field hidden
+                        return;
+                    }
+                    data.data.forEach(function(m) {
+                        machineSelect.append($('<option>', { value: m, text: m }));
+                    });
+                    machineField.removeClass('hidden');
+                    machineSelect.attr('required', 'required');
+                })
+                .fail(function() {
+                    console.error('Error loading machines for', departmentName, lineName);
+                });
+        }
+
+        function loadDepartments() {
+            $.get('/Account/GetDepartmentsDirect', function (response) {
+                if (!response.success) return;
+
+                const sel = $('#DepartmentId');
+                sel.empty().append('<option value="">Select Department</option>');
+
+                // Preserve the order the server sent them in (already sorted by
+                // Category, DepartmentName in the controller above)
+                let currentGroup = null;
+                let $optgroup = null;
+
+                response.departments.forEach(function (dept) {
+                    const group = dept.category || 'OTHER';
+                    if (group !== currentGroup) {
+                        $optgroup = $('<optgroup>', { label: '── ' + group + ' ──' });
+                        sel.append($optgroup);
+                        currentGroup = group;
+                    }
+                    $optgroup.append($('<option>', { value: dept.id, text: dept.name }));
+                });
+            });
+        }
+
+        function loadLines(departmentId, lineType, parentZone) {
+            if (!departmentId) return;
+            $.get('/Account/GetLinesByDepartment', {
+                id: departmentId,
+                userType: $('#UserType').val(),
+                lineType: lineType || '',
+                parentZone: parentZone || ''
+            }, function (response) {
+                const sel = $('#LineId');
+                sel.empty().append('<option value="">Select Line</option>');
+                if (response.success) {
+                    response.results.forEach(function (line) {
+                        sel.append($('<option>', { value: line.id, text: line.text }));
+                    });
+                }
+                $('#machineNumberField').addClass('hidden');
+                $('#MachineNumber').removeAttr('required')
+                    .empty().append('<option value="">Select Machine Number</option>');
+            });
+        }
+
+            function showSuccessModal(userData) {
+                let html = '';
+                for (const key in userData) {
+                    if (userData[key]) html += `<div><strong>${key}:</strong> ${userData[key]}</div>`;
+                }
+                $('#userDetails').html(html);
+                $('#successModal').show();
+            }
+
+            // ── event handlers ─────────────────────────────────────────────
+
+            $('#ClockNumber').on('input', function() {
+                let v = $(this).val().replace(/[^0-9]/g, '');
+                if (v.length > 6) v = v.substring(0, 6);
+                $(this).val(v);
+            });
+
+            $('#UserType').on('change', function() {
+                const ut = $(this).val().toLowerCase();
+                const isAdmin = ['admin','seniormanager','engineering admin','engineering seniormanager'].includes(ut);
+
+                if (isAdmin) {
+                    $('#Surname').removeAttr('required');
+                    if (!$('.surname-hint').length) {
+                        $('<div class="input-hint surname-hint">Surname is optional for Admin users</div>')
+                            .insertAfter($('#Surname'));
+                    } else { $('.surname-hint').show(); }
+                    $('label[for="Surname"]').text('Surname (Optional)');
+                } else {
+                    $('#Surname').attr('required','required');
+                    $('.surname-hint').hide();
+                    $('label[for="Surname"]').text('Surname');
+                }
+
+                updateEmailVisibility();
+                updateLineRequirements();
+                const deptId = $('#DepartmentId').val();
+                if (deptId) loadLines(deptId);
+            });
+
+        $('#DepartmentId').on('change', function () {
+            const departmentId = $(this).val();
+            const selectedText = $(this).find('option:selected').text().toUpperCase().trim();
+
+            isPreAssemblyDept     = selectedText.includes('PRE-ASSEMBLY');
+            isFordPreAssemblyDept = selectedText === 'PRE-ASSEMBLY FORD';
+
+            $('#zoneField').addClass('hidden');
+            $('#ZoneSelect').removeAttr('required').val('');
+            $('#HiddenZoneName').val('');
+            $('#LineId').empty().append('<option value="">Select Area</option>');
+            $('#lineIdField').removeClass('hidden');
+            $('#machineNumberField').addClass('hidden');
+            $('#MachineNumber').removeAttr('required')
+                .empty().append('<option value="">Select Machine Number</option>');
+
+            if (isFordPreAssemblyDept) {
+                $('#zoneField').removeClass('hidden');
+                $('#ZoneSelect').attr('required', 'required');
+                loadZones(departmentId);                 // ✅ DB-driven, includes Battery now
+
+            } else if (isPreAssemblyDept) {
+                loadLines(departmentId);                 // unchanged — no Zone rows to filter for these depts
+
+            } else if (departmentId) {
+                loadLines(departmentId);
+            }
+
+            updateLineRequirements();
+        });
+
+                function populatePreAssemblyAreas() {
+            const sel = $('#LineId');
+            sel.empty().append('<option value="">Select Area</option>');
+            PRE_ASSEMBLY_AREAS.forEach(function(area) {
+                sel.append($('<option>', { value: area, text: area }));
+            });
+            sel.prop('disabled', false);
+            $('#machineNumberField').addClass('hidden');
+            $('#MachineNumber').removeAttr('required')
+                .empty().append('<option value="">Select Machine Number</option>');
+            $('#HiddenLineName').val('');
+        }
+
+        const PRE_ASSEMBLY_AREAS = [
+            'Komax', 'Manual', 'Battery', 'Twisting', 'WrapShield',
+            'Bonders', 'Shielded', 'Sleeves',
+            'Internal Logistics', 'Moulding', 'Combimeter'
+        ];
+
+            // Zone change — PRE-ASSEMBLY FORD only
+        $('#ZoneSelect').on('change', function () {
+            const zoneText = $(this).val();
+            $('#HiddenZoneName').val(zoneText);
+
+            $('#LineId').empty().append('<option value="">Select Line</option>');
+            $('#machineNumberField').addClass('hidden');
+            $('#MachineNumber').removeAttr('required')
+                .empty().append('<option value="">Select Machine Number</option>');
+
+            if (!zoneText) return;
+
+            // ✅ Battery is a normal zone now — just with its own area list
+            $('#lineIdField').removeClass('hidden');
+            $('#LineId').attr('required', 'required');
+
+            if (zoneText === 'Battery') {
+                loadLines($('#DepartmentId').val(), 'Area', 'Battery');   // ✅ parentZone = Battery
+            } else {
+                loadLines($('#DepartmentId').val(), 'Area');               // shared pool, unchanged
+            }
+        });
+
+            $('#LineId').on('change', function() {
+                const lineName = $(this).find('option:selected').text().trim();
+                showMachineNumbers(lineName);
+            });
+
+            $('#Name, #Surname').on('input', function() {
+                $(this).val($(this).val().replace(/[0-9]/g, ''));
+                const userType = $('#UserType').val();
+                if (emailRequiredRoles.includes(userType)) {
+                    const name = $('#Name').val().toLowerCase();
+                    const surname = $('#Surname').val().toLowerCase();
+                    if (name && surname) {
+                        $('#Email').val(name + '.' + surname + '@@' + companyDomain);
+                    }
+                }
+            });
+
+            $('#ClockNumber').on('blur', function() {
+                const clockNumber = $(this).val();
+                if (!clockNumber) return;
+                $.get('/Account/CheckDuplicateRegistration', { clockNumber }, function(response) {
+                    if (response.isDuplicate) {
+                        $('.error-message')
+                            .text('A user or pending registration request already exists for this clock number.')
+                            .show();
+                        $('.submit-btn').prop('disabled', true);
+                    } else {
+                        $('.error-message').hide();
+                        $('.submit-btn').prop('disabled', false);
+                    }
+                });
+            });
+
+        function loadZones(departmentId) {
+            const $zone = $('#ZoneSelect');
+            $zone.empty().append('<option value="">Loading...</option>').prop('disabled', true);
+
+            $.get('/Account/GetLinesByDepartment', {
+                id: departmentId,
+                userType: $('#UserType').val(),
+                lineType: 'Zone'
+            }, function (response) {
+                $zone.empty().append('<option value="">Select Zone</option>');
+                if (response.success) {
+                    response.results.forEach(function (z) {
+                        if (z.text === 'Engineering Scrap') return;   // Zone-typed for grouping, not user-selectable here
+                        $zone.append($('<option>', { value: z.text, text: z.text }));
+                    });
+                }
+                $zone.prop('disabled', false);
+            });
+        }
+
+            $('#registrationForm').on('submit', function(e) {
+                e.preventDefault();
+                $('.error-message, .success-message').hide();
+
+                const clockNumber = $('#ClockNumber').val();
+                if (!clockNumber) { $('.error-message').text('Please enter a clock number').show(); return; }
+                if (!/^[0-9]{1,6}$/.test(clockNumber)) { $('.error-message').text('Clock Number must contain only numbers (1-6 digits)').show(); return; }
+                if (!$('#UserType').val()) { $('.error-message').text('Please select a user type').show(); return; }
+                if (!$('#Name').val()) { $('.error-message').text('Please enter your first name').show(); return; }
+                if (!$('#DepartmentId').val()) { $('.error-message').text('Please select a department').show(); return; }
+                if (!$('#Shift').val()) { $('.error-message').text('Please select a shift').show(); return; }
+
+                const userType = $('#UserType').val();
+
+                if (emailRequiredRoles.includes(userType)) {
+                    const email = $('#Email').val();
+                    if (!email || !email.endsWith('@@' + companyDomain)) {
+                        $('.error-message').text('Valid company email is required for this role').show();
+                        return;
+                    }
+                }
+
+                if (!managementRoles.includes(userType) && !$('#LineId').val()) {
+                    $('.error-message').text('Please select a production line').show();
+                    return;
+                }
+
+                // Machine number required for TSAM when a line is selected
+                // Zone required for PRE-ASSEMBLY FORD
+                if (isFordPreAssemblyDept && !$('#ZoneSelect').val()) {
+                    $('.error-message').text('Please select a zone for Pre-Assembly FORD').show();
+                    return;
+                }
+
+                // Machine number required for all pre-assembly when an area is selected
+                if (isPreAssemblyDept && $('#LineId').val()
+                    && $('#machineNumberField').is(':visible') && !$('#MachineNumber').val()) {
+                    $('.error-message').text('Please select a machine number for Pre-Assembly').show();
+                    return;
+                }
+
+                const $btn = $(this).find('button[type="submit"]');
+                const originalText = $btn.text();
+                $btn.prop('disabled', true).text('Processing...').addClass('loading');
+
+                $.ajax({
+                    url: '/Account/Register',
+                    method: 'POST',
+                    data: new FormData(this),
+                    processData: false,
+                    contentType: false,
+                    success: function(response) {
+                        if (response.success) {
+                    const _lineText    = $('#LineId option:selected').text();
+                    const _zoneText    = $('#ZoneSelect').val();
+                    const _displayLine = (isFordPreAssemblyDept && _zoneText)
+                        ? (_zoneText === _lineText ? _zoneText : `${_zoneText} - ${_lineText}`)
+                        : _lineText || 'N/A';
+
+                        showSuccessModal({
+                            'Clock Number': $('#ClockNumber').val(),
+                            'Name': $('#Name').val() + ' ' + $('#Surname').val(),
+                            'User Type': $('#UserType option:selected').text(),
+                            'Department': $('#DepartmentId option:selected').text(),
+                            'Zone': _zoneText || 'N/A',
+                            'Line': _displayLine,
+                            'Machine': $('#MachineNumber').val() || 'N/A',
+                            'Shift': $('#Shift option:selected').text()
+                        });
+                        } else {
+                            $('.error-message').text(response.message || 'Registration failed').show();
+                            $btn.prop('disabled', false).text(originalText).removeClass('loading');
+                        }
+                    },
+                    error: function() {
+                        $('.error-message').text('An error occurred during registration. Please try again.').show();
+                        $btn.prop('disabled', false).text(originalText).removeClass('loading');
+                    }
+                });
+            });
+
+            $('#closeModal').on('click', function() {
+                $('#successModal').hide();
+                window.location.href = '/Account/Login';
+            });
+
+            $(document).on('keydown', function(e) {
+                if (e.keyCode === 27 && $('#successModal').is(':visible')) {
+                    $('#successModal').hide();
+                    window.location.href = '/Account/Login';
+                }
+            });
+
+            // ── init ───────────────────────────────────────────────────────
+            loadDepartments();
+            updateEmailVisibility();
+            updateLineRequirements();
+        });
+    </script>
+</body>
+</html>

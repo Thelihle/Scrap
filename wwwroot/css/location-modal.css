@@ -1,0 +1,193 @@
+﻿/* location-modal.css */
+
+/* Modal Base */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Modal Content */
+.modal-content {
+    background: rgba(0, 21, 20, 0.95);
+    border: 2px solid #00fffc;
+    box-shadow: 0 0 30px #00fffc;
+    padding: 2rem;
+    width: 90%;
+    max-width: 500px;
+    border-radius: 4px;
+    position: relative;
+    animation: modalFadeIn 0.3s ease;
+}
+
+    /* Modal Title */
+    .modal-content h2 {
+        color: #00fffc;
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+        text-align: center;
+        text-shadow: 0 0 10px #00fffc;
+    }
+
+/* Form Groups */
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+    .form-group label {
+        display: block;
+        color: #00fffc;
+        margin-bottom: 0.5rem;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+    }
+
+.form-input {
+    width: 100%;
+    padding: 0.75rem;
+    background: rgba(0, 15, 14, 0.95);
+    border: 2px solid #00a4a2;
+    color: #00fffc;
+    border-radius: 4px;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+    .form-input:focus {
+        border-color: #00fffc;
+        box-shadow: 0 0 15px #00fffc;
+    }
+
+/* Select Input Specific Styling */
+select.form-input {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2300fffc' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.75rem center;
+    background-size: 1em;
+    padding-right: 2.5rem;
+}
+
+    select.form-input:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+/* Button Group */
+.button-group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+    .button-group button {
+        flex: 1;
+        padding: 0.75rem;
+        border: 2px solid;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: transparent;
+    }
+
+/* Submit Button */
+.btn-submit {
+    border-color: #00fffc;
+    color: #00fffc;
+}
+
+    .btn-submit:hover {
+        background: rgba(0, 255, 252, 0.1);
+        box-shadow: 0 0 15px #00fffc;
+    }
+
+/* Cancel Button */
+.btn-cancel {
+    border-color: #ff3333;
+    color: #ff3333;
+}
+
+    .btn-cancel:hover {
+        background: rgba(255, 0, 0, 0.1);
+        box-shadow: 0 0 15px #ff3333;
+    }
+
+/* Error Message */
+.error-message {
+    color: #ff4444;
+    background: rgba(255, 68, 68, 0.1);
+    border: 1px solid #ff4444;
+    padding: 0.75rem;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    display: none;
+    animation: fadeIn 0.3s ease;
+    border-radius: 4px;
+}
+
+/* Loading Spinner */
+.spinner {
+    display: none;
+}
+
+    .spinner i {
+        animation: spin 1s linear infinite;
+    }
+
+/* Animations */
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 640px) {
+    .modal-content {
+        width: 95%;
+        padding: 1.5rem;
+    }
+
+    .button-group {
+        flex-direction: column;
+    }
+
+        .button-group button {
+            width: 100%;
+        }
+}

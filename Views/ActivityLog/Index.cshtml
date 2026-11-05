@@ -1,0 +1,45 @@
+﻿@model IEnumerable<ActivityLogViewModel>
+
+@{
+    ViewData["Title"] = "Activity Logs";
+}
+
+<div class="container-fluid">
+    <h2>Activity Logs</h2>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Date/Time</th>
+                            <th>User</th>
+                            <th>Action</th>
+                            <th>Details</th>
+                            <th>Status</th>
+                            <th>IP Address</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var log in Model)
+                        {
+                            <tr>
+                                <td>@log.CreatedAt.ToString("yyyy-MM-dd HH:mm:ss")</td>
+                                <td>@log.ClockNumber</td>
+                                <td>@log.ActionType</td>
+                                <td>@log.ActionDetails</td>
+                                <td>
+                                    <span class="badge @(log.Status == "Success" ? "bg-success" : "bg-danger")">
+                                        @log.Status
+                                    </span>
+                                </td>
+                                <td>@log.IPAddress</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

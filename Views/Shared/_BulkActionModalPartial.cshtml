@@ -1,0 +1,38 @@
+﻿@* /Views/Shared/_BulkActionModalPartial.cshtml *@
+
+<div id="statusModal" class="modal">
+    <div class="setup-container">
+        <div class="setup-box">
+            <h1 class="setup-title" id="statusTitle">Bulk Action</h1>
+            <p class="setup-subtitle">Confirm your action</p>
+
+            <form id="statusForm">
+                @Html.AntiForgeryToken()
+                <div class="validation-message"></div>
+
+                <div class="form-group">
+                    <label for="approvalPassword">Your Password</label>
+                    <input type="password" id="approvalPassword" class="form-control" required
+                           placeholder="Enter your password" />
+                </div>
+
+                <div id="reasonSection" class="form-group" style="display: none;">
+                    <label for="rejectionReason">Reason</label>
+                    <textarea id="rejectionReason" class="form-control" rows="3"
+                              placeholder="Enter reason for rejection"></textarea>
+                </div>
+
+                <div class="selected-items-summary">
+                    <p>Selected Items: <span id="selectedCount">0</span></p>
+                </div>
+
+                <button type="submit" class="save-button">
+                    <span class="button-text">Confirm</span>
+                    <div class="spinner-border spinner-border-sm d-none" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>

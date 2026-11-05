@@ -1,31 +1,97 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
-
 	<PropertyGroup>
 		<TargetFramework>net7.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<LangVersion>11.0</LangVersion>
+		<PreserveCompilationContext>true</PreserveCompilationContext>
+		<MvcRazorCompileOnPublish>true</MvcRazorCompileOnPublish>
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="ClosedXML" Version="0.105.0-rc" />
+		<PackageReference Include="DinkToPdf" Version="1.0.8" />
+		<PackageReference Include="EPPlus" Version="4.5.3.3" />
+		<PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.2.0" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.1" />
+		<PackageReference Include="Microsoft.Extensions.FileProviders.Physical" Version="6.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging" Version="7.0.0" />
 		<PackageReference Include="Dapper" Version="2.1.28" />
+		<PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="7.0.14" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.14" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.14">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.14" />
+		<PackageReference Include="Microsoft.Web.LibraryManager.Build" Version="2.1.175" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+		<PackageReference Include="QuestPDF" Version="2026.5.0" />
+		<PackageReference Include="Serilog.Enrichers.Environment" Version="3.0.1" />
+		<PackageReference Include="Serilog.Enrichers.Process" Version="3.0.0" />
+		<PackageReference Include="Serilog.Enrichers.Thread" Version="4.0.0" />
+		<PackageReference Include="Serilog.Extensions.Logging" Version="7.0.0" />
+		<PackageReference Include="Serilog.Sinks.Console" Version="4.1.0" />
+		<PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="7.0.14" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="7.0.14">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="7.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="7.0.0" />
 		<PackageReference Include="System.Data.SqlClient" Version="4.8.6" />
 		<PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="7.0.15" />
 		<PackageReference Include="Serilog.AspNetCore" Version="7.0.0" />
 		<PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+		<PackageReference Include="xunit" Version="2.9.2" />
+		<PackageReference Include="xunit.runner.visualstudio" Version="3.0.0-pre.49">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
 	</ItemGroup>
 
+	
+	
+	<!-- Instead of explicitly including files, let's ensure they're preserved when publishing -->
 	<ItemGroup>
-		<None Include="wwwroot\**">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</None>
+		<None Include="wwwroot\**" CopyToPublishDirectory="PreserveNewest" />
+		<None Include="Views\**" CopyToPublishDirectory="PreserveNewest" />
 	</ItemGroup>
-
 	<ItemGroup>
-	  <Folder Include="Views\GroupLeader\" />
-	  <Folder Include="Views\Manager\" />
-	  <Folder Include="Views\Admin\" />
-	  <Folder Include="Views\SeniorManager\" />
+	  <Content Remove="Views\Account\TestClaims.cshtml" />
+	  <Content Remove="Views\Operator\DirectEntry.cshtml" />
+	  <Content Remove="Views\ScannerDevice\Details.cshtml" />
+	  <Content Remove="Views\ScannerDevice\Edit.cshtml" />
+	  <Content Remove="Views\ScannerDevice\Index.cshtml" />
+	  <Content Remove="Views\Scanner\RoleSelection.cshtml" />
+	  <Content Remove="Views\Scanner\ScannerError.cshtml" />
+	  <Content Remove="Views\ScrapApproval\AdminWeightDashboard.cshtml" />
+	  <Content Remove="Views\ScrapApproval\DeviceManagement.cshtml" />
+	  <Content Remove="Views\Shared\_ScannerLayout.cshtml" />
+	  <Content Remove="wwwroot\css\bootstrap-icons.css" />
+	  <Content Remove="wwwroot\css\bootstrap-icons.min.css" />
+	  <Content Remove="wwwroot\css\bootstrap.min.css" />
+	  <Content Remove="wwwroot\debug.html" />
+	  <Content Remove="wwwroot\js\chart.min.js" />
+	  <Content Remove="wwwroot\js\copy-password.js" />
+	  <Content Remove="wwwroot\js\dashboard-fixes.js" />
+	  <Content Remove="wwwroot\js\enhanced-weight-management.js" />
+	  <Content Remove="wwwroot\js\EntryResetButton.js" />
+	  <Content Remove="wwwroot\js\form-persistence.js" />
+	  <Content Remove="wwwroot\js\jquery-3.6.0.min.js" />
+	  <Content Remove="wwwroot\js\jquery.min.js" />
+	  <Content Remove="wwwroot\js\modal-fixes.js" />
+	  <Content Remove="wwwroot\js\moment.min.js" />
+	  <Content Remove="wwwroot\js\senior-manager-fix.js" />
+	  <Content Remove="wwwroot\js\teamleader-buttons-fix.js" />
 	</ItemGroup>
 
+		<ItemGroup>
+			<Reference Include="BomProcessing.Library">
+				<HintPath>Lib\BomProcessingLibrary.dll</HintPath>
+				<Private>true</Private>
+			</Reference>
+		</ItemGroup>
+	
 </Project>

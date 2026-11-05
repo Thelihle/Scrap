@@ -1,0 +1,295 @@
+﻿@model SCP_Control.Models.ScannerRoleSelectionViewModel
+
+@{
+    ViewData["Title"] = "Scanner Authentication";
+    Layout = "_ScannerLayout"; // We'll create a simplified layout for scanners
+    var scanner = ViewBag.Scanner as SCP_Control.Models.ScannerDevice;
+}
+
+<style>
+    /* Scanner-optimized styles */
+    .scanner-container {
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        min-height: 100vh;
+        padding: 20px;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .scanner-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        max-width: 600px;
+        margin: 0 auto;
+        backdrop-filter: blur(10px);
+    }
+
+    .scanner-header {
+        text-align: center;
+        margin-bottom: 30px;
+        color: #2c3e50;
+    }
+
+    .scanner-device-info {
+        background: #f8f9fa;
+        border-left: 5px solid #007bff;
+        padding: 15px;
+        margin-bottom: 25px;
+        border-radius: 5px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-control {
+        height: 50px;
+        font-size: 18px;
+        border-radius: 10px;
+        border: 2px solid #ddd;
+        padding: 0 15px;
+    }
+
+        .form-control:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+        }
+
+    .btn-scanner {
+        height: 60px;
+        font-size: 18px;
+        font-weight: bold;
+        border-radius: 15px;
+        margin: 10px 5px;
+        min-width: 200px;
+        transition: all 0.3s;
+    }
+
+        .btn-scanner:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+    .quick-access {
+        background: #28a745;
+        border: none;
+        color: white;
+    }
+
+        .quick-access:hover {
+            background: #218838;
+            color: white;
+        }
+
+    .auth-form {
+        border-top: 2px solid #eee;
+        padding-top: 25px;
+        margin-top: 25px;
+    }
+
+    .scanner-footer {
+        text-align: center;
+        margin-top: 30px;
+        color: #6c757d;
+        font-size: 14px;
+    }
+
+    .alert-info {
+        border-left: 5px solid #17a2b8;
+        border-radius: 10px;
+    }
+
+    @media (max-width: 768px) {
+        .scanner-card
+
+    {
+        margin: 10px;
+        padding: 20px;
+    }
+
+    .btn-scanner {
+        min-width: 150px;
+        margin: 5px 2px;
+    }
+
+    }
+</style>
+
+<div class="scanner-container">
+    <div class="scanner-card">
+        <div class="scanner-header">
+            <h2><i class="fas fa-barcode"></i> SCP Scanner Access</h2>
+            <p class="text-muted mb-0">Choose your access method</p>
+        </div>
+
+        @if (scanner != null)
+        {
+            <div class="scanner-device-info">
+                <h5><i class="fas fa-desktop"></i> @scanner.DeviceName</h5>
+                <p class="mb-1"><strong>Location:</strong> @(scanner.Location ?? "Not specified")</p>
+                <p class="mb-0"><strong>Department:</strong> @(scanner.Department ?? "Not specified")</p>
+            </div>
+        }
+
+        @if (Model.ShowQuickOperatorAccess)
+        {
+            <div class="text-center mb-4">
+                <h4 class="text-success"><i class="fas fa-flash"></i> Quick Access</h4>
+                <p class="text-muted">For operator tasks only - no login required</p>
+                <button type="button" class="btn btn-scanner quick-access" onclick="quickOperatorAccess()">
+                    <i class="fas fa-play-circle"></i> START AS OPERATOR
+                </button>
+            </div>
+        }
+
+        <div class="auth-form">
+            <h4 class="text-primary text-center mb-4">
+                <i class="fas fa-user-shield"></i> Full Authentication
+            </h4>
+            <p class="text-center text-muted mb-4">
+                For approvers, managers, and full system access
+            </p>
+
+            <form asp-action="Authenticate" method="post" id="authForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="ScannerDeviceId" />
+                <input type="hidden" asp-for="ReturnUrl" />
+                <input type="hidden" asp-for="ScannerDeviceName" />
+                <input type="hidden" asp-for="ScannerLocation" />
+
+                <div class="form-group">
+                    <label asp-for="ClockNumber" class="form-label">
+                        <i class="fas fa-id-badge"></i> Clock Number
+                    </label>
+                    <input asp-for="ClockNumber" class="form-control" placeholder="Enter your clock number"
+                           autocomplete="username" maxlength="20" />
+                    <span asp-validation-for="ClockNumber" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label asp-for="Password" class="form-label">
+                        <i class="fas fa-lock"></i> Password
+                    </label>
+                    <input asp-for="Password" type="password" class="form-control" placeholder="Enter your password"
+                           autocomplete="current-password" />
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+
+                <div class="text-center">
+                    <button type="submit" class="btn btn-primary btn-scanner" id="loginBtn">
+                        <i class="fas fa-sign-in-alt"></i> <span id="loginBtnText">AUTHENTICATE</span>
+                    </button>
+                </div>
+
+                @if (ViewData.ModelState.ErrorCount > 0)
+                {
+                    <div class="alert alert-danger mt-3">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                        {
+                            <div>@error.ErrorMessage</div>
+                        }
+                    </div>
+                }
+            </form>
+        </div>
+
+        <div class="scanner-footer">
+            <p><i class="fas fa-info-circle"></i> Your access level will be determined automatically based on your role</p>
+            <p><strong>Scanner IP:</strong> @Context.Connection.RemoteIpAddress</p>
+            @if (scanner != null)
+            {
+                <p><strong>Device ID:</strong> SCP-@scanner.Id | <strong>Last Access:</strong> @(scanner.LastAccessDate?.ToString("MMM dd, HH:mm") ?? "Never")</p>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        function quickOperatorAccess() {
+            // Show loading
+            const btn = event.target;
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> CONNECTING...';
+            btn.disabled = true;
+
+            $.post('/Scanner/QuickOperatorAccess', {
+                scannerId: @Model.ScannerDeviceId,
+                __RequestVerificationToken: $('[name=__RequestVerificationToken]').val()
+            })
+            .done(function(data) {
+                if (data.success) {
+                    btn.innerHTML = '<i class="fas fa-check"></i> SUCCESS!';
+                    btn.classList.remove('quick-access');
+                    btn.classList.add('btn-success');
+
+                    setTimeout(() => {
+                        window.location.href = data.redirectUrl;
+                    }, 1000);
+                } else {
+                    btn.innerHTML = originalHtml;
+                    btn.disabled = false;
+                    alert('Error: ' + data.message);
+                }
+            })
+            .fail(function() {
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+                alert('Connection error. Please try authentication method.');
+            });
+        }
+
+        // Form submission handling
+        $('#authForm').on('submit', function() {
+            const btn = $('#loginBtn');
+            const btnText = $('#loginBtnText');
+
+            btn.prop('disabled', true);
+            btnText.html('<i class="fas fa-spinner fa-spin"></i> AUTHENTICATING...');
+
+            // Re-enable after 10 seconds if no response (fallback)
+            setTimeout(() => {
+                btn.prop('disabled', false);
+                btnText.html('AUTHENTICATE');
+            }, 10000);
+        });
+
+        // Auto-focus on clock number input
+        $(document).ready(function() {
+            $('#ClockNumber').focus();
+
+            // Enter key navigation
+            $('#ClockNumber').keypress(function(e) {
+                if (e.which == 13) {
+                    $('#Password').focus();
+                }
+            });
+        });
+
+        // Show current time for scanner users
+        function updateTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-US', {
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            // Update time display if element exists
+            const timeElement = document.querySelector('.current-time');
+            if (timeElement) {
+                timeElement.textContent = timeStr;
+            }
+        }
+
+        // Update time every minute
+        updateTime();
+        setInterval(updateTime, 60000);
+    </script>
+}

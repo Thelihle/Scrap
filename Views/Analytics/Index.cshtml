@@ -1,0 +1,1104 @@
+﻿@{
+    ViewData["Title"] = "Analytics Hub";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Scrap Management Analytics Hub</title>
+
+    <style>
+        /* Corporate Theme - Base Styles */
+        :root {
+            --primary-color: #428bca;
+            --primary-color-dark: #3071a9;
+            --secondary-color: #5bc0de;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --error-color: #dc3545;
+            --text-primary: #1a1a2e;
+            --text-secondary: #495057;
+            --text-muted: #6c757d;
+            --bg-light: #f8f9fa;
+            --border-color: #dee2e6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            color: var(--text-primary);
+            line-height: 1.6;
+            position: relative;
+        }
+
+            /* Corporate background pattern */
+            body::before {
+                content: '';
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-image: radial-gradient(circle at 25% 25%, rgba(66, 139, 202, 0.1) 0%, transparent 50%), radial-gradient(circle at 75% 75%, rgba(40, 167, 69, 0.1) 0%, transparent 50%);
+                z-index: -1;
+            }
+
+        /* Container */
+        .dashboard-container {
+            max-width: 1200px;
+            width: 95%;
+            margin: 20px auto;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+        }
+
+        /* Header Section */
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            margin-bottom: 25px;
+            border-bottom: 2px solid var(--primary-color);
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .dashboard-title {
+            color: var(--text-primary);
+            font-size: clamp(20px, 5vw, 28px);
+            margin: 0;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* Back Link */
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--bg-light);
+            border: 2px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 10px 18px;
+            border-radius: 4px;
+            text-decoration: none;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+            .back-link:hover {
+                background: #e9ecef;
+                border-color: var(--primary-color);
+                color: var(--primary-color);
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            }
+
+        /* Analytics Cards */
+        .analytics-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: clamp(20px, 3vw, 30px);
+            margin-top: 2rem;
+        }
+
+        .analytics-card {
+            background: #fff;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: clamp(20px, 3vw, 30px);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            min-height: 220px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+            .analytics-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 8px 20px rgba(66, 139, 202, 0.3);
+                border-color: var(--primary-color);
+            }
+
+        .card-icon {
+            font-size: clamp(2.5rem, 5vw, 3rem);
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+        }
+
+        .card-info h2 {
+            color: var(--text-primary);
+            font-size: clamp(18px, 3vw, 22px);
+            margin-bottom: 10px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .analytics-card:hover .card-info h2 {
+            color: var(--primary-color);
+            transform: translateX(5px);
+        }
+
+        .card-info p {
+            margin: 0;
+            color: var(--text-muted);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .card-action {
+            margin-top: auto;
+            text-align: right;
+            font-size: 1.8rem;
+            color: var(--primary-color);
+        }
+
+        /* Logout Button */
+        .logout-btn {
+            background: rgba(220, 53, 69, 0.1);
+            border: 2px solid var(--error-color);
+            color: var(--error-color);
+            padding: 10px 18px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 13px;
+        }
+
+            .logout-btn:hover {
+                background: rgba(220, 53, 69, 0.2);
+                transform: translateY(-1px);
+                box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+            }
+
+        #department optgroup {
+            font-weight: 700;
+            color: var(--primary-color);
+            background: var(--bg-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-size: 12px;
+        }
+
+            #department optgroup option {
+                font-weight: 500;
+                color: var(--text-secondary);
+                background: #fff;
+                text-transform: none;
+                font-size: 14px;
+            }
+        /* Modal */
+        #reportModal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: #fff;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            padding: clamp(25px, 5vw, 35px);
+            width: 100%;
+            max-width: 500px;
+            border-radius: 8px;
+            animation: modalFadeIn 0.3s ease;
+            margin: auto;
+        }
+
+        .modal-title {
+            color: var(--text-primary);
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: clamp(20px, 5vw, 24px);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+
+        .charts-btn {
+            width: 100%;
+            padding: 14px;
+            margin-bottom: 20px;
+            border: 2px solid var(--primary-color);
+            background: rgba(66, 139, 202, 0.1);
+            color: var(--primary-color);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+            .charts-btn:hover {
+                background: var(--primary-color);
+                color: #fff;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(66, 139, 202, 0.3);
+            }
+
+        .admin-badge {
+            background: var(--primary-color);
+            color: #fff;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 3px;
+            letter-spacing: 1px;
+        }
+
+        .icon-chart::before {
+            content: "📊";
+        }
+
+        /* Form Elements */
+        .form-row {
+            margin-bottom: 20px;
+        }
+
+            .form-row label {
+                display: block;
+                color: var(--text-secondary);
+                margin-bottom: 8px;
+                font-size: 14px;
+                font-weight: 600;
+            }
+
+            .form-row input,
+            .form-row select {
+                width: 100%;
+                padding: 12px 15px;
+                background: #fff;
+                border: 2px solid var(--border-color);
+                color: var(--text-secondary);
+                border-radius: 4px;
+                font-size: 16px;
+                transition: all 0.3s ease;
+                box-sizing: border-box;
+            }
+
+                .form-row input:focus,
+                .form-row select:focus {
+                    border-color: var(--primary-color);
+                    box-shadow: 0 0 0 0.2rem rgba(66, 139, 202, 0.25);
+                    outline: none;
+                }
+
+        /* Date Picker Styling */
+        input[type="date"] {
+            color-scheme: light;
+            position: relative;
+        }
+
+            input[type="date"]::-webkit-calendar-picker-indicator {
+                cursor: pointer;
+                opacity: 0.6;
+            }
+
+                input[type="date"]::-webkit-calendar-picker-indicator:hover {
+                    opacity: 1;
+                }
+
+        /* Date Range */
+        .date-range-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+            .date-range-row .form-row {
+                margin-bottom: 0;
+            }
+
+        /* Quick Date Buttons */
+        .quick-dates {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .quick-date-btn {
+            padding: 10px 12px;
+            background: var(--bg-light);
+            border: 2px solid var(--border-color);
+            color: var(--text-secondary);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            font-weight: 500;
+        }
+
+            .quick-date-btn:hover {
+                border-color: var(--primary-color);
+                background: #e3f2fd;
+                color: var(--primary-color);
+            }
+
+            .quick-date-btn.active {
+                background: var(--primary-color);
+                color: #fff;
+                border-color: var(--primary-color);
+            }
+
+        /* Button Row */
+        .button-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .excel-btn, .pdf-btn {
+            flex: 1;
+            padding: 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .excel-btn {
+            border: 2px solid var(--success-color);
+            background: rgba(40, 167, 69, 0.1);
+            color: var(--success-color);
+        }
+
+            .excel-btn:hover {
+                background: var(--success-color);
+                color: #fff;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+            }
+
+        .pdf-btn {
+            border: 2px solid var(--error-color);
+            background: rgba(220, 53, 69, 0.1);
+            color: var(--error-color);
+        }
+
+            .pdf-btn:hover {
+                background: var(--error-color);
+                color: #fff;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+            }
+
+        .cancel-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--bg-light);
+            border: 2px solid var(--border-color);
+            color: var(--text-secondary);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+            .cancel-btn:hover {
+                background: #e9ecef;
+                border-color: var(--text-secondary);
+                color: var(--text-primary);
+            }
+
+        /* Animation */
+        @@keyframes modalFadeIn {
+            from
+
+        {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        }
+
+        /* Icons using Unicode */
+        .icon-graph::before {
+            content: "📊";
+        }
+
+        .icon-file::before {
+            content: "📄";
+        }
+
+        .icon-arrow-left::before {
+            content: "←";
+        }
+
+        .icon-arrow-right::before {
+            content: "→";
+        }
+
+        .icon-logout::before {
+            content: "⏻";
+        }
+
+        .icon-excel::before {
+            content: "📈";
+        }
+
+        .icon-pdf::before {
+            content: "📋";
+        }
+
+        /* Media Queries */
+        @@media (max-width: 768px) {
+            .header-section
+
+        {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .button-row {
+            flex-direction: column;
+        }
+
+        .excel-btn, .pdf-btn {
+            width: 100%;
+        }
+
+        .analytics-cards {
+            grid-template-columns: 1fr;
+        }
+
+        .date-range-row {
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        .quick-dates {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .dashboard-container {
+            padding: 20px;
+        }
+
+        }
+
+        @@media (max-width: 480px) {
+            .dashboard-container
+
+        {
+            padding: 15px;
+            width: 100%;
+            margin: 10px 0;
+            border-radius: 0;
+        }
+
+        .modal-content {
+            padding: 20px;
+        }
+
+        .quick-dates {
+            grid-template-columns: 1fr;
+        }
+
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container analytics-hub">
+        <!-- Header Section -->
+        <div class="header-section">
+            <h1 class="dashboard-title">Scrap Management Analytics Hub</h1>
+            <form asp-controller="Account" asp-action="Logout" method="post" id="logoutForm">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="logout-btn">
+                    <span class="icon-logout"></span> Logout
+                </button>
+            </form>
+        </div>
+
+        <a href="@Url.Action("Dashboard", "ScrapApproval")" class="back-link">
+            <span class="icon-arrow-left"></span> Back to Approval Dashboard
+        </a>
+
+        <!-- Main Analytics Hub Cards -->
+        <div class="analytics-cards">
+            <div class="analytics-card" onclick="location.href='@Url.Action("Dashboard", "Analytics")'">
+                <div class="card-icon">
+                    <span class="icon-graph"></span>
+                </div>
+                <div class="card-info">
+                    <h2>Scrap Analytics Dashboard</h2>
+                    <p>Comprehensive overview of scrap data with interactive charts and reports</p>
+                </div>
+                <div class="card-action">
+                    <span class="icon-arrow-right"></span>
+                </div>
+            </div>
+
+            <div id="customReportsLink" class="analytics-card report-card">
+                <div class="card-icon">
+                    <span class="icon-file"></span>
+                </div>
+                <div class="card-info">
+                    <h2>Custom Reports</h2>
+                    <p>Generate custom reports with specific filters and export to Excel or PDF</p>
+                </div>
+                <div class="card-action">
+                    <span class="icon-arrow-right"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Report Modal -->
+        <div id="reportModal">
+            <div class="modal-content">
+                <h2 class="modal-title">Generate Custom Report</h2>
+
+                <form id="exportForm" method="post" action="@Url.Action("ExportToExcel", "Export")">
+                    @Html.AntiForgeryToken()
+
+                    <div class="form-row">
+                        <label>Date Range:</label>
+                        <div class="quick-dates">
+                            <button type="button" class="quick-date-btn" data-days="0">Today</button>
+                            <button type="button" class="quick-date-btn" data-days="1">Yesterday</button>
+                            <button type="button" class="quick-date-btn" data-days="7">Last 7 Days</button>
+                            <button type="button" class="quick-date-btn" data-days="30" data-active="true">Last 30 Days</button>
+                            <button type="button" class="quick-date-btn" data-days="90">Last 90 Days</button>
+                            <button type="button" class="quick-date-btn" data-days="custom">Custom</button>
+                        </div>
+                        <div class="date-range-row">
+                            <div class="form-row">
+                                <label for="startDate">Start Date:</label>
+                                <input type="date" id="startDate" name="startDate" />
+                            </div>
+                            <div class="form-row">
+                                <label for="endDate">End Date:</label>
+                                <input type="date" id="endDate" name="endDate" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <label for="department">Department:</label>
+                        <select id="department" name="department">
+                            <option value="All Departments">All Departments</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row" id="zoneRow" style="display:none;">
+                        <label for="zone">Zone:</label>
+                        <select id="zone">
+                            <option value="">Select Zone / All Zones</option>
+                            <!-- populated dynamically by loadZonesForDepartment() -->
+                        </select>
+                    </div>
+
+                    <div class="form-row">
+                        <label for="line">Line / Area:</label>
+                        <select id="line" name="line">
+                            <option value="All Lines">All Lines</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row">
+                        <label for="shift">Shift:</label>
+                        <select id="shift" name="shift">
+                            <option value="All Shifts">All Shifts</option>
+                            <option value="A">A</option>
+                            <option value="B">B</option>
+                            <option value="Straight">Straight</option>
+                        </select>
+                    </div>
+
+
+                        <div class="button-row">
+                            <button type="button" id="excelBtn" class="excel-btn">
+                                <span class="icon-excel"></span> Export to Excel
+                            </button>
+                            <button type="button" id="pdfBtn" class="pdf-btn">
+                                <span class="icon-pdf"></span> Export to PDF
+                            </button>
+                        </div>
+
+                        @if (ViewBag.IsAdmin == true)
+                        {
+                            <button type="button" id="excelChartsBtn" class="charts-btn">
+                                <span class="icon-chart"></span> Export Excel + Charts
+                                <span class="admin-badge">ADMIN</span>
+                            </button>
+                        }
+
+                        <input type="hidden" id="exportAllData" name="exportAllData" value="false" />
+
+                    <button type="button" id="cancelBtn" class="cancel-btn">
+                        Cancel
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeDateInputs();
+            loadExportDepartments();
+
+            const customReportsLink = document.getElementById('customReportsLink');
+            const reportModal = document.getElementById('reportModal');
+            const cancelBtn = document.getElementById('cancelBtn');
+            const excelChartsBtn = document.getElementById('excelChartsBtn');
+
+                    async function loadExportDepartments() {
+            const sel = document.getElementById('department');
+            if (!sel) return;
+
+            try {
+                const res = await fetch('/Account/GetDepartmentsDirect');
+                const data = await res.json();
+                if (!data.success) return;
+
+                const displayOrder = ['SCRAP CLERK', 'FINAL ASSEMBLY', 'PRE ASSEMBLY', 'REWORK', 'SUPPORT', 'OTHER'];
+                const grouped = {};
+                data.departments.forEach(d => {
+                    const cat = d.category || 'OTHER';
+                    (grouped[cat] = grouped[cat] || []).push(d);
+                });
+
+                displayOrder.forEach(cat => {
+                    const depts = grouped[cat];
+                    if (!depts || depts.length === 0) return;
+
+                    const optgroup = document.createElement('optgroup');
+                    optgroup.label = '── ' + cat + ' ──';
+                    depts
+                        .sort((a, b) => a.name.localeCompare(b.name))
+                        .forEach(d => {
+                            const opt = document.createElement('option');
+                            opt.value = d.name;
+                            opt.textContent = d.name;
+                            optgroup.appendChild(opt);
+                        });
+                    sel.appendChild(optgroup);
+                });
+            } catch (err) {
+                console.error('Error loading export departments', err);
+            }
+        }
+
+            if (excelChartsBtn) {
+                excelChartsBtn.addEventListener('click', function () {
+                    updateExportAllDataFlag();
+                    showLoadingIndicator('Excel + Charts');
+                    const exportForm = document.getElementById('exportForm');
+                    if (exportForm) {
+                        exportForm.action = '/Analytics/ExportToExcelWithCharts';
+                        exportForm.submit();
+                        if (reportModal) reportModal.style.display = 'none';
+                    }
+                });
+            }
+
+            if (customReportsLink && reportModal) {
+                customReportsLink.addEventListener('click', function() {
+                    reportModal.style.display = 'flex';
+                });
+            }
+
+            if (cancelBtn && reportModal) {
+                cancelBtn.addEventListener('click', function() {
+                    reportModal.style.display = 'none';
+                });
+            }
+
+            window.addEventListener('click', function(event) {
+                if (reportModal && event.target === reportModal) {
+                    reportModal.style.display = 'none';
+                }
+            });
+
+            initializeQuickDates();
+
+
+
+            const excelBtn = document.getElementById('excelBtn');
+            if (excelBtn) {
+                excelBtn.addEventListener('click', function() {
+                    updateExportAllDataFlag();
+                    showLoadingIndicator('Excel');
+                    const exportForm = document.getElementById('exportForm');
+                    if (exportForm) {
+                        exportForm.action = '/Export/ExportToExcel';
+                        exportForm.submit();
+                        if (reportModal) reportModal.style.display = 'none';
+                    }
+                });
+            }
+
+            const pdfBtn = document.getElementById('pdfBtn');
+            if (pdfBtn) {
+                pdfBtn.addEventListener('click', function() {
+                    updateExportAllDataFlag();
+                    showLoadingIndicator('PDF');
+                    const exportForm = document.getElementById('exportForm');
+                    if (exportForm) {
+                        exportForm.action = '/Export/ExportToPdf';
+                        exportForm.submit();
+                        if (reportModal) reportModal.style.display = 'none';
+                    }
+                });
+            }
+        });
+
+        function initializeDateInputs() {
+            const today = new Date();
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(today.getDate() - 30);
+
+            const startDateInput = document.getElementById('startDate');
+            const endDateInput = document.getElementById('endDate');
+
+            if (startDateInput && endDateInput) {
+                startDateInput.value = formatDateForInput(thirtyDaysAgo);
+                endDateInput.value = formatDateForInput(today);
+            }
+        }
+
+        function initializeQuickDates() {
+            const quickDateButtons = document.querySelectorAll('.quick-date-btn');
+
+            quickDateButtons.forEach(button => {
+                if (button.dataset.active) {
+                    button.classList.add('active');
+                }
+
+                button.addEventListener('click', function() {
+                    const days = this.dataset.days;
+                    quickDateButtons.forEach(btn => btn.classList.remove('active'));
+
+                    if (days === 'custom') {
+                        this.classList.add('active');
+                        return;
+                    }
+
+                    this.classList.add('active');
+                    setQuickDateRange(parseInt(days));
+                });
+            });
+        }
+
+        function loadZonesForDepartment(department) {
+            zoneSelect.innerHTML = '<option value="">Loading...</option>';
+            zoneSelect.disabled = true;
+
+            fetch(`/Operator/GetLinesByDepartment?departmentName=${encodeURIComponent(department)}&lineType=Zone`)
+                .then(r => r.json())
+                .then(data => {
+                    zoneSelect.innerHTML = '<option value="">Select Zone / All Zones</option>';
+                    if (data && data.success && Array.isArray(data.lines)) {
+                        data.lines.forEach(z => {
+                            if (z.name === 'Engineering Scrap') return;   // ✅ NEW — not a real user-facing zone
+                            const opt = document.createElement('option');
+                            opt.value = z.name;
+                            opt.textContent = z.name;
+                            zoneSelect.appendChild(opt);
+                        });
+                    }
+                })
+                .catch(() => {
+                    zoneSelect.innerHTML = '<option value="">Error loading zones</option>';
+                })
+                .finally(() => { zoneSelect.disabled = false; });
+        }
+
+        function setQuickDateRange(days) {
+            const startDateInput = document.getElementById('startDate');
+            const endDateInput = document.getElementById('endDate');
+
+            if (!startDateInput || !endDateInput) return;
+
+            const today = new Date();
+            const startDate = new Date();
+
+            if (days === 0) {
+                startDate.setDate(today.getDate());
+            } else if (days === 1) {
+                startDate.setDate(today.getDate() - 1);
+                today.setDate(today.getDate() - 1);
+            } else {
+                startDate.setDate(today.getDate() - days);
+            }
+
+            startDateInput.value = formatDateForInput(startDate);
+            endDateInput.value = formatDateForInput(today);
+        }
+
+        function formatDateForInput(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+                const departmentSelect = document.getElementById('department');
+        const zoneSelect = document.getElementById('zone');
+        const zoneRow = document.getElementById('zoneRow');
+        const lineSelect = document.getElementById('line');
+
+        function isFordDept(dept) {
+            return (dept || '').toUpperCase() === 'PRE-ASSEMBLY FORD';
+        }
+
+        if (departmentSelect) {
+            departmentSelect.addEventListener('change', function() {
+                const dept = this.value;
+                lineSelect.innerHTML = '<option value="All Lines">All Lines</option>';
+                if (isFordDept(dept)) {
+                    zoneRow.style.display = 'block';
+                    loadZonesForDepartment(dept);
+                } else {
+                    zoneRow.style.display = 'none';
+                    zoneSelect.innerHTML = '<option value="">Select Zone / All Zones</option>';
+                    loadLinesByDepartment(dept);
+                }
+            });
+        }
+
+        if (zoneSelect) {
+            zoneSelect.addEventListener('change', function() {
+                loadAreasForZone(departmentSelect.value, this.value);
+            });
+        }
+
+        function loadLinesByDepartment(department) {
+            lineSelect.disabled = true;
+            while (lineSelect.options.length > 1) lineSelect.remove(1);
+
+            if (department === 'All Departments') {
+                lineSelect.disabled = false;
+                return;
+            }
+
+            if (isFordDept(department)) {
+                // Ford lines come from the Zone → Area cascade (loadAreasForZone),
+                // not this flat list. Leave on "All Lines" until a zone is picked.
+                lineSelect.disabled = false;
+                return;
+            }
+
+            const loadingOption = document.createElement('option');
+            loadingOption.text = "Loading lines...";
+            loadingOption.disabled = true;
+            lineSelect.add(loadingOption);
+
+            fetch(`/Operator/GetLinesByDepartment?departmentName=${encodeURIComponent(department)}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (lineSelect.options.length > 1) lineSelect.remove(lineSelect.options.length - 1);
+                    if (data && data.success && Array.isArray(data.lines)) {
+                        data.lines.forEach(l => {
+                            if (l.name === 'Engineering Scrap') return;
+                            const opt = document.createElement('option');
+                            opt.value = l.name;
+                            opt.textContent = l.name;
+                            lineSelect.add(opt);
+                        });
+                    }
+                })
+                .catch(() => {
+                    if (lineSelect.options.length > 1) lineSelect.remove(lineSelect.options.length - 1);
+                    const errOpt = document.createElement('option');
+                    errOpt.disabled = true;
+                    errOpt.textContent = "Error loading lines";
+                    lineSelect.add(errOpt);
+                })
+                .finally(() => { lineSelect.disabled = false; });
+        }
+
+        function loadAreasForZone(department, zone) {
+            lineSelect.disabled = true;
+            while (lineSelect.options.length > 1) lineSelect.remove(1);
+
+            if (!zone) {
+                // No specific zone chosen — "All Lines" means no Line filter at all,
+                // so every Ford zone/area is included.
+                lineSelect.disabled = false;
+                return;
+            }
+
+            const loadingOption = document.createElement('option');
+            loadingOption.text = "Loading areas...";
+            loadingOption.disabled = true;
+            lineSelect.add(loadingOption);
+
+            const params = new URLSearchParams({ departmentName: department, lineType: 'Area' });
+            if (zone === 'Battery') params.append('parentZone', 'Battery');
+
+            fetch(`/Operator/GetLinesByDepartment?${params}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (lineSelect.options.length > 1) lineSelect.remove(lineSelect.options.length - 1);
+
+                    // "Whole zone" option — matches TLs/GLs assigned to the bare zone,
+                    // same convention as GetScrapDataForUser's zone-tolerant matching.
+                    const wholeZoneOpt = document.createElement('option');
+                    wholeZoneOpt.value = zone;
+                    wholeZoneOpt.textContent = `${zone} (whole zone)`;
+                    lineSelect.add(wholeZoneOpt);
+
+                    if (data && data.success && Array.isArray(data.lines)) {
+                        data.lines.forEach(a => {
+                            const opt = document.createElement('option');
+                            opt.value = `${zone} - ${a.name}`;
+                            opt.textContent = a.name;
+                            lineSelect.add(opt);
+                        });
+                    }
+                })
+                .catch(() => {
+                    if (lineSelect.options.length > 1) lineSelect.remove(lineSelect.options.length - 1);
+                    const errOpt = document.createElement('option');
+                    errOpt.disabled = true;
+                    errOpt.textContent = "Error loading areas";
+                    lineSelect.add(errOpt);
+                })
+                .finally(() => { lineSelect.disabled = false; });
+        }
+
+        function updateExportAllDataFlag() {
+            const departmentSelect = document.getElementById('department');
+            const lineSelect = document.getElementById('line');
+            const shiftSelect = document.getElementById('shift');
+            const exportAllDataInput = document.getElementById('exportAllData');
+
+            if (departmentSelect && lineSelect && shiftSelect && exportAllDataInput) {
+                if (departmentSelect.value === 'All Departments' &&
+                    lineSelect.value === 'All Lines' &&
+                    shiftSelect.value === 'All Shifts') {
+                    exportAllDataInput.value = 'true';
+                    console.log("Setting exportAllData to true");
+                } else {
+                    exportAllDataInput.value = 'false';
+                    console.log("Setting exportAllData to false");
+                }
+            }
+        }
+
+        function showLoadingIndicator(exportType) {
+            if (document.getElementById('exportLoadingIndicator')) {
+                document.getElementById('exportLoadingIndicator').remove();
+            }
+
+            if (!document.getElementById('spinAnimation')) {
+                const styleEl = document.createElement('style');
+                styleEl.id = 'spinAnimation';
+                styleEl.textContent = '@@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }';
+                document.head.appendChild(styleEl);
+            }
+
+            const loadingIndicator = document.createElement('div');
+            loadingIndicator.id = 'exportLoadingIndicator';
+            loadingIndicator.style.position = 'fixed';
+            loadingIndicator.style.top = '0';
+            loadingIndicator.style.left = '0';
+            loadingIndicator.style.width = '100%';
+            loadingIndicator.style.height = '100%';
+            loadingIndicator.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+            loadingIndicator.style.display = 'flex';
+            loadingIndicator.style.justifyContent = 'center';
+            loadingIndicator.style.alignItems = 'center';
+            loadingIndicator.style.zIndex = '10001';
+
+            const content = document.createElement('div');
+            content.style.textAlign = 'center';
+            content.style.padding = '30px';
+            content.style.backgroundColor = '#fff';
+            content.style.border = '2px solid #428bca';
+            content.style.borderRadius = '8px';
+            content.style.boxShadow = '0 8px 32px rgba(0, 0, 0, 0.2)';
+
+            const spinner = document.createElement('div');
+            spinner.className = 'spinner';
+            spinner.style.border = '4px solid rgba(66, 139, 202, 0.3)';
+            spinner.style.borderRadius = '50%';
+            spinner.style.borderTop = '4px solid #428bca';
+            spinner.style.width = '40px';
+            spinner.style.height = '40px';
+            spinner.style.margin = '0 auto 15px';
+            spinner.style.animation = 'spin 1s linear infinite';
+
+            const message = document.createElement('p');
+            message.style.color = '#1a1a2e';
+            message.style.fontSize = '16px';
+            message.style.margin = '0';
+            message.style.fontWeight = '600';
+            message.textContent = `Generating ${exportType} report...`;
+
+            content.appendChild(spinner);
+            content.appendChild(message);
+            loadingIndicator.appendChild(content);
+            document.body.appendChild(loadingIndicator);
+
+            setTimeout(function() {
+                if (document.getElementById('exportLoadingIndicator')) {
+                    document.getElementById('exportLoadingIndicator').style.display = 'none';
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

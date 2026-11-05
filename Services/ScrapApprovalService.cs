@@ -1,102 +1,408 @@
-﻿using Dapper;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using System.Data;
+using Microsoft.Data.SqlClient;
+using System.Data.Common;
 using SCP_Control.Models;
+using SCP_Control.ViewModels;
+using SCP_Control.DbContext;
 using SCP_Control.Services.Interfaces;
-using System.Data.SqlClient;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using SCP_Control.Models.Common;
 
 namespace SCP_Control.Services
 {
-    public class ScrapApprovalService
+    public class ScrapApprovalService : IScrapApprovalService
     {
-        private readonly string _connectionString;
-        private readonly IEmailService _emailService;
-        private const string LogTemplate = "Processing approval for scrap {ScrapId}";
+        private readonly ApplicationDbContext _context;
+        private readonly ILogger<ScrapApprovalService> _logger;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        // Regular constructor instead of primary constructor
-        public ScrapApprovalService(IConfiguration configuration, IEmailService emailService)
+        public ScrapApprovalService(
+            ApplicationDbContext context,
+            ILogger<ScrapApprovalService> logger,
+            IHttpContextAccessor httpContextAccessor)
         {
-            _connectionString = configuration.GetConnectionString("DefaultConnection") ??
-                throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
-            _emailService = emailService;
+            _context = context;
+            _logger = logger;
+            _httpContextAccessor = httpContextAccessor;
         }
 
-        public async Task<IEnumerable<ScrapData>> GetScrapDataForApproval(
-            string userType,
-            string? department,
-            string? line,
-            string? shift)
+        public async Task<IEnumerable<string>> GetAllDepartments()
         {
-            using var connection = new SqlConnection(_connectionString);
-            var query = @"
-                SELECT * FROM ScrapData 
-                WHERE (@Department IS NULL OR Department = @Department)
-                AND (@Line IS NULL OR Line = @Line)
-                AND (@Shift IS NULL OR Shift = @Shift)";
+            return await _context.scpDepartment
+                .Where(d => d.IsActive)
+                .Select(d => d.DepartmentName)  // ❌ This causes duplicates
+                .OrderBy(d => d)
+                .ToListAsync();
+        }
 
-            switch (userType.ToLower())
+        public async Task<IEnumerable<DepartmentViewModel>> GetDepartmentsWithDetails()
+        {
+            return await _context.scpDepartment
+                .Where(d => d.IsActive)
+                .Select(d => new DepartmentViewModel
+                {
+                    DepartmentId = d.DepartmentId,
+                    DepartmentName = d.DepartmentName,
+                    Location = d.Location,
+                    Plant = d.Plant
+                })
+                .OrderBy(d => d.Plant)
+                .ThenBy(d => d.DepartmentName)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<string>> GetAllLines()
+        {
+            return await _context.scpLine
+                .Where(l => l.IsActive)
+                .Select(l => l.LineName)
+                .OrderBy(l => l)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<string>> GetLinesByDepartment(string department)
+        {
+            return await _context.scpLine
+                .Where(l => l.Department.DepartmentName == department && l.IsActive)
+                .Select(l => l.LineName)
+                .OrderBy(l => l)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<string>> GetDepartmentsByUser(string? username)
+        {
+            try
             {
-                case "teamleader":
-                    query += " AND Status = 'Submitted'";
-                    break;
-                case "groupleader":
-                    query += " AND TeamLeaderApproval = 'Approved'";
-                    break;
-                case "manager":
-                    query += " AND GroupLeaderApproval = 'Approved'";
-                    break;
-                case "seniormanager":
-                    query += " AND ManagerApproval = 'Approved'";
-                    break;
+                if (string.IsNullOrEmpty(username))
+                    return Enumerable.Empty<string>();
+
+                var user = await _context.Users
+                    .FirstOrDefaultAsync(u => u.ClockNumber == username && u.IsActive == true);
+
+                if (user == null)
+                    return Enumerable.Empty<string>();
+
+                // For TeamLeader and GroupLeader, return only their assigned department
+                if (user.UserType == "TeamLeader" || user.UserType == "GroupLeader")
+                {
+                    return new[] { user.Department ?? string.Empty };
+                }
+
+                // For Manager and above, return all active departments
+                return await _context.scpDepartment
+                    .Where(d => d.IsActive)
+                    .Select(d => d.DepartmentName)
+                    .OrderBy(d => d)
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting departments for user {Username}", username);
+                return Enumerable.Empty<string>();
+            }
+        }
+
+
+        public async Task<FilteredScrapDataModel> GetFilteredScrapData(
+           string department = "",
+           string line = "",
+           string shift = "",
+           string timeFrame = "",
+           DateTime? startDate = null,
+           DateTime? endDate = null)
+        {
+            try
+            {
+                var query = _context.ScrapData.AsQueryable();
+
+                // Apply filters
+                if (!string.IsNullOrEmpty(department))
+                    query = query.Where(s => s.Department == department);
+                if (!string.IsNullOrEmpty(line))
+                    query = query.Where(s => s.Line == line);
+                if (!string.IsNullOrEmpty(shift))
+                    query = query.Where(s => s.Shift == shift);
+
+                var items = await query
+                    .Select(s => new ScrapItemViewModel
+                    {
+                        ScrapId = s.ScrapId,
+                        PartNumber = s.PartNumber,
+                        Department = s.Department,
+                        Line = s.Line,
+                        Shift = s.Shift,
+                        Quantity = s.Quantity,
+                        ScrapReason = s.ScrapReason,
+                        Status = s.Status,
+                        ClockNumber = s.ClockNumber,
+                        SubmissionDate = s.CreatedAt,
+                        MaterialCost = 0
+                    })
+                    .ToListAsync();
+
+                // Get unique part numbers
+                var partNumbers = items.Select(i => i.PartNumber).Distinct().ToList();
+
+                // Get material costs using raw SQL
+                var materialCosts = new Dictionary<string, decimal>();
+                var partNumberList = string.Join(",", partNumbers.Select(p => $"'{p}'"));
+
+                using (var command = _context.Database.GetDbConnection().CreateCommand())
+                {
+                    command.CommandText = $@"
+                    SELECT StockCode, MaterialCost 
+                    FROM SysproCompanyB.dbo.InvMaster 
+                    WHERE StockCode IN ({partNumberList})";
+
+                    if (command.Connection.State != ConnectionState.Open)
+                        await command.Connection.OpenAsync();
+
+                    using var reader = await command.ExecuteReaderAsync();
+                    while (await reader.ReadAsync())
+                    {
+                        materialCosts[reader.GetString(0)] = reader.GetDecimal(1);
+                    }
+                }
+
+                // Calculate costs
+                decimal totalCost = 0;
+                foreach (var item in items)
+                {
+                    if (materialCosts.TryGetValue(item.PartNumber, out decimal cost))
+                    {
+                        item.MaterialCost = cost * item.Quantity;
+                        totalCost += item.MaterialCost;
+                    }
+                }
+
+                var groupedScrap = items
+                    .GroupBy(i => i.PartNumber)
+                    .Select(g => new ScrapGroupViewModel
+                    {
+                        PartNumber = g.Key,
+                        Items = g.ToList()
+                    })
+                    .ToList();
+
+                return new FilteredScrapDataModel
+                {
+                    GroupedScrap = groupedScrap,
+                    Items = items,
+                    TotalCount = items.Count,
+                    TotalWeight = items.Sum(i => i.WeightKg),
+                    TotalCost = totalCost,
+                    PendingApprovalCount = items.Count(i => i.Status == "Pending")
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting filtered scrap data");
+                throw;
+            }
+        }
+
+        public async Task<Dictionary<string, decimal>> GetMaterialCosts(List<string> partNumbers)
+        {
+            using var connection = _context.Database.GetDbConnection();
+            if (connection.State != ConnectionState.Open)
+                await connection.OpenAsync();
+
+            var partNumberList = string.Join(",", partNumbers.Select(p => $"'{p}'"));
+            using var command = connection.CreateCommand();
+            command.CommandText = $@"
+        SELECT StockCode, MaterialCost 
+        FROM SysproCompanyB.dbo.InvMaster 
+        WHERE StockCode IN ({partNumberList})";
+
+            var materialCosts = new Dictionary<string, decimal>();
+            using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                materialCosts[reader.GetString(0)] = reader.GetDecimal(1);
             }
 
-            return await connection.QueryAsync<ScrapData>(query,
-                new { Department = department, Line = line, Shift = shift });
+            return materialCosts;
         }
 
-        public async Task<bool> ApproveScrap(int scrapId, string userType, string decision, string reason)
+        private bool IsManagementRole(string? userType)
         {
-            using var connection = new SqlConnection(_connectionString);
-            var updateQuery = userType.ToLower() switch
+            if (string.IsNullOrEmpty(userType)) return false;
+
+            return userType.ToLower() switch
             {
-                "teamleader" => @"
-                    UPDATE ScrapData 
-                    SET TeamLeaderApproval = @Decision,
-                        TeamLeaderApprovalDate = @Now,
-                        TeamLeaderApprovalReason = @Reason,
-                        Status = CASE WHEN @Decision = 'Approved' THEN 'TeamLeaderApproved' ELSE 'Rejected' END
-                    WHERE ScrapId = @ScrapId",
-                "groupleader" => @"
-                    UPDATE ScrapData 
-                    SET GroupLeaderApproval = @Decision,
-                        GroupLeaderApprovalDate = @Now,
-                        GroupLeaderApprovalReason = @Reason,
-                        Status = CASE WHEN @Decision = 'Approved' THEN 'GroupLeaderApproved' ELSE 'Rejected' END
-                    WHERE ScrapId = @ScrapId",
-                _ => throw new ArgumentException("Invalid user type", nameof(userType))
+                "groupleader" => true,
+                "manager" => true,
+                "seniormanager" => true,
+                "admin" => true,
+                _ => false
             };
-
-            var result = await connection.ExecuteAsync(updateQuery,
-                new { ScrapId = scrapId, Decision = decision, Now = DateTime.UtcNow, Reason = reason });
-
-            if (result > 0 && decision == "Rejected")
-            {
-                await NotifyRejection(scrapId, userType, reason);
-            }
-
-            return result > 0;
         }
 
-        private async Task NotifyRejection(int scrapId, string userType, string reason)
+        public async Task<Result> UpdateScrapStatus(
+            int scrapId,
+            bool isApproved,
+            string reason,
+            string approverClockNumber)
         {
-            using var connection = new SqlConnection(_connectionString);
-            var scrap = await connection.QueryFirstOrDefaultAsync<ScrapData>(
-                "SELECT * FROM ScrapData WHERE ScrapId = @ScrapId",
-                new { ScrapId = scrapId });
-
-            if (scrap != null)
+            try
             {
-                var message = $"Scrap submission {scrapId} has been rejected by {userType}. Reason: {reason}";
-                await _emailService.SendEmail(scrap.Email ?? "", "Scrap Submission Rejected", message);
+                var scrap = await _context.ScrapData.FindAsync(scrapId);
+                if (scrap == null)
+                    return Result.CreateFailure("Scrap record not found");
+
+                scrap.Status = isApproved ? "Approved" : "Rejected";
+                scrap.ApprovedBy = approverClockNumber;
+                scrap.ApprovalDate = DateTime.UtcNow;
+                scrap.ApprovalReason = reason;
+                scrap.ModifiedAt = DateTime.UtcNow;
+                scrap.ModifiedBy = approverClockNumber;
+
+                await _context.SaveChangesAsync();
+                return Result.CreateSuccess("Status updated successfully");
             }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating scrap status");
+                return Result.CreateFailure("Error updating status");
+            }
+        }
+
+        public async Task<Result> BulkUpdateScrapStatus(
+    List<int> scrapIds,
+    bool isApproved,
+    string reason,
+    string approverClockNumber)
+        {
+            try
+            {
+                var scraps = await _context.ScrapData
+                    .Where(s => scrapIds.Contains(s.ScrapId))
+                    .ToListAsync();
+
+                if (!scraps.Any())
+                    return Result.CreateFailure("No scrap records found");
+
+                foreach (var scrap in scraps)
+                {
+                    scrap.Status = isApproved ? "Approved" : "Rejected";
+                    scrap.ApprovedBy = approverClockNumber;
+                    scrap.ApprovalDate = DateTime.UtcNow;
+                    scrap.ApprovalReason = reason;
+                    scrap.ModifiedAt = DateTime.UtcNow;
+                    scrap.ModifiedBy = approverClockNumber;
+                }
+
+                await _context.SaveChangesAsync();
+                return Result.CreateSuccess($"Successfully {(isApproved ? "approved" : "rejected")} {scraps.Count} items");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error performing bulk status update");
+                return Result.CreateFailure("Error updating statuses");
+            }
+        }
+
+        public async Task<IEnumerable<ViewModels.ScrapSummaryModel>> GetScrapDataByLocation(ViewModels.LocationDetails location)
+        {
+            return await _context.ScrapData
+                .Where(s =>
+                    (string.IsNullOrEmpty(location.Department) || s.Department == location.Department) &&
+                    (string.IsNullOrEmpty(location.Line) || s.Line == location.Line) &&
+                    (string.IsNullOrEmpty(location.Shift) || s.Shift == location.Shift))
+                .Select(s => new ViewModels.ScrapSummaryModel
+                {
+                    ScrapId = s.ScrapId,
+                    PartNumber = s.PartNumber,
+                    ClockNumber = s.ClockNumber,
+                    Department = s.Department,
+                    Line = s.Line,
+                    Shift = s.Shift,
+                    Quantity = s.Quantity,
+                    ScrapReason = s.ScrapReason ?? string.Empty,
+                    Status = s.Status,
+                    SubmissionDate = s.CreatedAt
+                })
+                .ToListAsync();
+        }
+
+       
+
+        public async Task<IEnumerable<ScrapSummaryModel>> GetScrapDataForApproval(
+            string department,
+            string line,
+            string shift)
+        {
+            return await _context.ScrapData
+                .Where(s =>
+                    s.Status == "Pending" &&
+                    (string.IsNullOrEmpty(department) || s.Department == department) &&
+                    (string.IsNullOrEmpty(line) || s.Line == line) &&
+                    (string.IsNullOrEmpty(shift) || s.Shift == shift))
+                .Select(s => new ScrapSummaryModel
+                {
+                    ScrapId = s.ScrapId,
+                    PartNumber = s.PartNumber,
+                    SubmittedClockNumber = s.ClockNumber,
+                    Department = s.Department,
+                    Line = s.Line,
+                    Shift = s.Shift,
+                    Quantity = s.Quantity,
+                    Status = s.Status,
+                    SubmissionDate = s.CreatedAt
+                })
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<PendingApprovalModel>> GetPendingApprovals(string department)
+        {
+            return await _context.ScrapData
+                .Where(s => s.Status == "Pending" && s.Department == department)
+                .Select(s => new PendingApprovalModel
+                {
+                    ScrapId = s.ScrapId,
+                    PartNumber = s.PartNumber,
+                    Department = s.Department,
+                    Line = s.Line,
+                    Shift = s.Shift,
+                    SubmissionDate = s.CreatedAt,
+                    Quantity = s.Quantity                   
+                })
+                .ToListAsync();
+        }
+
+        public async Task<Result> ProcessFirstApproval(
+            int scrapId,
+            bool isApproved,
+            string reason,
+            string approverClockNumber)
+        {
+            try
+            {
+                var scrap = await _context.ScrapData
+                    .FirstOrDefaultAsync(s => s.ScrapId == scrapId && s.Status == "Pending");
+
+                if (scrap == null)
+                    return Result.CreateFailure("Pending scrap record not found");
+
+                scrap.FirstApprovalStatus = isApproved ? "Approved" : "Rejected";
+                scrap.FirstApprovalBy = approverClockNumber;
+                scrap.FirstApprovalDate = DateTime.UtcNow;
+                scrap.FirstApprovalReason = reason;
+                scrap.ModifiedAt = DateTime.UtcNow;
+                scrap.ModifiedBy = approverClockNumber;
+
+                await _context.SaveChangesAsync();
+                return Result.CreateSuccess("First approval processed successfully");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing first approval");
+                return Result.CreateFailure("Error processing first approval");
+            }
+
+            
         }
     }
 }

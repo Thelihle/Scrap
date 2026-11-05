@@ -7,33 +7,21 @@ namespace SCP_Control.Controllers
         [Route("Error/{statusCode}")]
         public IActionResult HttpStatusCodeHandler(int statusCode)
         {
-            switch (statusCode)
+            var errorMessage = statusCode switch
             {
-                case 404:
-                    ViewBag.ErrorMessage = "Sorry, the resource you requested could not be found";
-                    ViewBag.ErrorTitle = "Page Not Found";
-                    ViewBag.ErrorCode = "404";
-                    break;
-                case 500:
-                    ViewBag.ErrorMessage = "An error occurred while processing your request";
-                    ViewBag.ErrorTitle = "Server Error";
-                    ViewBag.ErrorCode = "500";
-                    break;
-                default:
-                    ViewBag.ErrorMessage = "An error occurred while processing your request";
-                    ViewBag.ErrorTitle = "Error";
-                    ViewBag.ErrorCode = statusCode.ToString();
-                    break;
-            }
+                404 => "Page not found",
+                401 => "Unauthorized access",
+                _ => "An error occurred"
+            };
+
+            ViewData["ErrorMessage"] = errorMessage;
             return View("Error");
         }
 
-        [Route("Error/Network")]
-        public IActionResult NetworkError()
+        [Route("Error")]
+        public IActionResult Error()
         {
-            ViewBag.ErrorMessage = "Unable to connect to the server. Please check your network connection.";
-            ViewBag.ErrorTitle = "Network Error";
-            ViewBag.ErrorCode = "NET";
+            ViewData["ErrorMessage"] = "An unexpected error occurred";
             return View("Error");
         }
     }

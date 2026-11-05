@@ -1,137 +1,1078 @@
 ﻿@model OperatorDetailsViewModel
 @{
     ViewData["Title"] = "Operator Dashboard";
+    Layout = "_OperatorLayout";  // This layout doesn't exist
 }
 
-<div class="dashboard-container">
-    <div class="dashboard-header">
-        <h1 class="portal-title">Scrap Control Portal</h1>
-        <div class="user-details">
-            <div class="detail-item department">
-                <i class="bi bi-building"></i>
-                @Model.Department
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>HESTO Harnesses - Operator Dashboard</title>
+
+    <!-- LOCAL RESOURCES ONLY -->
+    <link rel="stylesheet" href="~/css/bootstrap-icons.min.css" asp-append-version="true">
+
+    <style>
+        /* HESTO Harnesses Operator Dashboard Corporate Theme */
+        :root {
+            --hesto-primary: #428bca;
+            --hesto-secondary: #28a745;
+            --hesto-accent: #17a2b8;
+            --hesto-warning: #ffc107;
+            --hesto-danger: #dc3545;
+            --hesto-success: #28a745;
+            --hesto-dark: #1a1a2e;
+            --hesto-light: #f8f9fa;
+            --hesto-white: #ffffff;
+            --hesto-gray: #6c757d;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            font-family: -webkit-system-font, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", Arial, sans-serif;
+            -webkit-text-size-adjust: 100%;
+            position: relative;
+        }
+
+            body::before {
+                content: '';
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-image: radial-gradient(circle at 25% 25%, rgba(66, 139, 202, 0.08) 0%, transparent 50%), radial-gradient(circle at 75% 75%, rgba(40, 167, 69, 0.08) 0%, transparent 50%);
+                z-index: -1;
+            }
+
+        .main-container {
+            max-width: 520px; /* was: max-width: 100%; */
+            margin: 0 auto;
+            padding: 15px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-header {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            padding: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+            .user-header::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 3px;
+                background: linear-gradient(45deg, var(--hesto-primary), var(--hesto-secondary));
+                border-radius: 8px 8px 0 0;
+            }
+
+        .user-info {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .info-item {
+            background: var(--hesto-light);
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 8px 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: var(--hesto-dark);
+            white-space: nowrap;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+            .info-item:hover {
+                background: #e3f2fd;
+                border-color: var(--hesto-primary);
+                transform: translateY(-1px);
+            }
+
+            .info-item i {
+                font-size: 16px;
+                color: var(--hesto-primary);
+            }
+
+        .logout-btn {
+            background: var(--hesto-danger);
+            border: 2px solid var(--hesto-danger);
+            color: var(--hesto-white);
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            white-space: nowrap;
+            min-width: fit-content;
+            transition: all 0.3s ease;
+        }
+
+            .logout-btn:hover {
+                background: #c82333;
+                border-color: #c82333;
+                transform: translateY(-1px);
+                box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+            }
+
+            .logout-btn:active {
+                transform: translateY(0);
+            }
+
+            .logout-btn i {
+                font-size: 16px;
+            }
+
+        form {
+            margin: 0;
+            padding: 0;
+        }
+
+
+
+
+
+            .content-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 4px;
+                background: linear-gradient(45deg, var(--hesto-primary), var(--hesto-secondary));
+                transform: scaleX(0);
+                transition: transform 0.3s ease;
+            }
+
+            .content-card:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+                border-color: var(--hesto-primary);
+            }
+
+                .content-card:hover::before {
+                    transform: scaleX(1);
+                }
+
+            .content-card:active {
+                transform: translateY(-1px);
+            }
+
+
+
+        .content-card:hover .card-icon {
+            color: var(--hesto-secondary);
+            transform: scale(1.1);
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            width: 100%;
+            max-width: 480px;
+            margin: 0 auto;
+            padding-top: 10px;
+            flex: 1;
+        }
+
+        .content-card {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #dee2e6;
+            border-radius: 12px;
+            padding: 16px 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            min-height: 100px;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-icon {
+            font-size: 24px;
+            color: var(--hesto-primary);
+            margin-bottom: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .content-card h3 {
+            color: var(--hesto-dark);
+            font-size: 13px;
+            margin: 0 0 4px 0;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-align: center;
+        }
+
+        .content-card p {
+            color: var(--hesto-gray);
+            font-size: 11px;
+            margin: 0;
+            line-height: 1.3;
+            text-align: center;
+            font-weight: 400;
+        }
+
+
+
+        /* ── Direct Entry Link ───────────────────────────── */
+
+
+
+            .direct-entry-link i {
+                font-size: 13px;
+            }
+
+
+
+        .direct-entry-link:hover {
+            background: rgba(66, 139, 202, 0.15);
+            border-color: rgba(66, 139, 202, 0.5);
+            color: #90caff;
+            text-decoration: none;
+            box-shadow: 0 0 12px rgba(66, 139, 202, 0.18);
+        }
+
+            .direct-entry-link:hover .direct-entry-arrow {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        /* ────────────────────────────────────────────────── */
+
+        @@media screen and (max-width: 480px) {
+            .main-container {
+                padding: 10px;
+            }
+
+            .user-header {
+                padding: 10px 12px;
+                margin-bottom: 10px;
+            }
+
+            .user-info {
+                justify-content: center;
+            }
+
+            .info-item {
+                font-size: 11px;
+                padding: 5px 8px;
+            }
+
+            .logout-btn {
+                padding: 8px 14px;
+                font-size: 12px;
+            }
+
+            .content-grid {
+                max-width: 100%;
+                gap: 10px;
+                padding-top: 8px;
+            }
+
+            .content-card {
+                padding: 12px 10px;
+                min-height: 88px;
+            }
+
+            .card-icon {
+                font-size: 20px;
+                margin-bottom: 6px;
+            }
+
+            .content-card h3 {
+                font-size: 12px;
+                margin-bottom: 3px;
+            }
+
+            .content-card p {
+                font-size: 10px;
+                line-height: 1.25;
+            }
+        }
+
+        #locationBanner {
+            padding: 12px 14px !important;
+        }
+
+
+
+
+
+
+
+
+
+
+        @@media (hover: none) and (pointer: coarse) {
+            .info-item, .logout-btn, .content-card {
+                min-height: 44px;
+            }
+        }
+
+        @@media screen and (max-width: 768px) {
+            .page-title {
+                font-size: 20px;
+            }
+
+            .logout-btn {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+        }
+
+        @@media screen and (max-height: 480px) and (orientation: landscape) {
+            .content-grid {
+                flex-direction: row;
+                max-width: 100%;
+                justify-content: center;
+            }
+
+            .content-card {
+                min-height: 100px;
+                flex: 1;
+                max-width: 200px;
+            }
+        }
+
+        /* AI Assistant styles (unchanged) */
+        .operator-ai-assistant {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+            .operator-ai-assistant .ai-toggle {
+                width: 65px;
+                height: 65px;
+                border-radius: 50%;
+                background: var(--hesto-primary);
+                border: 2px solid var(--hesto-white);
+                color: var(--hesto-white);
+                cursor: pointer;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                font-size: 22px;
+                box-shadow: 0 4px 16px rgba(66, 139, 202, 0.4);
+                transition: all 0.3s ease;
+                animation: operatorPulse 3s infinite;
+                position: relative;
+            }
+
+                .operator-ai-assistant .ai-toggle:hover {
+                    transform: scale(1.1);
+                    box-shadow: 0 6px 20px rgba(66, 139, 202, 0.6);
+                }
+
+                .operator-ai-assistant .ai-toggle.active {
+                    background: #3071a9;
+                    box-shadow: 0 6px 20px rgba(48, 113, 169, 0.6);
+                }
+
+                .operator-ai-assistant .ai-toggle svg {
+                    width: 30px;
+                    height: 30px;
+                    fill: var(--hesto-white);
+                }
+
+        .ai-badge {
+            position: absolute;
+            top: -5px;
+            right: -2px;
+            font-size: 14px;
+            background: var(--hesto-warning);
+            color: var(--hesto-dark);
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid var(--hesto-white);
+            font-weight: bold;
+        }
+
+        @@keyframes operatorPulse {
+            0% {
+                box-shadow: 0 4px 16px rgba(66, 139, 202, 0.4);
+            }
+
+            50% {
+                box-shadow: 0 4px 16px rgba(66, 139, 202, 0.6), 0 0 0 10px rgba(66, 139, 202, 0.1);
+            }
+
+            100% {
+                box-shadow: 0 4px 16px rgba(66, 139, 202, 0.4);
+            }
+        }
+
+        .operator-ai-assistant .ai-chat {
+            position: absolute;
+            bottom: 85px;
+            right: 0;
+            width: 380px;
+            max-width: 90vw;
+            height: 480px;
+            background: var(--hesto-white);
+            border: 1px solid #dee2e6;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            border-radius: 12px;
+            display: none;
+            flex-direction: column;
+            animation: slideUp 0.3s ease;
+        }
+
+        @@keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .operator-ai-assistant .ai-header {
+            padding: 15px;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--hesto-light);
+            border-radius: 12px 12px 0 0;
+        }
+
+        .operator-ai-assistant .ai-title {
+            color: var(--hesto-dark);
+            font-size: 16px;
+            font-weight: 700;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+            .operator-ai-assistant .ai-title svg {
+                width: 18px;
+                height: 18px;
+                fill: var(--hesto-primary);
+            }
+
+        .operator-ai-assistant .ai-status {
+            color: var(--hesto-success);
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: 600;
+        }
+
+            .operator-ai-assistant .ai-status::before {
+                content: "●";
+                animation: blink 1.5s infinite;
+            }
+
+        @@keyframes blink {
+            0%, 50% {
+                opacity: 1;
+            }
+
+            51%, 100% {
+                opacity: 0.3;
+            }
+        }
+
+        .operator-ai-assistant .ai-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            max-height: 300px;
+            background: var(--hesto-white);
+        }
+
+        .operator-ai-assistant .ai-message {
+            margin-bottom: 15px;
+            opacity: 0;
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+            .operator-ai-assistant .ai-message.bot {
+                text-align: left;
+            }
+
+            .operator-ai-assistant .ai-message.user {
+                text-align: right;
+            }
+
+        .operator-ai-assistant .message-bubble {
+            display: inline-block;
+            padding: 12px 15px;
+            border-radius: 16px;
+            max-width: 85%;
+            word-wrap: break-word;
+            position: relative;
+            line-height: 1.4;
+        }
+
+        .operator-ai-assistant .ai-message.bot .message-bubble {
+            background: #e3f2fd;
+            border: 1px solid #bbdefb;
+            color: #1565c0;
+        }
+
+        .operator-ai-assistant .ai-message.user .message-bubble {
+            background: var(--hesto-primary);
+            color: var(--hesto-white);
+        }
+
+        @@keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .operator-ai-assistant .typing-indicator {
+            display: none;
+            color: var(--hesto-gray);
+            font-style: italic;
+            opacity: 0.8;
+            padding: 0 15px;
+            font-size: 14px;
+        }
+
+        .typing-dots::after {
+            content: "";
+            animation: dots 1.5s infinite;
+        }
+
+        @@keyframes dots {
+            0%, 20% {
+                content: "";
+            }
+
+            40% {
+                content: ".";
+            }
+
+            60% {
+                content: "..";
+            }
+
+            80%, 100% {
+                content: "...";
+            }
+        }
+
+        .operator-ai-assistant .quick-actions {
+            padding: 12px 15px;
+            border-top: 1px solid #dee2e6;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            background: var(--hesto-light);
+        }
+
+        .operator-ai-assistant .quick-action-btn {
+            padding: 6px 10px;
+            background: var(--hesto-white);
+            border: 1px solid #dee2e6;
+            color: var(--hesto-dark);
+            text-decoration: none;
+            font-size: 11px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+
+            .operator-ai-assistant .quick-action-btn:hover {
+                background: #e3f2fd;
+                border-color: var(--hesto-primary);
+                color: #1565c0;
+            }
+
+        .operator-ai-assistant .ai-input-area {
+            padding: 15px;
+            border-top: 1px solid #dee2e6;
+            display: flex;
+            gap: 10px;
+            background: var(--hesto-light);
+            border-radius: 0 0 12px 12px;
+        }
+
+        .operator-ai-assistant .ai-input {
+            flex: 1;
+            padding: 10px 15px;
+            background: var(--hesto-white);
+            border: 1px solid #dee2e6;
+            color: var(--hesto-dark);
+            border-radius: 20px;
+            outline: none;
+            font-size: 14px;
+        }
+
+            .operator-ai-assistant .ai-input:focus {
+                border-color: var(--hesto-primary);
+                box-shadow: 0 0 0 0.2rem rgba(66, 139, 202, 0.25);
+            }
+
+        .operator-ai-assistant .ai-send {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--hesto-primary);
+            border: 1px solid var(--hesto-primary);
+            color: var(--hesto-white);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+            .operator-ai-assistant .ai-send:hover {
+                background: #3071a9;
+                border-color: #3071a9;
+                transform: scale(1.05);
+            }
+
+            .operator-ai-assistant .ai-send svg {
+                width: 16px;
+                height: 16px;
+                fill: var(--hesto-white);
+            }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 20px;
+            height: 20px;
+            background: var(--hesto-danger);
+            color: var(--hesto-white);
+            border-radius: 50%;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: bounce 0.5s ease infinite alternate;
+            border: 2px solid var(--hesto-white);
+        }
+
+        @@keyframes bounce {
+            from {
+                transform: scale(1);
+            }
+
+            to {
+                transform: scale(1.1);
+            }
+        }
+
+        @@media (max-width: 768px) {
+            .operator-ai-assistant .ai-chat {
+                width: 340px;
+                height: 450px;
+                bottom: 80px;
+            }
+
+            .operator-ai-assistant .ai-toggle {
+                width: 55px;
+                height: 55px;
+                font-size: 18px;
+            }
+
+                .operator-ai-assistant .ai-toggle svg {
+                    width: 26px;
+                    height: 26px;
+                }
+        }
+
+        @@media (max-width: 480px) {
+            .operator-ai-assistant .ai-chat {
+                width: 300px;
+                height: 400px;
+            }
+
+            .operator-ai-assistant .ai-toggle {
+                width: 50px;
+                height: 50px;
+            }
+        }
+
+        .content-card:focus, .logout-btn:focus, .info-item:focus {
+            outline: 2px solid var(--hesto-primary);
+            outline-offset: 2px;
+        }
+
+        @@media print {
+            .operator-ai-assistant, .logout-btn {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        @Html.AntiForgeryToken()
+        <!-- User Info Header -->
+        <header class="user-header">
+            <div class="user-info">
+                <span class="info-item">
+                    <i class="bi bi-person"></i>
+                    @User.Identity?.Name
+                </span>
+                <span class="info-item">
+                    <i class="bi bi-building"></i>
+                    @ViewData["Department"]
+                </span>
+                <span class="info-item">
+                    <i class="bi bi-diagram-3"></i>
+                    @ViewData["Line"]
+                </span>
+                @if (!string.IsNullOrEmpty(ViewData["Machine"]?.ToString()))
+                {
+                    <span class="info-item">
+                        <i class="bi bi-cpu"></i>
+                        @ViewData["Machine"]
+                    </span>
+                }
+                <span class="info-item">
+                    <i class="bi bi-clock"></i>
+                    @ViewData["Shift"] Shift
+                </span>
             </div>
-            <div class="detail-item line">
-                <i class="bi bi-gear"></i>
-                @Model.Line
+
+            <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+                <form method="post" id="logoutForm" style="margin: 0;">
+                    <button type="submit" class="logout-btn">
+                        <i class="bi bi-box-arrow-right"></i>
+                        Logout
+                    </button>
+                </form>
             </div>
-            <div class="detail-item shift">
-                <i class="bi bi-clock"></i>
-                Shift: @Model.Shift
+
+        </header>
+
+
+        <!-- Main Content -->
+        <main>
+
+
+            <div id="locationBanner" style="
+        max-width:450px; margin: 0 auto 16px auto;
+        background: rgba(255,255,255,0.97);
+        border-radius: 12px;
+        padding: 16px 18px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+        border-left: 5px solid #28a745;
+        position: relative;">
+
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;">
+                    <div style="flex:1;">
+                        <div style="font-size:14px;font-weight:700;color:#1a1a2e;margin-bottom:6px;">
+                            <i class="bi bi-shield-check" style="color:#28a745;margin-right:6px;"></i>
+                            Confirm Your Location Before Capturing
+                        </div>
+                        <div style="font-size:13px;color:#495057;line-height:1.6;">
+                            You are set to:
+                            <strong style="color:#428bca;">@ViewData["Department"]</strong> &bull;
+                            <strong style="color:#428bca;">@ViewData["Line"]</strong> &bull;
+                            <strong style="color:#428bca;">Shift @ViewData["Shift"]</strong>
+                            @if (!string.IsNullOrEmpty(ViewData["Machine"]?.ToString()))
+                            {
+                                <span> &bull; <strong style="color:#428bca;">@ViewData["Machine"]</strong></span>
+                            }
+                        </div>
+                        <div style="font-size:12px;color:#6c757d;margin-top:6px;">
+                            ⚠️ Make sure this is correct. If not, tap <strong>Update Details</strong> before capturing scrap.
+                        </div>
+                    </div>
+                    <button onclick="dismissBanner()" style="
+                background:transparent;border:none;
+                color:#adb5bd;font-size:20px;
+                cursor:pointer;padding:0;flex-shrink:0;
+                line-height:1;" title="Dismiss">
+                        &#x2715;
+                    </button>
+                </div>
+
+                <div style="display:flex;gap:8px;margin-top:12px;">
+                    <div style="flex:1;background:#f8f9fa;border-radius:8px;
+                        padding:8px 12px;font-size:12px;color:#6c757d;
+                        border:1px solid #dee2e6;display:flex;align-items:center;gap:6px;">
+                        <i class="bi bi-check-circle-fill" style="color:#28a745;"></i>
+                        Location looks correct — you're good to go
+                    </div>
+                    <a href="/Operator/Setup" style="
+                background:#ffc107;border:none;color:#1a1a2e;
+                border-radius:8px;padding:8px 14px;font-size:12px;
+                font-weight:700;text-decoration:none;
+                display:flex;align-items:center;gap:5px;
+                white-space:nowrap;transition:all 0.2s;"
+                       onmouseover="this.style.background='#e0a800';"
+                       onmouseout="this.style.background='#ffc107';">
+                        <i class="bi bi-pencil-fill"></i> Update
+                    </a>
+                </div>
+            </div>
+
+
+            <div class="content-grid">
+                <a href="/Operator/ScanPart" class="content-card">
+                    <div class="card-icon">
+                        <i class="bi bi-upc-scan"></i>
+                    </div>
+                    <h3>Scan Part</h3>
+                    <p>Scan or enter part number to log scrap</p>
+                </a>
+
+                <a href="/Operator/Setup" class="content-card">
+                    <div class="card-icon">
+                        <i class="bi bi-gear"></i>
+                    </div>
+                    <h3>Update Details</h3>
+                    <p>Update your department, line, or shift</p>
+                </a>
+
+                <a href="/Operator/ScrapHistory" class="content-card">
+                    <div class="card-icon">
+                        <i class="bi bi-clock-history"></i>
+                    </div>
+                    <h3>Scrap History</h3>
+                    <p>View your submitted scrap records</p>
+                </a>
+
+                <a href="#" onclick="goToScrapEntry(); return false;" class="content-card">
+                    <div class="card-icon">
+                        <i class="bi bi-pencil-square"></i>
+                    </div>
+                    <h3>My Scrap List</h3>
+                    <p>View saved entries and submit</p>
+                </a>
+            </div>
+        </main>
+    </div>
+
+
+
+    <!-- HESTO Corporate AI Assistant for Operators -->
+    <div class="operator-ai-assistant">
+        <div class="ai-toggle" id="operatorAiToggle">
+            <svg viewBox="0 0 24 24">
+                <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 1H5C3.9 1 3 1.9 3 3V7C1.9 7 1 7.9 1 9V16C1 17.1 1.9 18 3 18V21C3 22.1 3.9 23 5 23H8C9.1 23 10 22.1 10 21V19H14V21C14 22.1 14.9 23 16 23H19C20.1 23 21 22.1 21 21V18C22.1 18 23 17.1 23 16V9C23 7.9 22.1 7 21 7V9M18 10C18.6 10 19 10.4 19 11S18.6 12 18 12 17 11.6 17 11 17.4 10 18 10M6 10C6.6 10 7 10.4 7 11S6.6 12 6 12 5 11.6 5 11 5.4 10 6 10Z" />
+            </svg>
+            <div class="ai-badge">🔧</div>
+            <div class="notification-badge" id="operatorNotificationBadge" style="display: none;">!</div>
+        </div>
+
+        <div class="ai-chat" id="operatorAiChat">
+            <div class="ai-header">
+                <div class="ai-title">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M22.7 19L13.6 9.9C14.5 7.6 14 4.9 12.1 3C10.1 1 7.1 1 5.1 3S1 8.9 3 10.9C4.9 12.8 7.6 13.3 9.9 12.4L19 21.7C19.4 22.1 20.1 22.1 20.5 21.7L22.7 19.5C23.1 19.1 23.1 18.4 22.7 19ZM5.6 9.4C4.6 8.4 4.6 6.8 5.6 5.8S8.4 4.6 9.4 5.6 10.6 8.4 9.6 9.4 6.6 10.6 5.6 9.4Z" />
+                    </svg>
+                    Operator Assistant
+                </div>
+                <div class="ai-status"><span>Ready</span></div>
+            </div>
+
+            <div class="ai-messages" id="operatorAiMessages"></div>
+
+            <div class="typing-indicator" id="operatorTypingIndicator">
+                Assistant is typing<span class="typing-dots"></span>
+            </div>
+
+            <div class="quick-actions">
+                <div class="quick-action-btn" data-action="scan-help">📱 Scan Part</div>
+                <div class="quick-action-btn" data-action="scrap-entry">📝 Scrap Entry</div>
+                <div class="quick-action-btn" data-action="scrap-reasons">❓ Scrap Reasons</div>
+                <div class="quick-action-btn" data-action="position-help">📍 Position Guide</div>
+                <div class="quick-action-btn" data-action="history-help">📊 View History</div>
+                <div class="quick-action-btn" data-action="contact-support">📞 Get Help</div>
+            </div>
+
+            <div class="ai-input-area">
+                <input type="text" class="ai-input" id="operatorAiInput" placeholder="Ask about scanning, scrap entry, reasons...">
+                <button class="ai-send" id="operatorAiSend">
+                    <svg viewBox="0 0 24 24"><path d="M2,21L23,12L2,3V10L17,12L2,14V21Z" /></svg>
+                </button>
             </div>
         </div>
     </div>
 
-    <div class="dashboard-content">
-        <a href="@Url.Action("ScanPart")" class="action-card">
-            <div class="icon-container">
-                <i class="bi bi-upc-scan"></i>
-            </div>
-            <h3>Scan Part</h3>
-            <p>Scan or enter part number to log scrap</p>
-        </a>
+    <script src="~/js/jquery.min.js"></script>
 
-        <a href="@Url.Action("Setup")" class="action-card">
-            <div class="icon-container">
-                <i class="bi bi-gear"></i>
-            </div>
-            <h3>Update Details</h3>
-            <p>Update your department, line, or shift</p>
-        </a>
-    </div>
-</div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('logoutForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                fetch('/Account/Logout', { method: 'POST', headers: { 'Content-Type': 'application/json' } })
+                    .then(response => response.json())
+                    .then(data => { window.location.href = data.success ? (data.redirectUrl || '/Account/Login') : '/Account/Login'; })
+                    .catch(() => { window.location.href = '/Account/Login'; });
+            });
+        });
 
-<style>
-    .dashboard-container {
-        min-height: 100vh;
-        background: #1a1a1a;
-        padding: 20px;
-    }
+        class OperatorAIAssistant {
+            constructor() {
+                this.isOpen = false;
+                this.conversations = [];
+                this.escalationEmail = 'thembelihle.manyoni@hesto.co.za / call: 6770';
+                this.initializeEventListeners();
+                this.showWelcomeMessage();
+                this.knowledgeBase = {
+                    'scan part': 'HESTO Part Scanning Guide:\n\n📱 **SCANNING METHODS:**\n1️⃣ **Barcode Scanner:** Point scanner at part barcode\n2️⃣ **Manual Entry:** Type part number in field\n3️⃣ **Camera Scan:** Use device camera (if available)\n\n🔍 **PART NUMBER FORMAT:**\n• Usually starts with # (hash symbol)\n• Example: #22WHSY, #ABC123\n• Can include letters and numbers\n\n✅ **SUCCESSFUL SCAN:**\n• System validates part exists\n• Shows material cost and UOM\n• Proceeds to scrap entry screen\n\n❌ **SCAN ISSUES:**\n• "Invalid part number" = Part not in system\n• Scanner not working = Try manual entry',
+                    'scrap entry': 'HESTO Scrap Entry Process:\n\n📝 **STEP-BY-STEP PROCESS:**\n1️⃣ **Scan/Enter Part Number**\n2️⃣ **Select Scrap Section**\n3️⃣ **Choose Scrap Reason**\n4️⃣ **Enter Position** (if required)\n5️⃣ **Enter Quantity**\n6️⃣ **Submit Entry**\n\n✅ **SUCCESSFUL SUBMISSION:**\n• Entry goes to "Pending TL" status\n• Team Leader will review and approve',
+                    'scrap reasons': 'HESTO Scrap Reasons by Section:\n\n🏭 **PRODUCTION SECTION:**\n• Contamination, Wrong Part, Damaged by Operator\n\n📊 **COMBIMETER SECTION:**\n• Position-specific defects, Electrical issues\n\n🔧 **MOULDING SECTION:**\n• Flash, Short shot, Sink marks\n\n📦 **SLEEVE SECTION:**\n• Incorrect size, Material defect'
+                };
+            }
 
-    .dashboard-header {
-        background: rgba(0, 255, 255, 0.1);
-        border: 1px solid #00ffff;
-        border-radius: 8px;
-        padding: 20px;
-        margin-bottom: 30px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 20px;
-    }
+            initializeEventListeners() {
+                const toggle = document.getElementById('operatorAiToggle');
+                const input  = document.getElementById('operatorAiInput');
+                const send   = document.getElementById('operatorAiSend');
+                const quickActions = document.querySelectorAll('.operator-ai-assistant .quick-action-btn');
 
-    .portal-title {
-        color: #00ffff;
-        margin: 0;
-        font-size: 24px;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
+                if (toggle) toggle.addEventListener('click', () => this.toggleChat());
+                if (input)  input.addEventListener('keypress', (e) => { if (e.key === 'Enter') this.sendMessage(); });
+                if (send)   send.addEventListener('click', () => this.sendMessage());
+                quickActions.forEach(btn => btn.addEventListener('click', () => this.handleQuickAction(btn.getAttribute('data-action'))));
+                document.addEventListener('click', (e) => { if (!e.target.closest('.operator-ai-assistant') && this.isOpen) this.toggleChat(); });
+            }
 
-    .user-details {
-        display: flex;
-        gap: 20px;
-        flex-wrap: wrap;
-    }
+            toggleChat() {
+                const chat   = document.getElementById('operatorAiChat');
+                const toggle = document.getElementById('operatorAiToggle');
+                this.isOpen  = !this.isOpen;
+                if (this.isOpen) { chat.style.display = 'flex'; toggle.classList.add('active'); document.getElementById('operatorAiInput').focus(); this.hideNotificationBadge(); }
+                else             { chat.style.display = 'none';  toggle.classList.remove('active'); }
+            }
 
-    .detail-item {
-        background: rgba(0, 255, 255, 0.1);
-        padding: 8px 16px;
-        border-radius: 4px;
-        color: #00ffff;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
+            showWelcomeMessage() {
+                setTimeout(() => { this.addBotMessage(`🔧 Welcome to HESTO Operator Assistant!\n\n💡 Use the quick buttons below or ask me anything about the scrap management system.\n\nHow can I help you today?`); this.showNotificationBadge(); }, 2000);
+            }
 
-    .dashboard-content {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 20px;
-    }
+            sendMessage() { const input = document.getElementById('operatorAiInput'); const message = input.value.trim(); if (message) { this.addUserMessage(message); input.value = ''; this.processMessage(message); } }
+            addUserMessage(message) { const c = document.getElementById('operatorAiMessages'); const d = document.createElement('div'); d.className = 'ai-message user'; d.innerHTML = `<div class="message-bubble">${this.escapeHtml(message)}</div>`; c.appendChild(d); this.scrollToBottom(); }
+            addBotMessage(message) { const c = document.getElementById('operatorAiMessages'); const d = document.createElement('div'); d.className = 'ai-message bot'; d.innerHTML = `<div class="message-bubble">${this.formatMessage(message)}</div>`; c.appendChild(d); this.scrollToBottom(); }
+            showTypingIndicator() { document.getElementById('operatorTypingIndicator').style.display = 'block'; this.scrollToBottom(); }
+            hideTypingIndicator() { document.getElementById('operatorTypingIndicator').style.display = 'none'; }
 
-    .action-card {
-        background: rgba(18, 18, 18, 0.95);
-        border: 1px solid #00ffff;
-        border-radius: 8px;
-        padding: 30px;
-        text-align: center;
-        text-decoration: none;
-        color: #00ffff;
-        transition: all 0.3s ease;
-    }
+            processMessage(message) {
+                this.showTypingIndicator();
+                setTimeout(() => { this.hideTypingIndicator(); this.addBotMessage(this.generateResponse(message.toLowerCase())); }, 600 + Math.random() * 800);
+            }
 
-    .action-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
-    }
+            generateResponse(message) {
+                for (const [keyword, response] of Object.entries(this.knowledgeBase)) { if (message.includes(keyword)) return response; }
+                return "🔧 **OPERATOR ASSISTANT**\n\nI'm here to help with your daily scrap management tasks. Try the quick action buttons below, or ask me something specific!";
+            }
 
-    .icon-container {
-        font-size: 48px;
-        margin-bottom: 20px;
-    }
+            handleQuickAction(action) {
+                const map = { 'scan-help': ['How do I scan parts?', 'scan part'], 'scrap-entry': ['Help with scrap entry', 'scrap entry'], 'scrap-reasons': ['What scrap reasons are available?', 'scrap reasons'] };
+                if (map[action]) { this.addUserMessage(map[action][0]); setTimeout(() => this.addBotMessage(this.knowledgeBase[map[action][1]]), 500); }
+                else if (action === 'contact-support') { this.addUserMessage('I need technical support'); setTimeout(() => this.addBotMessage(`📧 **SUPPORT CONTACT:**\n🔧 Thembelihle (Technical Support)\nEmail: ${this.escalationEmail}`), 500); }
+            }
 
-    .action-card h3 {
-        margin: 0 0 10px;
-        font-size: 20px;
-    }
-
-    .action-card p {
-        margin: 0;
-        color: #fff;
-        opacity: 0.8;
-    }
-
-    @@media (max-width: 768px) {
-        .dashboard-header {
-            flex-direction: column;
-            text-align: center;
+            formatMessage(m) { return m.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); }
+            escapeHtml(t)     { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+            scrollToBottom()  { const c = document.getElementById('operatorAiMessages'); if (c) c.scrollTop = c.scrollHeight; }
+            showNotificationBadge() { if (!this.isOpen) { const b = document.getElementById('operatorNotificationBadge'); if (b) b.style.display = 'flex'; } }
+            hideNotificationBadge() { const b = document.getElementById('operatorNotificationBadge'); if (b) b.style.display = 'none'; }
         }
 
-        .user-details {
-            justify-content: center;
-            width: 100%;
+        document.addEventListener('DOMContentLoaded', function() {
+            new OperatorAIAssistant();
+        });
+    </script>
+
+
+
+    <script>
+        function dismissBanner() {
+                    const banner = document.getElementById('locationBanner');
+                    if (banner) {
+                        banner.style.display = 'none';
+                        localStorage.setItem('locationBannerDismissed', 'true');
+                    }
+                }
+
+                document.addEventListener('DOMContentLoaded', function () {
+                    const dismissed = localStorage.getItem('locationBannerDismissed');
+                    if (dismissed === 'true') {
+                        const banner = document.getElementById('locationBanner');
+                        if (banner) banner.style.display = 'none';
+                    }
+                });
+
+        function goToScrapEntry() {
+            try {
+                const clockNumber = '@User.Identity?.Name' || 'unknown';
+                const key = 'scrapEntries_' + clockNumber;
+                const saved = localStorage.getItem(key);
+                if (saved) {
+                    const entries = JSON.parse(saved);
+                    if (entries && entries.length > 0) {
+                        const first      = entries[0];
+                        const partNumber = first.partNumber;
+                        const scrapType  = first.scrapType || 'component';
+                        window.location.href = `/Operator/ScrapEntry?partNumber=${encodeURIComponent(partNumber)}&scrapType=${encodeURIComponent(scrapType)}`;
+                        return;
+                    }
+                }
+            } catch(e) {}
+            window.location.href = '/Operator/ScanPart';
         }
-    }
-</style>
+    </script>
+
+</body>
+</html>

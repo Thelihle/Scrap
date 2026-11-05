@@ -1,0 +1,30 @@
+# Build output
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+*.dll.config
+
+# Visual Studio / user-specific
+.vs/
+*.user
+*.suo
+*.userprefs
+*.pubxml.user
+
+# Application logs
+logs/
+*.log
+
+# Configuration with connection strings / credentials.
+# Copy appsettings.example.json to appsettings.json and fill in real values.
+appsettings*.json
+!appsettings.example.json
+
+# Local repair backup of the old .git folder (Nov 2026)
+.git.broken-*/
+
+# OS files
+Thumbs.db
+Desktop.ini
+.DS_Store

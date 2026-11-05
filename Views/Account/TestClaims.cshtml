@@ -1,0 +1,39 @@
+﻿<div class="test-result info">
+    <strong>Current Status:</strong> You are accessing this page successfully, which means basic authentication is working.
+</div>
+
+<h3>Test Direct Dashboard Access:</h3>
+
+<div style="margin: 20px 0;">
+    <p><strong>Operator Dashboard Test:</strong></p>
+    <a href="/Operator/Index" target="_blank" style="display: inline-block; padding: 10px 15px; background: #007bff; color: white; text-decoration: none; border-radius: 5px;">
+        🔗 Test Operator Dashboard (/Operator/Index)
+    </a>
+</div>
+
+<div style="margin: 20px 0;">
+    <p><strong>Approval Dashboard Test:</strong></p>
+    <a href="/ScrapApproval/Dashboard" target="_blank" style="display: inline-block; padding: 10px 15px; background: #28a745; color: white; text-decoration: none; border-radius: 5px;">
+        🔗 Test Approval Dashboard (/ScrapApproval/Dashboard)
+    </a>
+</div>
+
+<div style="margin: 20px 0;">
+    <p><strong>Alternative Routes Test:</strong></p>
+    <a href="/Operator" target="_blank" style="display: inline-block; padding: 8px 12px; background: #6c757d; color: white; text-decoration: none; border-radius: 3px; margin: 5px;">
+        🔗 /Operator
+    </a>
+    <a href="/ScrapApproval" target="_blank" style="display: inline-block; padding: 8px 12px; background: #6c757d; color: white; text-decoration: none; border-radius: 3px; margin: 5px;">
+        🔗 /ScrapApproval
+    </a>
+</div>
+
+<div class="test-result info">
+    <h4>What to Look For:</h4>
+    <ul>
+        <li><strong>✅ Dashboard loads:</strong> Authorization works, issue is in redirect logic</li>
+        <li><strong>❌ 403 Forbidden:</strong> Authorization policy doesn't allow Operators</li>
+        <li><strong>❌ 404 Not Found:</strong> Controller or action missing</li>
+        <li><strong>❌ Redirects to login:</strong> Session/authentication issue</li>
+    </ul>
+</div>

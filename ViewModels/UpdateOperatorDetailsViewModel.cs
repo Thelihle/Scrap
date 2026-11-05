@@ -5,5 +5,6 @@
         public string? Department { get; set; }
         public string? Line { get; set; }
         public string? Shift { get; set; }
+        public string? MachineNumber { get; set; }
     }
 }

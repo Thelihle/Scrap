@@ -1,0 +1,1398 @@
+﻿@model ScrapEntryViewModel
+@{
+    ViewData["Title"] = "Direct Scrap Entry - SCP Control";
+    Layout = "_TeamLeaderLayout";
+}
+
+<div class="scrap-container">
+    <!-- Navigation Bar -->
+    <div class="navigation-bar">
+        <button onclick="navigateHome()" class="nav-button back-button" id="homeBtn">
+            <i class="bi bi-house"></i> Home
+        </button>
+        <form action="/Account/Logout" method="post" style="margin: 0;" id="logoutForm">
+            <input type="hidden" data-clock-number="@User.Identity?.Name" value="@User.Identity?.Name" />
+            @Html.AntiForgeryToken()
+            <button type="submit" class="nav-button logout-button">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </button>
+        </form>
+    </div>
+
+    <!-- Direct Entry Header -->
+    <div class="part-info-section" id="partInfoSection">
+        <h2 class="section-title">
+            <i class="bi bi-pencil-square"></i> Direct Scrap Entry
+        </h2>
+
+        <!-- Info banner -->
+        <div class="info-banner">
+            <i class="bi bi-info-circle"></i>
+            Your previously saved entries have been loaded below. Review and click <strong>Submit All</strong> to save them to the database.
+        </div>
+
+        <div class="info-cards">
+            <div class="info-card">
+                <label>Department</label>
+                <span id="department">@Model.Department</span>
+            </div>
+            <div class="info-card">
+                <label>Line</label>
+                <span id="line">@Model.Line</span>
+            </div>
+            <div class="info-card">
+                <label>Shift</label>
+                <span id="shift">@Model.Shift</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scrap Entry Form — Part Number & Quantity DISABLED -->
+    <div class="scrap-entry-section" id="scrapEntrySection">
+        <h2 class="section-title">
+            Scrap Details
+            <span class="add-more-toggle-label">
+                Add another entry?
+                <label class="toggle-switch">
+                    <input type="checkbox" id="enableFormToggle" />
+                    <span class="toggle-slider"></span>
+                </label>
+            </span>
+        </h2>
+
+        <div id="formDisabledOverlay" class="form-disabled-notice">
+            <i class="bi bi-lock"></i> Toggle above to add a new entry
+        </div>
+
+        <form id="scrapForm" class="scrap-form">
+            @Html.AntiForgeryToken()
+
+            <div class="form-grid">
+                <!-- Part Number — DISABLED -->
+                <div class="form-group">
+                    <label for="manualPartNumber">Part Number</label>
+                    <input type="text" id="manualPartNumber" class="form-control"
+                           placeholder="Enable form to enter part number"
+                           disabled />
+                    <small class="form-help">Toggle above to enable entry</small>
+                </div>
+
+                <!-- Scrap Section -->
+                <div class="form-group">
+                    <label for="scrapSection">Scrap Section</label>
+                    <select id="scrapSection" class="form-control" disabled>
+                        <option value="">Select Section</option>
+                    </select>
+                </div>
+
+                <!-- Machine Type (Pre-Assembly Ford only) -->
+                <div id="machineTypeDiv" class="form-group" style="display:none;">
+                    <label for="machineType">Machine Type</label>
+                    <select id="machineType" class="form-control" disabled>
+                        <option value="">Select Machine Type</option>
+                    </select>
+                </div>
+
+                <!-- Machine Number -->
+                <div id="machineNumberDiv" class="form-group" style="display:none;">
+                    <label for="machineNumber">Machine Number</label>
+                    <select id="machineNumber" class="form-control" disabled>
+                        <option value="">Select Machine Number</option>
+                    </select>
+                </div>
+
+                <!-- Engineering Plant -->
+                <div id="engineeringPlantDiv" class="form-group" style="display:none;">
+                    <label for="engineeringPlant">Plant *</label>
+                    <select id="engineeringPlant" class="form-control" disabled>
+                        <option value="">Select Plant</option>
+                        <option value="Plant A">Plant A</option>
+                        <option value="Plant B">Plant B</option>
+                        <option value="Plant C">Plant C</option>
+                        <option value="Fielli">Fielli</option>
+                    </select>
+                </div>
+
+                <!-- Scrap Reason -->
+                <div class="form-group">
+                    <label for="scrapReason">Scrap Reason</label>
+                    <select id="scrapReason" class="form-control" disabled>
+                        <option value="">Select Reason</option>
+                    </select>
+                </div>
+
+                <!-- Position (CombiMeter) -->
+                <div id="positionDiv" class="form-group" style="display:none;">
+                    <label for="partPosition">Position</label>
+                    <select id="partPosition" class="form-control" disabled>
+                        <option value="">Select Position</option>
+                    </select>
+                </div>
+
+                <!-- Length (Pre-Assembly) -->
+                <div id="lengthDiv" class="form-group" style="display:none;">
+                    <label for="lengthInput">Length (mm)</label>
+                    <input type="number" id="lengthInput" step="0.001" min="0"
+                           placeholder="Enter length in mm" class="form-control" disabled />
+                </div>
+
+                <!-- Quantity — DISABLED -->
+                <div class="form-group">
+                    <label for="quantity">Quantity</label>
+                    <input type="number" id="quantity" min="1" class="form-control"
+                           placeholder="Enable form to enter quantity"
+                           disabled />
+                </div>
+            </div>
+
+            <div class="action-buttons" id="formActionButtons" style="display:none;">
+                <button type="button" id="addToReviewBtn" class="action-button primary-button">
+                    Add to Review
+                </button>
+                <button type="button" id="clearBtn" class="action-button secondary-button">
+                    Clear
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Review Entries -->
+    <div class="review-section" id="reviewSection">
+        <h2 class="section-title">Review Entries</h2>
+        <div class="entry-cards" id="reviewTableBody"></div>
+
+        <div class="totals-section">
+            <div class="total-item">
+                <span class="total-label">Total Quantity:</span>
+                <span class="total-value" id="totalQuantity">0</span>
+            </div>
+        </div>
+
+        <div class="action-buttons final-actions">
+            <button type="button" class="action-button secondary-button" id="addNewPartBtn">
+                Scan New Part
+            </button>
+            <button type="button" id="submitAllBtn" class="action-button primary-button">
+                Submit All
+            </button>
+        </div>
+    </div>
+
+    <!-- Success Message -->
+    <div class="success-message hidden" id="successMessage">
+        <h3>✅ Scrap Entries Submitted Successfully!</h3>
+        <p>All entries have been submitted and saved to the database.</p>
+    </div>
+
+    <!-- Post-Submission Actions -->
+    <div class="review-section hidden" id="postSubmissionActions">
+        <h2 class="section-title">Next Actions</h2>
+        <div class="action-buttons final-actions">
+            <button type="button" class="action-button secondary-button" id="viewHistoryBtn">
+                View Scrap History
+            </button>
+            <button type="button" class="action-button primary-button" id="scanPartBtn">
+                Scan Part Numbers
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="submission-progress hidden" id="submissionProgress">
+    <div class="progress-text">Submitting entries to database...</div>
+</div>
+
+<style>
+    :root {
+        --neon-cyan: #00fff2;
+        --neon-cyan-glow: rgba(0, 255, 242, 0.3);
+        --dark-bg: #121212;
+        --card-bg: rgba(0, 21, 20, 0.95);
+        --warning-color: #ff4444;
+        --success-color: #00ff00;
+        --border-radius: 6px;
+    }
+
+    body {
+        background: var(--dark-bg);
+        color: #fff;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0;
+        padding: 0;
+    }
+
+    .scrap-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .navigation-bar {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+    }
+
+    .nav-button {
+        background: transparent;
+        border: 1px solid var(--neon-cyan);
+        color: var(--neon-cyan);
+        padding: 10px 16px;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+        font-size: 14px;
+    }
+
+        .nav-button:hover {
+            background: rgba(0,255,242,0.1);
+            box-shadow: 0 0 10px var(--neon-cyan-glow);
+        }
+
+    .logout-button {
+        border-color: var(--warning-color);
+        color: var(--warning-color);
+    }
+
+        .logout-button:hover {
+            background: rgba(255,68,68,0.1);
+            box-shadow: 0 0 10px rgba(255,68,68,0.3);
+        }
+
+    /* Info banner */
+    .info-banner {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: rgba(0, 255, 242, 0.07);
+        border: 1px solid rgba(0, 255, 242, 0.3);
+        border-radius: var(--border-radius);
+        padding: 12px 16px;
+        margin-bottom: 20px;
+        color: rgba(0,255,242,0.85);
+        font-size: 14px;
+    }
+
+        .info-banner i {
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .info-banner strong {
+            color: var(--neon-cyan);
+        }
+
+    .section-title {
+        color: var(--neon-cyan);
+        font-size: 22px;
+        margin-bottom: 20px;
+        position: relative;
+        padding-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 60px;
+            height: 3px;
+            background: var(--neon-cyan);
+            border-radius: 3px;
+        }
+
+    /* Toggle switch */
+    .add-more-toggle-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        color: rgba(0,255,242,0.6);
+        font-weight: 400;
+        margin-left: auto;
+        cursor: pointer;
+    }
+
+    .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 40px;
+        height: 22px;
+    }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+    .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(255,255,255,0.15);
+        border-radius: 22px;
+        transition: 0.3s;
+        border: 1px solid rgba(0,255,242,0.3);
+    }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: rgba(0,255,242,0.5);
+            border-radius: 50%;
+            transition: 0.3s;
+        }
+
+    input:checked + .toggle-slider {
+        background-color: rgba(0,255,242,0.2);
+        border-color: var(--neon-cyan);
+    }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(18px);
+            background-color: var(--neon-cyan);
+        }
+
+    /* Disabled form notice */
+    .form-disabled-notice {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255,255,255,0.03);
+        border: 1px dashed rgba(255,255,255,0.15);
+        border-radius: var(--border-radius);
+        padding: 10px 14px;
+        margin-bottom: 16px;
+        color: rgba(255,255,255,0.35);
+        font-size: 13px;
+    }
+
+    .part-info-section, .scrap-entry-section, .review-section {
+        margin-bottom: 30px;
+        padding: 20px;
+        background: var(--card-bg);
+        border-radius: var(--border-radius);
+        border: 1px solid var(--neon-cyan);
+        box-shadow: 0 0 15px rgba(0,255,242,0.15);
+    }
+
+    .info-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+    }
+
+    .info-card {
+        background: rgba(0,255,242,0.05);
+        padding: 15px;
+        border-radius: var(--border-radius);
+        border: 1px solid rgba(0,255,242,0.3);
+    }
+
+        .info-card label {
+            display: block;
+            color: var(--neon-cyan);
+            font-size: 13px;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-card span {
+            display: block;
+            color: white;
+            font-size: 17px;
+            font-weight: 500;
+        }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 25px;
+    }
+
+    .form-group label {
+        display: block;
+        color: var(--neon-cyan);
+        margin-bottom: 8px;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 12px;
+        background: #ffffff;
+        border: 1px solid var(--neon-cyan);
+        border-radius: 4px;
+        color: #000000;
+        font-size: 16px;
+        transition: all 0.2s ease;
+        box-sizing: border-box;
+    }
+
+        .form-control:focus {
+            outline: none;
+            box-shadow: 0 0 10px var(--neon-cyan-glow);
+        }
+
+        .form-control:disabled {
+            background: rgba(255,255,255,0.06);
+            border-color: rgba(255,255,255,0.12);
+            color: rgba(255,255,255,0.25);
+            cursor: not-allowed;
+        }
+
+        .form-control::placeholder {
+            color: #666;
+            opacity: 0.8;
+        }
+
+    .form-help {
+        color: #666;
+        font-size: 12px;
+        margin-top: 5px;
+        display: block;
+    }
+
+    .form-text {
+        color: #888;
+        font-size: 12px;
+        margin-top: 5px;
+    }
+
+    /* Machine / Engineering field styling */
+    #machineTypeDiv, #machineNumberDiv {
+        background: rgba(23,162,184,0.05);
+        padding: 12px;
+        border-radius: var(--border-radius);
+        border: 1px solid rgba(23,162,184,0.3);
+    }
+
+    #engineeringPlantDiv {
+        background: rgba(108,117,125,0.05);
+        padding: 12px;
+        border-radius: var(--border-radius);
+        border: 1px solid rgba(108,117,125,0.3);
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 15px;
+        margin-top: 20px;
+    }
+
+    .action-button {
+        padding: 12px 24px;
+        border-radius: var(--border-radius);
+        font-weight: 500;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.2s ease;
+        border: none;
+        font-size: 15px;
+    }
+
+        .action-button.primary-button {
+            background: var(--neon-cyan);
+            color: #000;
+        }
+
+            .action-button.primary-button:hover {
+                background: #00ddd0;
+                box-shadow: 0 0 15px var(--neon-cyan-glow);
+            }
+
+        .action-button.secondary-button {
+            background: transparent;
+            border: 1px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+        }
+
+            .action-button.secondary-button:hover {
+                background: rgba(0,255,242,0.1);
+            }
+
+        .action-button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+    /* Entry cards */
+    .scrap-entry-card {
+        margin-bottom: 15px;
+        border: 1px solid var(--neon-cyan);
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        transition: all 0.2s ease;
+    }
+
+        .scrap-entry-card:hover {
+            box-shadow: 0 0 10px var(--neon-cyan-glow);
+        }
+
+    .entry-header {
+        padding: 15px;
+        background: rgba(0,255,242,0.05);
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+        .entry-header:hover {
+            background: rgba(0,255,242,0.1);
+        }
+
+    .entry-title {
+        color: var(--neon-cyan);
+        font-weight: bold;
+        font-size: 16px;
+    }
+
+    .entry-quantity {
+        color: var(--neon-cyan);
+        font-weight: 500;
+    }
+
+    .entry-details {
+        display: none;
+        padding: 15px;
+        background: rgba(0,0,0,0.3);
+        border-top: 1px solid var(--neon-cyan);
+    }
+
+        .entry-details.visible {
+            display: block;
+        }
+
+    .entry-detail {
+        margin-bottom: 8px;
+        color: #ccc;
+    }
+
+    .entry-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+    .btn-edit {
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        background: var(--neon-cyan);
+        color: black;
+        border: none;
+    }
+
+        .btn-edit:hover {
+            background: #00ddd0;
+        }
+
+    .btn-delete {
+        padding: 8px 16px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        background: transparent;
+        border: 1px solid var(--warning-color);
+        color: var(--warning-color);
+    }
+
+        .btn-delete:hover {
+            background: rgba(255,68,68,0.1);
+        }
+
+    .no-entries {
+        text-align: center;
+        color: #888;
+        padding: 40px 20px;
+        font-style: italic;
+    }
+
+    .totals-section {
+        margin: 25px 0;
+        padding: 15px;
+        border-top: 1px solid var(--neon-cyan);
+        border-bottom: 1px solid var(--neon-cyan);
+        background: rgba(0,255,242,0.05);
+    }
+
+    .total-item {
+        display: flex;
+        justify-content: space-between;
+        color: var(--neon-cyan);
+        margin: 8px 0;
+        font-size: 16px;
+    }
+
+    .total-value {
+        font-weight: bold;
+    }
+
+    .final-actions {
+        margin-top: 20px;
+        justify-content: space-between;
+    }
+
+        .final-actions .action-button {
+            flex: 1;
+        }
+
+    .success-message {
+        background: rgba(0,255,0,0.1);
+        border: 2px solid var(--success-color);
+        color: var(--success-color);
+        padding: 20px;
+        border-radius: var(--border-radius);
+        text-align: center;
+        margin: 20px 0;
+        font-size: 18px;
+        font-weight: bold;
+    }
+
+    .submission-progress {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0,0,0,0.9);
+        color: var(--neon-cyan);
+        padding: 20px 40px;
+        border-radius: 8px;
+        border: 2px solid var(--neon-cyan);
+        box-shadow: 0 0 25px rgba(0,255,242,0.4);
+        z-index: 10000;
+        font-weight: 500;
+        font-size: 16px;
+    }
+
+    .hidden {
+        display: none !important;
+    }
+
+    @@media (max-width: 768px) {
+        .info-cards {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .action-buttons, .final-actions {
+            flex-direction: column;
+        }
+
+        .action-button {
+            width: 100%;
+        }
+
+        .section-title {
+            font-size: 18px;
+        }
+
+        .add-more-toggle-label {
+            margin-left: 0;
+            width: 100%;
+        }
+    }
+
+    @@media (max-width: 480px) {
+        .info-cards {
+            grid-template-columns: 1fr;
+        }
+
+        .part-info-section, .scrap-entry-section, .review-section {
+            padding: 15px;
+        }
+    }
+</style>
+
+<script>
+    console.log('DirectEntry loading...');
+
+    let scrapState = { entries: [], isLoading: false, isSubmitted: false };
+    let editState  = { isEditing: false, editingIndex: -1, originalEntry: null };
+    let formEnabled = false;
+
+    // ── Full static data matching ScrapEntry.cshtml ──────────────────────────
+    const STATIC_SCRAP_DATA = {
+        sections: [
+            { value: "1",  text: "Production" },
+            { value: "2",  text: "CombiMeter" },
+            { value: "3",  text: "Moulding" },
+            { value: "4",  text: "Sleeve" },
+            { value: "5",  text: "Pre-Assembly Ford" },
+            { value: "6",  text: "Pre-Assembly Isuzu" },
+            { value: "7",  text: "Ground" },
+            { value: "8",  text: "Battery" },
+            { value: "9",  text: "Pre-Assembly TSAM" },
+            { value: "10", text: "Engineering" }
+        ],
+
+        preAssemblyFordMachines: [
+            { value: "komax",      text: "Komax" },
+            { value: "twisting",   text: "Twisting" },
+            { value: "weldsplice", text: "WeldSplice" }
+        ],
+
+        machineNumbers: {
+            komax:      ["K1","K2","K3","K4","K5","K6","K7","K8","K9","K10","K11","K12","K13","K14","K15","K16","K17","K18","K19","K20"],
+            twisting:   ["M1","M2","M3","M4","M5","M6","M7","M8","M9","M10"],
+            weldsplice: ["M1","M2","M3","M4","M5","M6","M7","M8","M9","M10"]
+        },
+
+        reasonsBySection: {
+            "1": [
+                { value: "3",   text: "Exposed Wire" },
+                { value: "4",   text: "Wrong Terminals" },
+                { value: "5",   text: "Wrong Seals" },
+                { value: "6",   text: "Swiped Terminals" },
+                { value: "7",   text: "Broken Terminals" },
+                { value: "8",   text: "Busted/Damaged Seals" },
+                { value: "9",   text: "Long & Short Wires" },
+                { value: "10",  text: "Thick Wire Cut Offs" },
+                { value: "11",  text: "Wire Poor Quality" },
+                { value: "12",  text: "Tool is Problem" },
+                { value: "13",  text: "Long Over Lapping" },
+                { value: "14",  text: "Long length cut offs" },
+                { value: "15",  text: "Verification Method" },
+                { value: "16",  text: "Over heating" },
+                { value: "17",  text: "Terminal Poor Quality" },
+                { value: "18",  text: "Over twisting" },
+                { value: "19",  text: "Machine Shutdown" },
+                { value: "20",  text: "Machine Problem" },
+                { value: "21",  text: "Set-Up" },
+                { value: "22",  text: "End-of-Reel" },
+                { value: "23",  text: "Rework" },
+                { value: "24",  text: "Production Scrap" },
+                { value: "25",  text: "Obsolescence" },
+                { value: "26",  text: "Substitute" },
+                { value: "27",  text: "Damage from Supplier" },
+                { value: "28",  text: "Samples" },
+                { value: "29",  text: "Incorrect Part Used" },
+                { value: "243", text: "Engineering Changes" },
+                { value: "244", text: "Terminal Change" },
+                { value: "245", text: "Length Change" },
+                { value: "246", text: "Runout" }
+            ],
+            "2": [
+                { value: "48", text: "Missing part",                        requiresPosition: true },
+                { value: "49", text: "Wrong assembly",                      requiresPosition: true },
+                { value: "50", text: "Inoperative",                         requiresPosition: true },
+                { value: "51", text: "Damaged from Supplier",               requiresPosition: true },
+                { value: "52", text: "OBSOLESCENCE",                        requiresPosition: true },
+                { value: "53", text: "Indication failure",                  requiresPosition: true },
+                { value: "54", text: "Shaking pointer, Sticking pointer",   requiresPosition: true },
+                { value: "55", text: "Pointer press fit defect",            requiresPosition: true },
+                { value: "56", text: "Insufficient solder",                 requiresPosition: true },
+                { value: "57", text: "Other soldering defects",             requiresPosition: true },
+                { value: "58", text: "Unit tilt",                           requiresPosition: true },
+                { value: "59", text: "Stay-on lighting, Unclear lighting",  requiresPosition: true },
+                { value: "60", text: "Display failure on LCD",              requiresPosition: true },
+                { value: "61", text: "Pin hole",                            requiresPosition: true },
+                { value: "62", text: "Light leakage",                       requiresPosition: true },
+                { value: "63", text: "Uneven color",                        requiresPosition: true },
+                { value: "64", text: "Dust (foreign material)",             requiresPosition: true },
+                { value: "65", text: "Fiber",                               requiresPosition: true },
+                { value: "66", text: "Scratch",                             requiresPosition: true },
+                { value: "67", text: "Dirt (Contamination)",                requiresPosition: true },
+                { value: "68", text: "Black dot/White dot",                 requiresPosition: true },
+                { value: "69", text: "Looseness",                           requiresPosition: true },
+                { value: "70", text: "Burr",                                requiresPosition: true },
+                { value: "71", text: "Crack",                               requiresPosition: true },
+                { value: "72", text: "Deformation/Warpage (Distortion)",   requiresPosition: true },
+                { value: "73", text: "Broken lock",                         requiresPosition: true },
+                { value: "74", text: "Unlocked",                            requiresPosition: true },
+                { value: "75", text: "Partly missing character/Bleeding",  requiresPosition: true },
+                { value: "76", text: "Dropped Part",                        requiresPosition: true },
+                { value: "77", text: "FT Failure",                          requiresPosition: true },
+                { value: "78", text: "Height error failure",                requiresPosition: true },
+                { value: "79", text: "Pointer position failure",            requiresPosition: true }
+            ],
+            "3": [
+                { value: "80", text: "Purging" }, { value: "81", text: "Start up scrap" },
+                { value: "82", text: "Sprues" },  { value: "83", text: "Part deformed" },
+                { value: "84", text: "Sink marks" }, { value: "85", text: "Flash" },
+                { value: "86", text: "Scratches" }, { value: "87", text: "Stress Marks" },
+                { value: "88", text: "Flow Marks" }, { value: "89", text: "Short shot" },
+                { value: "90", text: "Pin Marks" }, { value: "91", text: "Bubble" },
+                { value: "92", text: "Oil Mark" }, { value: "93", text: "Burn Mark" },
+                { value: "94", text: "Dis-Colour" }, { value: "95", text: "Unclear Laser Marking" },
+                { value: "96", text: "Black spot" }, { value: "97", text: "Splash" }
+            ],
+            "4": [
+                { value: "98",  text: "COT start up /set up" },
+                { value: "99",  text: "COT production quality" },
+                { value: "100", text: "COT production quality (wall thickness)" },
+                { value: "101", text: "COT production quality (hole on sleeve)" },
+                { value: "102", text: "COT Purging" },
+                { value: "103", text: "VOB Purging" },
+                { value: "104", text: "VOB start up /diameter change" },
+                { value: "105", text: "VOB Production (wall thickness)" },
+                { value: "106", text: "VOB Production (hole on sleeve)" }
+            ],
+            "5": [
+                { value: "107", text: "Wire Cut Too Short" }, { value: "108", text: "Wire Cut Too Long" },
+                { value: "109", text: "Wrong Wire Color" },   { value: "110", text: "Missing Terminal" },
+                { value: "111", text: "Wrong Terminal" },     { value: "112", text: "Damaged Terminal" },
+                { value: "113", text: "Poor Crimp Quality" }, { value: "114", text: "Insulation Damage" },
+                { value: "115", text: "Assembly Error" },     { value: "116", text: "Quality Check Failure" },
+                { value: "117", text: "Machine Malfunction" },{ value: "118", text: "Setup Scrap" },
+                { value: "119", text: "End of Reel" },        { value: "120", text: "Material Defect" },
+                { value: "247", text: "Engineering Changes" },{ value: "248", text: "Terminal Change" },
+                { value: "249", text: "Length Change" },      { value: "250", text: "Runout" },
+                { value: "251", text: "Obsolescence" }
+            ],
+            "6": [
+                { value: "122", text: "Wire Cut Too Short" }, { value: "123", text: "Wire Cut Too Long" },
+                { value: "124", text: "Wrong Wire Color" },   { value: "125", text: "Missing Terminal" },
+                { value: "126", text: "Wrong Terminal" },     { value: "127", text: "Damaged Terminal" },
+                { value: "128", text: "Poor Crimp Quality" }, { value: "129", text: "Insulation Damage" },
+                { value: "130", text: "Assembly Error" },     { value: "131", text: "Quality Check Failure" },
+                { value: "132", text: "Machine Malfunction" },{ value: "133", text: "Setup Scrap" },
+                { value: "134", text: "End of Reel" },        { value: "135", text: "Material Defect" }
+            ],
+            "7": [
+                { value: "137", text: "Damaged Wire" },       { value: "138", text: "Wrong Length" },
+                { value: "139", text: "Poor Connection" },    { value: "140", text: "Terminal Issue" },
+                { value: "141", text: "Setup Scrap" },        { value: "142", text: "Quality Check Failure" },
+                { value: "143", text: "Material Defect" },    { value: "144", text: "Other" }
+            ],
+            "8": [
+                { value: "207", text: "Damaged Cable" },      { value: "208", text: "Wrong Length" },
+                { value: "209", text: "Poor Crimp" },         { value: "210", text: "Terminal Issue" },
+                { value: "211", text: "Setup Scrap" },        { value: "212", text: "Quality Check Failure" },
+                { value: "213", text: "Material Defect" }
+            ],
+            "9": [
+                { value: "215", text: "Exposed Wire" },       { value: "216", text: "Wrong Terminals" },
+                { value: "217", text: "Wrong Seals" },        { value: "218", text: "Swiped Terminals" },
+                { value: "219", text: "Broken Terminals" },   { value: "220", text: "Busted/Damaged Seals" },
+                { value: "221", text: "Long & Short Wires" }, { value: "222", text: "Thick Wire Cut Offs" },
+                { value: "223", text: "Wire Poor Quality" },  { value: "224", text: "Tool is Problem" },
+                { value: "225", text: "Long Over Lapping" },  { value: "226", text: "Long length cut offs" },
+                { value: "227", text: "Verification Method" },{ value: "228", text: "Over heating" },
+                { value: "229", text: "Terminal Poor Quality" },{ value: "230", text: "Over twisting" },
+                { value: "231", text: "Machine Shutdown" },   { value: "232", text: "Machine Problem" },
+                { value: "233", text: "Set-Up" },             { value: "234", text: "End-of-Reel" },
+                { value: "235", text: "Rework" },             { value: "236", text: "Production Scrap" },
+                { value: "237", text: "Obsolescence" },       { value: "238", text: "Substitute" },
+                { value: "239", text: "Damage from Supplier" },{ value: "240", text: "Samples" },
+                { value: "241", text: "Incorrect Part Used" },{ value: "242", text: "Engineering Scrap" },
+                { value: "252", text: "Engineering Changes" },{ value: "253", text: "Terminal Change" },
+                { value: "259", text: "Length Change" },      { value: "260", text: "Runout" }
+            ],
+            "10": [
+                { value: "254", text: "Obsolescence" },       { value: "255", text: "Engineering Changes" },
+                { value: "256", text: "Terminal Change" },    { value: "257", text: "Length Change" },
+                { value: "258", text: "Runout" }
+            ]
+        },
+
+        combiMeterPositions: [
+            "AMBIENT PRISM","BEZEL","BARCODE LABEL","CASE","COMBI METER",
+            "DIAL HOLDER","DISPLAY LCD","FRONT GLASS","FUEL POINTER",
+            "ID LABEL","LCD PRISM","LCD","MODULE CASE","PCB ASSY",
+            "REAR COVER","RING","RUBBER BUSH","SPEED METER",
+            "SPEED PRISM","SPEED SCREW","TEMPO POINTER",
+            "TRIP POINTER PCB ASSY","TRIP KNOB","STEPPER MOTOR"
+        ]
+    };
+
+    // ── INIT ──────────────────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', function () {
+        loadSavedEntries();
+        attachEventListeners();
+        loadScrapSections();
+    });
+
+    // ── TOGGLE: enable/disable form ───────────────────────────────────────────
+    function setFormEnabled(enabled) {
+        formEnabled = enabled;
+        const fields = ['manualPartNumber','scrapSection','scrapReason','quantity',
+                        'partPosition','lengthInput','machineType','machineNumber','engineeringPlant'];
+        fields.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.disabled = !enabled;
+        });
+
+        const overlay  = document.getElementById('formDisabledOverlay');
+        const actBtns  = document.getElementById('formActionButtons');
+        if (overlay) overlay.style.display  = enabled ? 'none'  : 'flex';
+        if (actBtns) actBtns.style.display  = enabled ? 'flex'  : 'none';
+
+        if (!enabled) {
+            // reset visible conditional fields
+            ['positionDiv','lengthDiv','machineTypeDiv','machineNumberDiv','engineeringPlantDiv']
+                .forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
+        }
+    }
+
+    // ── SECTIONS ──────────────────────────────────────────────────────────────
+    function loadScrapSections() {
+        const scrapSection = document.getElementById('scrapSection');
+        scrapSection.innerHTML = '<option value="">Select Section</option>';
+        STATIC_SCRAP_DATA.sections.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s.value; opt.textContent = s.text;
+            scrapSection.appendChild(opt);
+        });
+    }
+
+    async function handleSectionChange() {
+        if (!formEnabled) return;
+        const scrapSection = document.getElementById('scrapSection');
+        const scrapReason  = document.getElementById('scrapReason');
+        const sectionId    = scrapSection.value;
+
+        scrapReason.innerHTML = '<option value="">Select Reason</option>';
+        scrapReason.disabled  = !sectionId;
+
+        // show/hide conditional divs
+        document.getElementById('positionDiv')        .style.display = sectionId === "2"  ? 'block' : 'none';
+        document.getElementById('lengthDiv')          .style.display = ["5","6"].includes(sectionId) ? 'block' : 'none';
+        document.getElementById('machineTypeDiv')     .style.display = sectionId === "5"  ? 'block' : 'none';
+        document.getElementById('machineNumberDiv')   .style.display = 'none';
+        document.getElementById('engineeringPlantDiv').style.display = sectionId === "10" ? 'block' : 'none';
+
+        if (!sectionId) return;
+
+        // try API first, fall back to static
+        scrapReason.innerHTML = '<option value="">Loading...</option>';
+        scrapReason.disabled  = true;
+        try {
+            let reasons = await loadReasonsFromAPI(sectionId);
+            if (!reasons || reasons.length === 0) reasons = STATIC_SCRAP_DATA.reasonsBySection[sectionId] || [];
+            scrapReason.innerHTML = '<option value="">Select Reason</option>';
+            reasons.forEach(r => {
+                const opt = document.createElement('option');
+                opt.value = r.value; opt.textContent = r.text;
+                scrapReason.appendChild(opt);
+            });
+            scrapReason.disabled = false;
+        } catch(e) {
+            scrapReason.innerHTML = '<option value="">Error loading</option>';
+        }
+
+        if (sectionId === "2") loadPositions();
+        if (sectionId === "5") loadMachineTypes();
+    }
+
+    function loadMachineTypes() {
+        const mt = document.getElementById('machineType');
+        if (!mt) return;
+        mt.innerHTML = '<option value="">Select Machine Type</option>';
+        STATIC_SCRAP_DATA.preAssemblyFordMachines.forEach(m => {
+            const o = document.createElement('option'); o.value = m.value; o.textContent = m.text;
+            mt.appendChild(o);
+        });
+    }
+
+    function handleMachineTypeChange() {
+        const mt  = document.getElementById('machineType');
+        const mnd = document.getElementById('machineNumberDiv');
+        const mn  = document.getElementById('machineNumber');
+        if (!mt.value) { mnd.style.display = 'none'; return; }
+        mnd.style.display = 'block';
+        mn.innerHTML = '<option value="">Select Machine Number</option>';
+        (STATIC_SCRAP_DATA.machineNumbers[mt.value] || []).forEach(n => {
+            const o = document.createElement('option'); o.value = n; o.textContent = n;
+            mn.appendChild(o);
+        });
+    }
+
+    async function loadReasonsFromAPI(sectionId) {
+        try {
+            const res = await fetch(`/Operator/GetScrapReasonsBySection?sectionId=${sectionId}`);
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const result = await res.json();
+            return result.success && result.data ? result.data : null;
+        } catch(e) { return null; }
+    }
+
+    function loadPositions() {
+        const pp = document.getElementById('partPosition');
+        if (!pp) return;
+        pp.innerHTML = '<option value="">Select Position</option>';
+        STATIC_SCRAP_DATA.combiMeterPositions.forEach(p => {
+            const o = document.createElement('option'); o.value = p; o.textContent = p;
+            pp.appendChild(o);
+        });
+    }
+
+    // ── ADD / EDIT ENTRIES ────────────────────────────────────────────────────
+    function addToReview() { editState.isEditing ? updateExistingEntry() : addNewEntry(); }
+
+    function addNewEntry() {
+        const partNumber   = document.getElementById('manualPartNumber').value.trim();
+        const scrapSection = document.getElementById('scrapSection');
+        const scrapReason  = document.getElementById('scrapReason');
+        const quantity     = document.getElementById('quantity');
+        const partPosition = document.getElementById('partPosition');
+        const engPlant     = document.getElementById('engineeringPlant');
+
+        if (!partNumber)        { alert('Please enter a part number'); return; }
+        if (!scrapSection.value){ alert('Please select a scrap section'); return; }
+        if (!scrapReason.value) { alert('Please select a scrap reason'); return; }
+        if (!quantity.value || parseInt(quantity.value) <= 0) { alert('Please enter a valid quantity'); return; }
+        if (scrapSection.value === "2" && (!partPosition || !partPosition.value)) { alert('Position is required for CombiMeter'); return; }
+        if (scrapSection.value === "10" && (!engPlant || !engPlant.value)) { alert('Please select a plant for Engineering'); return; }
+
+        scrapState.entries.push(createEntryFromForm());
+        saveToStorage(); updateReviewTable(); clearFormOnly();
+    }
+
+    function updateExistingEntry() {
+        const scrapSection = document.getElementById('scrapSection');
+        const scrapReason  = document.getElementById('scrapReason');
+        const quantity     = document.getElementById('quantity');
+        if (!scrapSection.value || !scrapReason.value || !quantity.value || parseInt(quantity.value) <= 0) {
+            alert('Please fill in all required fields'); return;
+        }
+        const updated = createEntryFromForm();
+        const idx = editState.editingIndex < scrapState.entries.length ? editState.editingIndex : scrapState.entries.length;
+        scrapState.entries.splice(idx, 0, updated);
+        saveToStorage(); updateReviewTable(); clearFormOnly(); exitEditingMode();
+        alert('Entry updated!');
+    }
+
+    function createEntryFromForm() {
+        const scrapSection = document.getElementById('scrapSection');
+        const scrapReason  = document.getElementById('scrapReason');
+        const quantity     = document.getElementById('quantity');
+        const partPosition = document.getElementById('partPosition');
+        const lengthInput  = document.getElementById('lengthInput');
+        const machineType  = document.getElementById('machineType');
+        const machineNumber= document.getElementById('machineNumber');
+        const engPlant     = document.getElementById('engineeringPlant');
+
+        let lengthValue = 0;
+        if (lengthInput?.value?.trim()) { const lv = parseFloat(lengthInput.value); if (!isNaN(lv) && lv >= 0) lengthValue = lv; }
+
+        return {
+            partNumber:        document.getElementById('manualPartNumber').value.trim(),
+            department:        document.getElementById('department')?.textContent?.trim() || '',
+            line:              document.getElementById('line')?.textContent?.trim() || '',
+            shift:             document.getElementById('shift')?.textContent?.trim() || '',
+            scrapSectionId:    parseInt(scrapSection.value),
+            sectionName:       scrapSection.options[scrapSection.selectedIndex].text,
+            reasonId:          parseInt(scrapReason.value),
+            scrapReason:       scrapReason.options[scrapReason.selectedIndex].text,
+            position:          scrapSection.value === "2" ? (partPosition?.value || "") : "",
+            length:            lengthValue,
+            machineType:       machineType?.value || "",
+            machineNumber:     machineNumber?.value || "",
+            engineeringPlant:  engPlant?.value || "",
+            quantity:          parseInt(quantity.value),
+            stockUom:          'EA',
+            materialCost:      0,
+            timestamp:         new Date().toISOString()
+        };
+    }
+
+    function deleteEntry(index) {
+        if (confirm('Delete this entry?')) {
+            scrapState.entries.splice(index, 1);
+            saveToStorage(); updateReviewTable();
+        }
+    }
+
+    function toggleEntryDetails(index) {
+        const det = document.getElementById(`entry-details-${index}`);
+        if (det) {
+            document.querySelectorAll('.entry-details.visible').forEach(el => { if (el !== det) el.classList.remove('visible'); });
+            det.classList.toggle('visible');
+        }
+    }
+
+    function editEntry(index) {
+        if (index < 0 || index >= scrapState.entries.length) return;
+        const entry = scrapState.entries[index];
+        editState.originalEntry = JSON.parse(JSON.stringify(entry));
+        editState.isEditing     = true;
+        editState.editingIndex  = index;
+
+        // Enable form for editing
+        const toggle = document.getElementById('enableFormToggle');
+        if (toggle) { toggle.checked = true; setFormEnabled(true); }
+
+        document.getElementById('manualPartNumber').value = entry.partNumber;
+        document.getElementById('quantity').value         = entry.quantity;
+
+        const ss = document.getElementById('scrapSection');
+        ss.value = entry.scrapSectionId.toString();
+        handleSectionChange().then(() => {
+            setTimeout(() => {
+                document.getElementById('scrapReason').value = entry.reasonId.toString();
+                if (entry.position) { const pp = document.getElementById('partPosition'); if (pp) pp.value = entry.position; }
+                if (entry.length > 0) { const li = document.getElementById('lengthInput'); if (li) li.value = entry.length; }
+                if (entry.engineeringPlant) { const ep = document.getElementById('engineeringPlant'); if (ep) ep.value = entry.engineeringPlant; }
+            }, 150);
+        });
+
+        scrapState.entries.splice(index, 1);
+        saveToStorage(); updateReviewTable(); showEditingMode();
+    }
+
+    function showEditingMode() {
+        const addBtn  = document.getElementById('addToReviewBtn');
+        const clrBtn  = document.getElementById('clearBtn');
+        if (addBtn) { addBtn.textContent = 'Update Entry'; addBtn.style.backgroundColor = '#ffa500'; }
+        if (clrBtn) { clrBtn.textContent = 'Cancel Edit';  clrBtn.style.backgroundColor = '#ff4444'; clrBtn.style.color = '#fff'; }
+        const sec = document.getElementById('scrapEntrySection');
+        if (sec) { sec.style.borderColor = '#ffa500'; sec.style.boxShadow = '0 0 15px rgba(255,165,0,0.3)'; }
+    }
+
+    function exitEditingMode() {
+        const addBtn = document.getElementById('addToReviewBtn');
+        const clrBtn = document.getElementById('clearBtn');
+        if (addBtn) { addBtn.textContent = 'Add to Review'; addBtn.style.backgroundColor = ''; }
+        if (clrBtn) { clrBtn.textContent = 'Clear'; clrBtn.style.backgroundColor = ''; clrBtn.style.color = ''; }
+        const sec = document.getElementById('scrapEntrySection');
+        if (sec) { sec.style.borderColor = ''; sec.style.boxShadow = ''; }
+        editState.isEditing = false; editState.editingIndex = -1; editState.originalEntry = null;
+    }
+
+    function clearFormOnly() {
+        ['manualPartNumber','scrapSection','scrapReason','quantity',
+         'partPosition','lengthInput','machineType','machineNumber','engineeringPlant']
+            .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+        const sr = document.getElementById('scrapReason');
+        if (sr) { sr.disabled = true; sr.innerHTML = '<option value="">Select Reason</option>'; }
+        ['positionDiv','lengthDiv','machineTypeDiv','machineNumberDiv','engineeringPlantDiv']
+            .forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
+    }
+
+    function clearForm() { editState.isEditing ? cancelEdit() : clearFormOnly(); }
+
+    function cancelEdit() {
+        if (!confirm('Cancel editing? Changes will be lost.')) return;
+        if (editState.originalEntry) {
+            const idx = editState.editingIndex < scrapState.entries.length ? editState.editingIndex : scrapState.entries.length;
+            scrapState.entries.splice(idx, 0, editState.originalEntry);
+            saveToStorage(); updateReviewTable();
+        }
+        clearFormOnly(); exitEditingMode();
+    }
+
+    // ── REVIEW TABLE ──────────────────────────────────────────────────────────
+    function updateReviewTable() {
+        const body = document.getElementById('reviewTableBody');
+        const totalQtyEl = document.getElementById('totalQuantity');
+        if (!body) return;
+        body.innerHTML = '';
+        let totalQty = 0;
+
+        if (scrapState.entries.length === 0) {
+            body.innerHTML = '<div class="no-entries">No saved entries found. Go to <strong>Scan Part</strong> to create entries.</div>';
+            if (totalQtyEl) totalQtyEl.textContent = '0';
+            return;
+        }
+
+        scrapState.entries.forEach((entry, index) => {
+            const card = document.createElement('div');
+            card.className = 'scrap-entry-card';
+
+            const positionDetails     = entry.position ? `<div class="entry-detail"><strong>Position:</strong> ${entry.position}</div>` : '';
+            const lengthDetails       = entry.length && entry.length > 0 ? `<div class="entry-detail"><strong>Length:</strong> ${entry.length} mm</div>` : '';
+            const machineDetails      = entry.machineType && entry.machineNumber ? `<div class="entry-detail"><strong>Machine:</strong> ${entry.machineType.toUpperCase()} – ${entry.machineNumber}</div>` : '';
+            const engPlantDetails     = entry.engineeringPlant ? `<div class="entry-detail"><strong>Plant:</strong> ${entry.engineeringPlant}</div>` : '';
+
+            card.innerHTML = `
+                <div class="entry-header" onclick="toggleEntryDetails(${index})">
+                    <div class="entry-title">${entry.partNumber} — ${entry.scrapReason} (${entry.sectionName})</div>
+                    <div class="entry-quantity">Qty: ${entry.quantity}</div>
+                </div>
+                <div class="entry-details" id="entry-details-${index}">
+                    ${positionDetails}${lengthDetails}${machineDetails}${engPlantDetails}
+                    <div class="entry-detail"><strong>Department:</strong> ${entry.department}</div>
+                    <div class="entry-detail"><strong>Line:</strong> ${entry.line}</div>
+                    <div class="entry-detail"><strong>Shift:</strong> ${entry.shift}</div>
+                    <div class="entry-actions">
+                        <button type="button" class="btn-edit"   onclick="editEntry(${index})">Edit</button>
+                        <button type="button" class="btn-delete" onclick="deleteEntry(${index})">Delete</button>
+                    </div>
+                </div>`;
+            body.appendChild(card);
+            totalQty += parseInt(entry.quantity) || 0;
+        });
+
+        if (totalQtyEl) totalQtyEl.textContent = totalQty;
+    }
+
+    // ── STORAGE ───────────────────────────────────────────────────────────────
+    function saveToStorage() {
+        const d = JSON.stringify(scrapState.entries);
+        sessionStorage.setItem('scrapEntries', d);
+        localStorage.setItem('scrapEntries', d);
+    }
+
+    function loadSavedEntries() {
+        try {
+            const d = sessionStorage.getItem('scrapEntries') || localStorage.getItem('scrapEntries');
+            if (d) {
+                const arr = JSON.parse(d);
+                if (Array.isArray(arr) && arr.length > 0) {
+                    scrapState.entries = arr;
+                    updateReviewTable();
+                    return arr.length;
+                }
+            }
+        } catch(e) { console.error('Storage load error:', e); }
+        updateReviewTable(); // show empty state
+        return 0;
+    }
+
+    function clearStorage() {
+        sessionStorage.removeItem('scrapEntries');
+        localStorage.removeItem('scrapEntries');
+        scrapState.entries = [];
+    }
+
+    // ── EVENT LISTENERS ───────────────────────────────────────────────────────
+    function attachEventListeners() {
+        document.getElementById('enableFormToggle')?.addEventListener('change', function() {
+            setFormEnabled(this.checked);
+            if (this.checked) {
+                // re-populate sections now that selects are enabled
+                loadScrapSections();
+            }
+        });
+
+        document.getElementById('scrapSection')  ?.addEventListener('change', handleSectionChange);
+        document.getElementById('machineType')   ?.addEventListener('change', handleMachineTypeChange);
+        document.getElementById('addToReviewBtn')?.addEventListener('click',  addToReview);
+        document.getElementById('clearBtn')      ?.addEventListener('click',  clearForm);
+        document.getElementById('submitAllBtn')  ?.addEventListener('click',  handleSubmitAll);
+        document.getElementById('addNewPartBtn') ?.addEventListener('click',  () => { window.location.href = '/Operator/ScanPart'; });
+        document.getElementById('viewHistoryBtn')?.addEventListener('click',  () => { window.location.href = '/Operator/ScrapHistory'; });
+        document.getElementById('scanPartBtn')   ?.addEventListener('click',  () => { window.location.href = '/Operator/ScanPart'; });
+    }
+
+    // ── SUBMIT ────────────────────────────────────────────────────────────────
+    async function handleSubmitAll() {
+        if (scrapState.entries.length === 0) { alert('No entries to submit.'); return; }
+        if (!confirm(`Submit ${scrapState.entries.length} entries?`)) return;
+
+        const submitBtn   = document.getElementById('submitAllBtn');
+        const progressDiv = document.getElementById('submissionProgress');
+        if (progressDiv) progressDiv.classList.remove('hidden');
+        if (submitBtn)   { submitBtn.disabled = true; submitBtn.textContent = 'Submitting...'; }
+
+        try {
+            let successCount = 0, failCount = 0;
+            const failedEntries = [];
+            let batchId = null;
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+
+            for (let i = 0; i < scrapState.entries.length; i++) {
+                const entry = scrapState.entries[i];
+                try {
+                    const payload = {
+                        partNumber:       entry.partNumber,
+                        scrapSectionId:   parseInt(entry.scrapSectionId),
+                        reasonId:         parseInt(entry.reasonId),
+                        scrapReason:      entry.scrapReason,
+                        quantity:         parseInt(entry.quantity),
+                        position:         entry.position || "",
+                        length:           entry.length || 0,
+                        weight:           entry.weight || 0,
+                        scrapType:        entry.scrapType || 'component',
+                        machineType:      entry.machineType || "",
+                        machineNumber:    entry.machineNumber || "",
+                        department:       entry.department,
+                        line:             entry.line,
+                        shift:            entry.shift,
+                        stockUom:         entry.stockUom || "",
+                        materialCost:     parseFloat(entry.materialCost) || 0,
+                        partCategory:     entry.partCategory || "",
+                        plant:            entry.plant || "",
+                        company:          entry.company || "B",
+                        batchScrapId:     batchId,
+                        status:           "Pending TL",
+                        engineeringPlant: entry.engineeringPlant || ""
+                    };
+
+                    const res = await fetch('/Operator/SubmitScrap', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': token },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (res.ok) {
+                        const result = await res.json();
+                        if (result.success) {
+                            successCount++;
+                            if (batchId === null && result.data?.batchScrapId) batchId = result.data.batchScrapId;
+                        } else {
+                            failCount++; failedEntries.push({ index: i, entry, error: result.message });
+                        }
+                    } else {
+                        failCount++; failedEntries.push({ index: i, entry, error: `HTTP ${res.status}` });
+                    }
+                } catch(err) {
+                    failCount++; failedEntries.push({ index: i, entry, error: err.message });
+                }
+                await new Promise(r => setTimeout(r, 200));
+            }
+
+            if (progressDiv) progressDiv.classList.add('hidden');
+
+            if (failCount === 0) {
+                clearStorage(); showSuccessState();
+            } else {
+                alert(`⚠️ ${successCount} submitted, ${failCount} failed.\nFailed entries remain for retry.`);
+                const successIdx = [];
+                for (let i = 0; i < scrapState.entries.length; i++) {
+                    if (!failedEntries.some(f => f.index === i)) successIdx.push(i);
+                }
+                successIdx.reverse().forEach(i => scrapState.entries.splice(i, 1));
+                saveToStorage(); updateReviewTable();
+            }
+        } catch(err) {
+            alert('Error: ' + err.message);
+            if (progressDiv) progressDiv.classList.add('hidden');
+        } finally {
+            if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Submit All'; }
+        }
+    }
+
+    function showSuccessState() {
+        ['partInfoSection','scrapEntrySection','reviewSection'].forEach(id => document.getElementById(id)?.classList.add('hidden'));
+        document.getElementById('successMessage')?.classList.remove('hidden');
+        document.getElementById('postSubmissionActions')?.classList.remove('hidden');
+        scrapState.isSubmitted = true;
+    }
+
+    // ── NAVIGATION ────────────────────────────────────────────────────────────
+    function navigateHome() { window.location.href = '/Operator/Index'; }
+
+    window.toggleEntryDetails = toggleEntryDetails;
+    window.deleteEntry        = deleteEntry;
+    window.editEntry          = editEntry;
+    window.navigateHome       = navigateHome;
+</script>

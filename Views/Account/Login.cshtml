@@ -1,322 +1,1152 @@
 ﻿@model LoginViewModel
+
 @{
-    ViewData["Title"] = "Login - Hesto Harnesses";
     Layout = null;
+    ViewData["Title"] = "Login";
 }
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login - Hesto Harnesses</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/lib/bootstrap-icons/font/bootstrap-icons.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Scrap Management System</title>
+
+    <!-- Add these meta tags to prevent browser caching -->
+    <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
+    <!-- LOCAL RESOURCES ONLY - No external dependencies -->
+    <link rel="stylesheet" href="~/css/bootstrap-icons.min.css" asp-append-version="true">
+
     <style>
-        body {
+        * {
             margin: 0;
             padding: 0;
-            min-height: 100vh;
-            background: #1a1a1a;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            box-sizing: border-box;
         }
 
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            position: relative;
+        }
+
+            /* Corporate background pattern */
+            body::before {
+                content: '';
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-image: radial-gradient(circle at 25% 25%, rgba(66, 139, 202, 0.1) 0%, transparent 50%), radial-gradient(circle at 75% 75%, rgba(40, 167, 69, 0.1) 0%, transparent 50%);
+                z-index: -1;
+            }
+
+        /* Login container */
         .login-container {
             width: 100%;
-            max-width: 400px;
-            padding: 20px;
+            max-width: 460px;
+            margin: 20px;
         }
 
-        .login-box {
-            background: rgba(18, 18, 18, 0.95);
-            border: 1px solid #00ffff;
-            border-radius: 8px;
-            padding: 30px;
-            animation: glow 2s infinite alternate;
+        /* Login form */
+        .login-form {
+            width: 100%;
+            padding: 40px 35px;
+            background: rgba(255, 255, 255, 0.98);
+            border: 1px solid #dee2e6;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            position: relative;
         }
 
-        .login-title {
-            color: #00ffff;
+        .login-header {
             text-align: center;
+            margin-bottom: 35px;
+            padding-bottom: 25px;
+            border-bottom: 2px solid #428bca;
+        }
+
+            .login-header h1 {
+                color: #1a1a2e;
+                font-size: 26px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 2px;
+                margin-bottom: 8px;
+            }
+
+            .login-header .tagline {
+                color: #6c757d;
+                font-size: 11px;
+                letter-spacing: 1.5px;
+                text-transform: uppercase;
+                margin-top: 8px;
+            }
+
+        /* HESTO Logo/Header */
+        h2 {
+            color: #1a1a2e;
             font-size: 28px;
-            margin-bottom: 30px;
+            text-align: center;
+            margin-bottom: 8px;
+            font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 2px;
         }
 
-        .login-tabs {
-            display: flex;
-            gap: 10px;
+        /* Add company tagline */
+        .login-form::after {
+            content: 'AUTOMOTIVE HARNESS SOLUTIONS';
+            display: block;
+            text-align: center;
+            color: #6c757d;
+            font-size: 12px;
+            letter-spacing: 1px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #428bca;
+            padding-bottom: 15px;
+        }
+
+        /* Login options */
+        .login-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
             margin-bottom: 30px;
         }
 
-        .login-tab-btn {
-            flex: 1;
-            padding: 12px;
-            border: 1px solid #00ffff;
-            background: transparent;
-            color: #00ffff;
+        .option.engineer-option {
+            grid-column: 1 / -1;
+        }
+
+        .option {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            padding: 18px 12px;
+            color: #495057;
             cursor: pointer;
-            transition: all 0.3s ease;
-            border-radius: 4px;
+            text-align: center;
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
+            min-height: 110px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
         }
 
-        .login-tab-btn.active {
-            background: rgba(0, 255, 255, 0.1);
-            box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
+            .option:hover {
+                background: #e9ecef;
+                border-color: #428bca;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(66, 139, 202, 0.15);
+            }
+
+            .option.active {
+                border-color: #428bca;
+                background: #e3f2fd;
+                color: #1565c0;
+                box-shadow: 0 4px 12px rgba(66, 139, 202, 0.25);
+            }
+
+
+            .option i {
+                font-size: 28px;
+                margin-bottom: 10px;
+                color: #428bca;
+                display: block;
+            }
+
+            .option span {
+                font-size: 11px;
+                text-transform: uppercase;
+                margin-bottom: 4px;
+                font-weight: 600;
+            }
+
+            .option small {
+                font-size: 10px;
+                opacity: 0.7;
+            }
+
+            .option .option-title {
+                font-size: 11px;
+                text-transform: uppercase;
+                font-weight: 700;
+                margin-bottom: 4px;
+                line-height: 1.3;
+            }
+
+            .option .option-subtitle {
+                font-size: 10px;
+                opacity: 0.75;
+                font-weight: 500;
+            }
+
+        /* Form fields */
+        .input-field {
+            margin-bottom: 22px;
         }
 
-        .login-tab-btn small {
-            font-size: 12px;
-            opacity: 0.8;
-            margin-top: 5px;
+            .input-field label {
+                display: block;
+                color: #495057;
+                margin-bottom: 8px;
+                font-size: 13px;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+
+            .input-field input {
+                width: 100%;
+                padding: 14px 16px;
+                background: #fff;
+                border: 2px solid #dee2e6;
+                color: #495057;
+                outline: none;
+                transition: all 0.3s ease;
+                font-size: 15px;
+                border-radius: 6px;
+            }
+
+                .input-field input:focus {
+                    border-color: #428bca;
+                    box-shadow: 0 0 0 0.2rem rgba(66, 139, 202, 0.15);
+                }
+
+        .input-hint {
+            color: #6c757d;
+            font-size: 11px;
+            margin-top: 6px;
+            font-style: italic;
         }
 
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            color: #00ffff;
-            margin-bottom: 8px;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 12px;
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid #00ffff;
-            border-radius: 4px;
-            color: #fff;
-        }
-
-        .form-control:focus {
-            outline: none;
-            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
-        }
-
-        .password-input {
+        /* Password wrapper */
+        .password-wrapper {
             position: relative;
         }
 
-        .toggle-password {
-            position: absolute;
-            right: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #00ffff;
-            cursor: pointer;
+            .password-wrapper i {
+                position: absolute;
+                right: 14px;
+                top: 50%;
+                transform: translateY(-50%);
+                cursor: pointer;
+                color: #6c757d;
+                font-size: 18px;
+                transition: color 0.2s;
+            }
+
+                .password-wrapper i:hover {
+                    color: #428bca;
+                }
+
+        .message {
+            padding: 14px 16px;
+            margin-bottom: 20px;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 14px;
+            display: none;
+            animation: slideDown 0.3s ease;
+        }
+        /* Error message */
+            .message.error {
+                color: #721c24;
+                background: #f8d7da;
+                border: 1px solid #f5c6cb;
+            }
+
+            .message.success {
+                color: #155724;
+                background: #d4edda;
+                border: 1px solid #c3e6cb;
+            }
+
+            .message.info {
+                color: #0c5460;
+                background: #d1ecf1;
+                border: 1px solid #bee5eb;
+            }
+
+        /* Session help */
+        .session-help {
+            text-align: center;
+            margin: 20px 0;
+            padding: 16px;
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 6px;
+            display: none;
+            animation: slideDown 0.3s ease;
         }
 
-        .login-button {
+            .session-help p {
+                margin: 0 0 12px 0;
+                font-size: 13px;
+                color: #856404;
+            }
+
+            .session-help i {
+                margin-right: 6px;
+            }
+
+        @@keyframes slideDown {
+            from
+
+        {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        }
+        /* Buttons */
+        .submit-btn {
             width: 100%;
-            padding: 12px;
-            background: #00ffff;
-            color: #000;
+            padding: 14px;
+            background: #428bca;
             border: none;
-            border-radius: 4px;
-            font-weight: bold;
+            color: #fff;
             cursor: pointer;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 1.2px;
+            font-size: 13px;
+            font-weight: 700;
             transition: all 0.3s ease;
+            margin-top: 8px;
+            border-radius: 6px;
+        }
+
+            .submit-btn:hover:not(:disabled) {
+                background: #3071a9;
+                transform: translateY(-2px);
+                box-shadow: 0 6px 16px rgba(66, 139, 202, 0.3);
+            }
+
+            .submit-btn:disabled {
+                opacity: 0.6;
+                cursor: not-allowed;
+            }
+            .submit-btn:hover {
+                background: #3071a9;
+                border-color: #3071a9;
+                transform: translateY(-1px);
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            }
+
+        #register-btn {
+            background: #28a745;
+            border-color: #28a745;
+            margin-top: 12px;
+        }
+
+        #clearSessionsBtn {
+            background: #dc3545;
+            padding: 12px 24px;
+            font-size: 13px;
+            width: auto;
+            margin: 0 auto;
+            display: inline-block;
+        }
+
+            #clearSessionsBtn:hover {
+                background: #c82333;
+            }
+            #register-btn:hover {
+                background: #218838;
+                border-color: #218838;
+            }
+
+        #force-login-btn {
+            background: #ffc107;
+            border-color: #ffc107;
+            color: #212529;
+        }
+
+            #force-login-btn:hover {
+                background: #e0a800;
+                border-color: #e0a800;
+            }
+
+        /* Animation */
+        @@keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .spin {
+            animation: spin 1s linear infinite;
+        }
+
+        @@keyframes spin {
+            from
+
+        {
+            transform: rotate(0deg);
+        }
+
+        to {
+            transform: rotate(360deg);
+        }
+
+        }
+
+
+        /* Direct Admin Link */
+        .admin-direct-link {
+            text-align: center;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid #e9ecef;
+        }
+
+            .admin-direct-link a {
+                color: #428bca;
+                text-decoration: none;
+                font-size: 13px;
+                font-weight: 600;
+                transition: all 0.2s;
+            }
+
+                .admin-direct-link a:hover {
+                    color: #3071a9;
+                    text-decoration: underline;
+                }
+
+        /* Mobile/Scanner optimizations */
+        @@media (max-width: 768px) {
+            .login-form {
+                padding: 20px;
+                margin: 10px;
+            }
+
+            .option {
+                min-height: 85px;
+                padding: 12px 8px;
+            }
+
+            .submit-btn {
+                padding: 15px;
+                font-size: 16px;
+            }
+        }
+
+        @@media (max-width: 768px) {
+            .login-container {
+                margin: 10px;
+            }
+
+            .login-form {
+                padding: 30px 24px;
+            }
+
+            .login-header h1 {
+                font-size: 22px;
+            }
+
+            .login-options {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .option {
+                min-height: 95px;
+                padding: 16px 10px;
+            }
+
+                .option i {
+                    font-size: 24px;
+                    margin-bottom: 8px;
+                }
+
+            .submit-btn {
+                padding: 16px;
+                font-size: 14px;
+            }
+        }
+
+        /* AI Assistant - HESTO Corporate Theme */
+        .ai-assistant {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .ai-toggle {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: #428bca;
+            border: 2px solid #fff;
+            color: #fff;
+            cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            font-size: 24px;
+            box-shadow: 0 4px 16px rgba(66, 139, 202, 0.4);
+            transition: all 0.3s ease;
+            animation: pulse 3s infinite;
         }
 
-        .login-button:hover {
-            background: #00cccc;
-            box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
+            .ai-toggle:hover {
+                transform: scale(1.08);
+                box-shadow: 0 6px 20px rgba(66, 139, 202, 0.6);
+            }
+
+            .ai-toggle.active {
+                background: #3071a9;
+                box-shadow: 0 6px 16px rgba(48, 113, 169, 0.6);
+            }
+
+        @@keyframes pulse {
+            0%, 100%
+
+        {
+            box-shadow: 0 4px 16px rgba(66, 139, 202, 0.4);
         }
 
-        .login-footer {
-            text-align: center;
-            margin-top: 20px;
-            display: flex;
-            justify-content: center;
-            gap: 20px;
+        50% {
+            box-shadow: 0 4px 16px rgba(66, 139, 202, 0.6), 0 0 0 12px rgba(66, 139, 202, 0.1);
         }
 
-        .login-footer a {
-            color: #00ffff;
-            text-decoration: none;
-            font-size: 14px;
         }
 
-        .validation-message {
+        .ai-toggle svg {
+            width: 26px;
+            height: 26px;
+            fill: #fff;
+        }
+
+        .ai-chat {
+            position: absolute;
+            bottom: 80px;
+            right: 0;
+            width: 350px;
+            max-width: 90vw;
+            height: 450px;
+            background: #fff;
+            border: 1px solid #dee2e6;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+            border-radius: 12px;
             display: none;
-            background: rgba(255, 0, 0, 0.1);
-            border: 1px solid #ff4444;
-            color: #ff4444;
-            padding: 10px;
-            border-radius: 4px;
-            margin-bottom: 20px;
+            flex-direction: column;
+            animation: slideUp 0.3s ease;
+        }
+
+        @@keyframes slideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .ai-header {
+            padding: 15px;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #f8f9fa;
+            border-radius: 12px 12px 0 0;
+        }
+
+        .ai-title {
+            color: #1a1a2e;
+            font-size: 16px;
+            font-weight: bold;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+            .ai-title svg {
+                width: 18px;
+                height: 18px;
+                fill: #428bca;
+            }
+
+        .ai-status {
+            color: #28a745;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: 600;
+        }
+
+            .ai-status::before {
+                content: "●";
+                animation: blink 1.5s infinite;
+            }
+
+        @@keyframes blink {
+            0%, 50% {
+                opacity: 1;
+            }
+
+            51%, 100% {
+                opacity: 0.3;
+            }
+        }
+
+        .ai-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            max-height: 300px;
+            background: #fff;
+        }
+
+        .ai-message {
+            margin-bottom: 15px;
+            opacity: 0;
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+            .ai-message.bot {
+                text-align: left;
+            }
+
+            .ai-message.user {
+                text-align: right;
+            }
+
+        .message-bubble {
+            display: inline-block;
+            padding: 10px 15px;
+            border-radius: 15px;
+            max-width: 80%;
+            word-wrap: break-word;
+            position: relative;
+        }
+
+        .ai-message.bot .message-bubble {
+            background: #e3f2fd;
+            border: 1px solid #bbdefb;
+            color: #1565c0;
+        }
+
+        .ai-message.user .message-bubble {
+            background: #428bca;
+            color: #fff;
+        }
+
+        @@keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .ai-input-area {
+            padding: 15px;
+            border-top: 1px solid #dee2e6;
+            display: flex;
+            gap: 10px;
+            background: #f8f9fa;
+            border-radius: 0 0 12px 12px;
+        }
+
+        .ai-input {
+            flex: 1;
+            padding: 10px 15px;
+            background: #fff;
+            border: 1px solid #dee2e6;
+            color: #495057;
+            border-radius: 20px;
+            outline: none;
             font-size: 14px;
         }
 
-        @@keyframes glow {
-            from {
-                box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+            .ai-input:focus {
+                border-color: #428bca;
+                box-shadow: 0 0 0 0.2rem rgba(66, 139, 202, 0.25);
             }
-            to {
-                box-shadow: 0 0 30px rgba(0, 255, 255, 0.4);
-            }
+
+        .ai-send {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #428bca;
+            border: 1px solid #428bca;
+            color: #fff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
         }
 
-        .text-danger {
-            color: #ff4444;
+            .ai-send:hover {
+                background: #3071a9;
+                border-color: #3071a9;
+                transform: scale(1.05);
+            }
+
+            .ai-send svg {
+                width: 16px;
+                height: 16px;
+                fill: #fff;
+            }
+
+        .quick-actions {
+            padding: 10px 15px;
+            border-top: 1px solid #dee2e6;
+            background: #f8f9fa;
+        }
+
+        .quick-action-btn {
+            display: inline-block;
+            padding: 6px 12px;
+            margin: 2px;
+            background: #fff;
+            border: 1px solid #dee2e6;
+            color: #495057;
+            text-decoration: none;
             font-size: 12px;
-            margin-top: 4px;
-            display: block;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
         }
 
-        .bi {
-            font-size: 20px;
-            margin-bottom: 5px;
+            .quick-action-btn:hover {
+                background: #e3f2fd;
+                border-color: #428bca;
+                color: #1565c0;
+            }
+
+        .typing-indicator {
+            display: none;
+            color: #6c757d;
+            font-style: italic;
+            opacity: 0.7;
+            padding: 0 15px;
+        }
+
+        .typing-dots::after {
+            content: "";
+            animation: dots 1.5s infinite;
+        }
+
+        @@keyframes dots {
+            0%, 20% {
+                content: "";
+            }
+
+            40% {
+                content: ".";
+            }
+
+            60% {
+                content: "..";
+            }
+
+            80%, 100% {
+                content: "...";
+            }
+        }
+
+        /* Mobile Responsive */
+        @@media (max-width: 768px) {
+            .ai-chat {
+                width: 300px;
+                height: 400px;
+            }
+
+            .ai-toggle {
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+            }
+        }
+
+        /* Notification badge */
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 20px;
+            height: 20px;
+            background: #dc3545;
+            color: white;
+            border-radius: 50%;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: bounce 0.5s ease infinite alternate;
+        }
+
+        @@keyframes bounce {
+            from {
+                transform: scale(1);
+            }
+
+            to {
+                transform: scale(1.1);
+            }
+        }
+
+        /* HESTO Branding Enhancement */
+        .login-form::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #428bca, #28a745, #428bca);
+            border-radius: 10px;
+            z-index: -1;
+            opacity: 0.1;
         }
     </style>
 </head>
 <body>
     <div class="login-container">
-        <div class="login-box">
-            <h1 class="login-title">HESTO HARNESSES</h1>
-
-            <div class="login-tabs">
-                <button type="button" class="login-tab-btn active" data-login-type="operator">
-                    <i class="bi bi-person-badge"></i>
-                    <span>Operator/TeamLeader</span>
-                    <small>Use Clock Number</small>
-                </button>
-                <button type="button" class="login-tab-btn" data-login-type="admin">
-                    <i class="bi bi-shield-lock"></i>
-                    <span>Admin/Management</span>
-                    <small>Use Email Address</small>
-                </button>
+        <div class="login-form">
+            <!-- Header -->
+            <div class="login-header">
+                <h1>Scrap Management</h1>
+                <div class="tagline">Automotive Harness Solutions</div>
             </div>
 
-            <form asp-action="Login" asp-controller="Account" method="post" id="loginForm">
+            <form id="loginForm" action="/Account/LoginPost" method="post">
                 @Html.AntiForgeryToken()
-                <div class="validation-message"></div>
+                <input type="hidden" name="X-Requested-With" value="XMLHttpRequest" />
+                <input type="hidden" id="LoginType" name="LoginType" value="operator" />
+                <input type="hidden" id="ForceLogin" name="ForceLogin" value="false" />
 
-                <input type="hidden" asp-for="LoginType" id="loginType" value="operator" />
+                <!-- FIXED: Login options with consistent 3-column grid -->
+                <div class="login-options">
+                    <div class="option" data-type="admin" id="adminOption">
+                        <i class="bi bi-shield-lock"></i>
+                        <div class="option-title">Admin/<br />Management</div>
+                        <div class="option-subtitle">Name.Surname</div>
+                    </div>
 
-                <div class="form-group">
-                    <label asp-for="ClockNumber" id="loginLabel">Clock Number</label>
-                    <input asp-for="ClockNumber" class="form-control" placeholder="Enter clock number" autocomplete="off" />
-                    <span asp-validation-for="ClockNumber" class="text-danger"></span>
+                    <div class="option active" data-type="operator" id="operatorOption">
+                        <i class="bi bi-person-badge"></i>
+                        <div class="option-title">Operator/<br />TeamLeader</div>
+                        <div class="option-subtitle">Clock Number</div>
+                    </div>
+
+                    <div class="option" data-type="engineer" id="engineerOption">
+                        <i class="bi bi-gear-fill"></i>
+                        <div class="option-title">Engineer</div>
+                        <div class="option-subtitle">Clock Number</div>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label asp-for="Password">Password</label>
-                    <div class="password-input">
-                        <input asp-for="Password" class="form-control" placeholder="Enter password" type="password" />
-                        <i class="bi bi-eye-slash toggle-password"></i>
-                    </div>
-                    <span asp-validation-for="Password" class="text-danger"></span>
+                <!-- Messages -->
+                <div class="message error" id="errorMessage"
+                     style="@(ViewData["Message"] != null ? "display:block" : "display:none")">
+                    @(ViewData["Message"] ?? "")
                 </div>
 
-                <button type="submit" class="login-button">
-                    <span class="button-text">LOG IN</span>
-                    <div class="spinner-border spinner-border-sm d-none" role="status">
-                        <span class="visually-hidden">Loading...</span>
+                <!-- Session help -->
+                <div class="session-help" id="sessionHelp">
+                    <p>
+                        <i class="bi bi-info-circle"></i>
+                        Can't login? Your session might be active elsewhere.
+                    </p>
+                    <button type="button" id="clearSessionsBtn" class="submit-btn">
+                        <i class="bi bi-trash"></i> Clear All My Sessions
+                    </button>
+                </div>
+
+                <!-- Clock Number input -->
+                <div class="input-field">
+                    <label id="loginInputLabel" for="ClockNumber">Clock Number</label>
+                    <input type="text" id="ClockNumber" name="ClockNumber" required autocomplete="off">
+                    <div class="input-hint operator-hint">For Operator and TeamLeader roles only</div>
+                    <div class="input-hint admin-hint" style="display: none;">
+                        For Admin roles: Enter your name.surname or just name
                     </div>
+                    <div class="input-hint engineer-hint" style="display: none;">
+                        For Engineer roles: Enter your clock number
+                    </div>
+                </div>
+
+                <!-- Password input -->
+                <div class="input-field">
+                    <label for="Password">Password</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="Password" name="Password" required autocomplete="current-password">
+                        <i class="bi bi-eye-slash" id="togglePassword"></i>
+                    </div>
+                </div>
+
+                <!-- Submit buttons -->
+                <button type="submit" id="access-system-btn" class="submit-btn">
+                    Access System
                 </button>
 
-                <div class="login-footer">
-                    <a asp-action="Register">Register New User</a>
-                    <span class="separator">|</span>
-                    <a asp-action="ForgotPassword">Forgot Password?</a>
-                </div>
+                <button type="button" id="register-btn" class="submit-btn">
+                    Register New User
+                </button>
             </form>
+
+            <!-- Admin link -->
+            <div class="admin-direct-link">
+                <a href="#" id="adminLoginLink">Admin/Management Login →</a>
+            </div>
         </div>
     </div>
 
-    <!-- Scripts at the bottom of the body -->
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
-    <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
-    <script>
-        $(document).ready(function() {
-            const $form = $('#loginForm');
-            const $submitButton = $('.login-button');
-            const $spinner = $('.spinner-border');
-            const $buttonText = $('.button-text');
-            const $validationMessage = $('.validation-message');
+    <!-- LOCAL JQUERY -->
+    <script src="~/js/jquery.min.js" asp-append-version="true"></script>
 
-            // Tab switching
-            $('.login-tab-btn').click(function() {
-                $('.login-tab-btn').removeClass('active');
-                $(this).addClass('active');
-                
-                const loginType = $(this).data('login-type');
-                $('#loginType').val(loginType);
-                
-                if (loginType === 'admin') {
-                    $('#loginLabel').text('Email Address');
-                    $('#ClockNumber').attr('placeholder', 'Enter email address');
-                } else {
-                    $('#loginLabel').text('Clock Number');
-                    $('#ClockNumber').attr('placeholder', 'Enter clock number');
+    <script>
+        $(document).ready(function () {
+            console.log("✅ Login page initialized");
+
+            // Check URL parameters
+            function checkUrlParameters() {
+                var urlParams = new URLSearchParams(window.location.search);
+                var $errorMsg = $('.message.error');
+
+                $errorMsg.hide();
+
+                if (urlParams.has('sessionExpired')) {
+                    $errorMsg.text('Your session has expired. Please log in again.').show();
+                } else if (urlParams.has('fresh')) {
+                    $('.message.success').text('You have been logged out successfully.').show();
+                } else if (urlParams.has('error')) {
+                    $errorMsg.text('An error occurred. Please try again.').show();
                 }
 
-                // Clear fields and validation messages
-                $('#ClockNumber, #Password').val('');
-                $validationMessage.hide();
-                $('.text-danger').hide();
-            });
+                if (window.history && window.history.replaceState && urlParams.toString()) {
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
+            }
+
+            checkUrlParameters();
+
+            // Login type switching
+            function switchLoginType(type) {
+                console.log("🔄 Switching to: " + type);
+                $('#LoginType').val(type);
+                $('.option').removeClass('active');
+
+                if (type === 'admin') {
+                    $('#adminOption').addClass('active');
+                    $('#loginInputLabel').text('USERNAME');
+                    $('#ClockNumber').attr('placeholder', 'name.surname or name');
+                    $('.admin-hint').show();
+                    $('.operator-hint, .engineer-hint').hide();
+                } else if (type === 'engineer') {
+                    $('#engineerOption').addClass('active');
+                    $('#loginInputLabel').text('CLOCK NUMBER');
+                    $('#ClockNumber').attr('placeholder', '');
+                    $('.engineer-hint').show();
+                    $('.admin-hint, .operator-hint').hide();
+                } else {
+                    $('#operatorOption').addClass('active');
+                    $('#loginInputLabel').text('CLOCK NUMBER');
+                    $('#ClockNumber').attr('placeholder', '');
+                    $('.operator-hint').show();
+                    $('.admin-hint, .engineer-hint').hide();
+                }
+
+                $('#ClockNumber').val('');
+                $('.message').hide();
+                $('#ClockNumber').focus();
+            }
+
+            // Attach click events
+            $('#adminOption').on('click', function() { switchLoginType('admin'); });
+            $('#operatorOption').on('click', function() { switchLoginType('operator'); });
+            $('#engineerOption').on('click', function() { switchLoginType('engineer'); });
 
             // Password visibility toggle
-            $('.toggle-password').click(function() {
-                const $input = $(this).closest('.password-input').find('input');
-                const type = $input.attr('type') === 'password' ? 'text' : 'password';
-                $input.attr('type', type);
+            $('#togglePassword').on('click', function () {
+                const $password = $('#Password');
+                const type = $password.attr('type') === 'password' ? 'text' : 'password';
+                $password.attr('type', type);
                 $(this).toggleClass('bi-eye bi-eye-slash');
             });
 
-            // Form submission
-            $form.on('submit', function(e) {
-                e.preventDefault();
+            // Login attempts tracking
+            let loginAttempts = 0;
 
-                if (!this.checkValidity()) {
+            // Form submission
+            $('#loginForm').on('submit', function (e) {
+                e.preventDefault();
+                console.log("🚀 Form submission");
+
+                $('.message').hide();
+
+                const loginType = $('#LoginType').val();
+                const clockNumber = $('#ClockNumber').val().trim();
+                const password = $('#Password').val();
+
+                if (!clockNumber || !password) {
+                    $('.message.error').text('Please enter both username and password').show();
                     return;
                 }
 
-                $submitButton.prop('disabled', true);
-                $spinner.removeClass('d-none');
-                $buttonText.text('Logging in...');
-                $validationMessage.hide();
+                const $submitBtn = $('#access-system-btn');
+                const originalText = $submitBtn.text();
+                $submitBtn.prop('disabled', true).html('<i class="bi bi-arrow-repeat spin"></i> Logging in...');
+
+                const formData = new FormData();
+                formData.append('ClockNumber', clockNumber);
+                formData.append('Password', password);
+                formData.append('LoginType', loginType);
+                formData.append('RememberMe', 'false');
+                formData.append('__RequestVerificationToken', $('input[name="__RequestVerificationToken"]').val());
 
                 $.ajax({
-                    url: this.action,
-                    method: 'POST',
-                    data: $(this).serialize(),
-                    success: function(response) {
+                    url: '/Account/LoginPost',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    success: function (response) {
+                        console.log('✅ Login response:', response);
+
                         if (response.success) {
-                            window.location.href = response.redirectUrl;
+                            loginAttempts = 0;
+                            $('#sessionHelp').hide();
+
+                            if (response.hadPreviousSession) {
+                                $('.message.info').text(response.message).show();
+                            }
+
+                            setTimeout(function () {
+                                window.location.href = response.redirectUrl;
+                            }, 500);
                         } else {
-                            $validationMessage.html(response.message).show();
-                            $submitButton.prop('disabled', false);
-                            $spinner.addClass('d-none');
-                            $buttonText.text('LOG IN');
+                            loginAttempts++;
+
+                            if (loginAttempts >= 2) {
+                                $('#sessionHelp').slideDown();
+                            }
+
+                            $('.message.error').text(response.message || 'Login failed').show();
+                            $submitBtn.prop('disabled', false).text(originalText);
                         }
                     },
-                    error: function() {
-                        $validationMessage.html('An error occurred. Please try again.').show();
-                        $submitButton.prop('disabled', false);
-                        $spinner.addClass('d-none');
-                        $buttonText.text('LOG IN');
+                    error: function (xhr, status, error) {
+                        console.error('❌ Login error:', error);
+                        loginAttempts++;
+
+                        if (loginAttempts >= 2) {
+                            $('#sessionHelp').slideDown();
+                        }
+
+                        $('.message.error')
+                            .text('An error occurred during login. Please try again.')
+                            .show();
+                        $submitBtn.prop('disabled', false).text(originalText);
                     }
                 });
             });
+
+            // Clear sessions button
+            $('#clearSessionsBtn').on('click', function() {
+                const clockNumber = $('#ClockNumber').val().trim();
+
+                if (!clockNumber) {
+                    $('.message.error').text('Please enter your clock number first').show();
+                    return;
+                }
+
+                const $btn = $(this);
+                const originalText = $btn.html();
+                $btn.prop('disabled', true).html('<i class="bi bi-arrow-repeat spin"></i> Clearing...');
+
+                $.ajax({
+                    url: '/Account/ClearUserSessions',
+                    type: 'POST',
+                    data: { clockNumber: clockNumber },
+                    success: function(response) {
+                        if (response.success) {
+                            $('.message.success')
+                                .html('<i class="bi bi-check-circle"></i> Sessions cleared! Refreshing...')
+                                .show();
+                            $('#sessionHelp').slideUp();
+
+                            setTimeout(function() {
+                                window.location.reload(true);
+                            }, 1000);
+                        } else {
+                            $('.message.error').text(response.message || 'Failed to clear sessions').show();
+                            $btn.prop('disabled', false).html(originalText);
+                        }
+                    },
+                    error: function() {
+                        $('.message.error').text('Error clearing sessions. Please contact support.').show();
+                        $btn.prop('disabled', false).html(originalText);
+                    }
+                });
+            });
+
+            // Register button
+            $('#register-btn').on('click', function() {
+                window.location.href = '/Account/UserRegistrationRequest';
+            });
+
+            // Admin login link
+            $('#adminLoginLink').on('click', function(e) {
+                e.preventDefault();
+                switchLoginType('admin');
+            });
+
+            // Initialize with default type
+            switchLoginType('operator');
+
+            console.log("✅ All event handlers attached");
+        });
+    </script>
+
+    <!-- AI Assistant Widget (simplified) -->
+    <div class="ai-assistant">
+        <div class="ai-toggle" id="aiToggle" title="Need help?">
+            <svg viewBox="0 0 24 24">
+                <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 1H5C3.9 1 3 1.9 3 3V7C1.9 7 1 7.9 1 9V16C1 17.1 1.9 18 3 18V21C3 22.1 3.9 23 5 23H8C9.1 23 10 22.1 10 21V19H14V21C14 22.1 14.9 23 16 23H19C20.1 23 21 22.1 21 21V18C22.1 18 23 17.1 23 16V9C23 7.9 22.1 7 21 7V9M18 10C18.6 10 19 10.4 19 11S18.6 12 18 12 17 11.6 17 11 17.4 10 18 10M6 10C6.6 10 7 10.4 7 11S6.6 12 6 12 5 11.6 5 11 5.4 10 6 10Z" />
+            </svg>
+        </div>
+    </div>
+
+    <script>
+        // Simple AI assistant toggle
+        $('#aiToggle').on('click', function() {
+            alert('AI Assistant - Coming Soon!\n\nFor support:\n📧 thembelihle.manyoni@hesto.co.za\n📞 Extension: 6770');
         });
     </script>
 </body>

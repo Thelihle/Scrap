@@ -1,0 +1,25 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Claims</title>
+</head>
+<body>
+    <h2>Debug User Claims</h2>
+    <button onclick="checkClaims()">Check Current User Claims</button>
+    <div id="result"></div>
+
+    <script>
+    function checkClaims() {
+        fetch('/Account/TestClaims')
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('result').innerHTML =
+                    '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            })
+            .catch(e => {
+                document.getElementById('result').innerHTML = 'Error: ' + e;
+            });
+    }
+    </script>
+</body>
+</html>

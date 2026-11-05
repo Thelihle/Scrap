@@ -1,0 +1,633 @@
+﻿@model SCP_Control.ViewModels.AnalyticsDashboardViewModel
+@{
+    ViewData["Title"] = "Scrap Analytics Dashboard";
+    Layout = null;
+
+    var start = Model.DateRange.StartDate.ToString("yyyy-MM-dd");
+    var end = Model.DateRange.EndDate.ToString("yyyy-MM-dd");
+}
+
+@functions {
+    // Dapper rows are IDictionary<string, object> — read columns by name safely
+    private static List<string> Labels(IEnumerable<dynamic> rows, string key)
+    {
+        var list = new List<string>();
+        if (rows == null) return list;
+        foreach (object r in rows)
+        {
+            object v = null;
+            if (r is IDictionary<string, object> d) d.TryGetValue(key, out v);
+            if (v == null || v is DBNull) list.Add("Unknown");
+            else if (v is DateTime dt) list.Add(dt.ToString("dd MMM"));
+            else list.Add(v.ToString());
+        }
+        return list;
+    }
+
+    private static List<decimal> Values(IEnumerable<dynamic> rows, string key)
+    {
+        var list = new List<decimal>();
+        if (rows == null) return list;
+        foreach (object r in rows)
+        {
+            object v = null;
+            if (r is IDictionary<string, object> d) d.TryGetValue(key, out v);
+            list.Add(v == null || v is DBNull ? 0m : Convert.ToDecimal(v));
+        }
+        return list;
+    }
+
+    private static string Cell(object row, string key)
+    {
+        if (row is IDictionary<string, object> d && d.TryGetValue(key, out var v) && v != null && !(v is DBNull))
+            return v.ToString();
+        return "";
+    }
+
+    private static decimal Num(object row, string key)
+    {
+        if (row is IDictionary<string, object> d && d.TryGetValue(key, out var v) && v != null && !(v is DBNull))
+            return Convert.ToDecimal(v);
+        return 0m;
+    }
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Scrap Analytics Dashboard</title>
+
+    <style>
+        :root {
+            --primary: #428bca;
+            --primary-dark: #3071a9;
+            --navy: #0f3460;
+            --success: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --text: #1a1a2e;
+            --text-2: #495057;
+            --muted: #6c757d;
+            --bg-light: #f8f9fa;
+            --border: #dee2e6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1400px;
+            width: 96%;
+            margin: 20px auto;
+            padding: 28px;
+            background: rgba(255,255,255,0.97);
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding-bottom: 14px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--primary);
+        }
+
+        .title {
+            font-size: clamp(20px, 3vw, 26px);
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 9px 16px;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            border: 2px solid var(--border);
+            background: var(--bg-light);
+            color: var(--text-2);
+            transition: all .2s;
+        }
+
+            .btn:hover {
+                border-color: var(--primary);
+                color: var(--primary);
+            }
+
+        .btn-primary {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #fff;
+        }
+
+            .btn-primary:hover {
+                background: var(--primary-dark);
+                color: #fff;
+            }
+
+        .error {
+            background: #fdecea;
+            border-left: 4px solid var(--danger);
+            padding: 12px 16px;
+            margin-bottom: 18px;
+            color: #842029;
+            font-size: 14px;
+        }
+
+        /* Filters */
+        .filters {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 12px;
+            align-items: end;
+            background: var(--bg-light);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 22px;
+        }
+
+            .filters label {
+                display: block;
+                font-size: 12px;
+                font-weight: 700;
+                color: var(--text-2);
+                text-transform: uppercase;
+                letter-spacing: .5px;
+                margin-bottom: 4px;
+            }
+
+            .filters select, .filters input {
+                width: 100%;
+                padding: 9px 10px;
+                border: 2px solid var(--border);
+                border-radius: 4px;
+                font-size: 14px;
+                background: #fff;
+                color: var(--text-2);
+            }
+
+                .filters select:focus, .filters input:focus {
+                    outline: none;
+                    border-color: var(--primary);
+                }
+
+        /* KPI cards */
+        .kpis {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .kpi {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-left: 5px solid var(--primary);
+            border-radius: 6px;
+            padding: 14px 16px;
+        }
+
+            .kpi .val {
+                font-size: 24px;
+                font-weight: 700;
+                line-height: 1.1;
+            }
+
+            .kpi .lbl {
+                font-size: 11px;
+                font-weight: 700;
+                color: var(--muted);
+                text-transform: uppercase;
+                letter-spacing: .5px;
+                margin-top: 4px;
+            }
+
+            .kpi.success {
+                border-left-color: var(--success);
+            }
+
+                .kpi.success .val {
+                    color: var(--success);
+                }
+
+            .kpi.warning {
+                border-left-color: var(--warning);
+            }
+
+                .kpi.warning .val {
+                    color: #b38600;
+                }
+
+            .kpi.danger {
+                border-left-color: var(--danger);
+            }
+
+                .kpi.danger .val {
+                    color: var(--danger);
+                }
+
+            .kpi.navy {
+                border-left-color: var(--navy);
+            }
+
+                .kpi.navy .val {
+                    color: var(--navy);
+                }
+
+        /* Panels */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+            gap: 18px;
+            margin-bottom: 18px;
+        }
+
+        .panel {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 16px;
+            min-width: 0;
+        }
+
+            .panel h3 {
+                font-size: 14px;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: .5px;
+                margin-bottom: 12px;
+                padding-bottom: 8px;
+                border-bottom: 1px solid var(--border);
+            }
+
+        .chart-box {
+            position: relative;
+            height: 300px;
+        }
+
+        .empty {
+            color: var(--muted);
+            font-size: 13px;
+            padding: 30px 0;
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        thead th {
+            background: var(--text);
+            color: #fff;
+            text-align: left;
+            padding: 8px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        th.r, td.r {
+            text-align: right;
+        }
+
+        tbody tr:nth-child(even) {
+            background: var(--bg-light);
+        }
+
+        td {
+            padding: 7px 8px;
+            border-bottom: 1px solid var(--border);
+        }
+
+            td.top3 {
+                color: var(--danger);
+                font-weight: 700;
+            }
+
+        @@media (max-width: 600px) {
+            .container {
+                padding: 16px;
+                width: 100%;
+                margin: 0;
+                border-radius: 0;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <!-- Header -->
+        <div class="header">
+            <div>
+                <div class="title">Scrap Analytics Dashboard</div>
+                <div class="subtitle">
+                    @Model.CurrentDepartment · @Model.CurrentLine · @Model.CurrentShift ·
+                    @Model.DateRange.StartDate.ToString("dd MMM yyyy") – @Model.DateRange.EndDate.ToString("dd MMM yyyy")
+                </div>
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <a href="@Url.Action("Index", "Analytics")" class="btn">← Analytics Hub</a>
+                <a href="@Url.Action("Dashboard", "ScrapApproval")" class="btn">Approval Dashboard</a>
+            </div>
+        </div>
+
+        @if (ViewBag.ErrorMessage != null)
+        {
+            <div class="error">@ViewBag.ErrorMessage</div>
+        }
+
+        <!-- Filters -->
+        <form method="get" action="@Url.Action("Dashboard", "Analytics")" class="filters">
+            <div>
+                <label for="startDate">Start date</label>
+                <input type="date" id="startDate" name="startDate" value="@start" />
+            </div>
+            <div>
+                <label for="endDate">End date</label>
+                <input type="date" id="endDate" name="endDate" value="@end" />
+            </div>
+            <div>
+                <label for="departmentId">Department</label>
+                <select id="departmentId" name="departmentId">
+                    <option value="0">All Departments</option>
+                    @foreach (var d in Model.Departments)
+                    {
+                        <option value="@d.DepartmentId" selected="@(d.DepartmentId == Model.SelectedDepartmentId)">@d.DepartmentName</option>
+                    }
+                </select>
+            </div>
+            <div>
+                <label for="lineId">Line</label>
+                <select id="lineId" name="lineId">
+                    <option value="0">All Lines</option>
+                    @foreach (var l in Model.Lines)
+                    {
+                        <option value="@l.LineId" selected="@(l.LineId == Model.SelectedLineId)">@l.LineName</option>
+                    }
+                </select>
+            </div>
+            <div>
+                <label for="shiftId">Shift</label>
+                <select id="shiftId" name="shiftId">
+                    <option value="0">All Shifts</option>
+                    @foreach (var s in Model.Shifts)
+                    {
+                        <option value="@s.ShiftId" selected="@(s.ShiftId == Model.SelectedShiftId)">@s.ShiftName</option>
+                    }
+                </select>
+            </div>
+            <div style="display:flex; gap:8px;">
+                <button type="submit" class="btn btn-primary" style="flex:1; justify-content:center;">Apply</button>
+                <a href="@Url.Action("Dashboard", "Analytics")" class="btn" style="justify-content:center;">Reset</a>
+            </div>
+        </form>
+
+        <!-- KPIs -->
+        <div class="kpis">
+            <div class="kpi"><div class="val">@Model.TotalScrapEntries.ToString("N0")</div><div class="lbl">Total entries</div></div>
+            <div class="kpi"><div class="val">@Model.TotalScrapQuantity.ToString("N0")</div><div class="lbl">Total quantity</div></div>
+            <div class="kpi danger"><div class="val">R @Model.TotalScrapCost.ToString("N2")</div><div class="lbl">Total cost</div></div>
+            <div class="kpi success"><div class="val">@Model.ApprovedScrapCount.ToString("N0")</div><div class="lbl">Approved</div></div>
+            <div class="kpi warning"><div class="val">@Model.PendingScrapCount.ToString("N0")</div><div class="lbl">Pending</div></div>
+            <div class="kpi danger"><div class="val">@Model.RejectedScrapCount.ToString("N0")</div><div class="lbl">Rejected</div></div>
+            <div class="kpi navy"><div class="val">@Model.TotalWeight.ToString("N2") kg</div><div class="lbl">Recorded weight (@Model.TotalWeighings.ToString("N0") weighings)</div></div>
+        </div>
+
+        <!-- Row 1 -->
+        <div class="grid">
+            <div class="panel">
+                <h3>Approval workflow</h3>
+                <div class="chart-box"><canvas id="chApproval"></canvas></div>
+            </div>
+            <div class="panel">
+                <h3>Top 10 scrap reasons</h3>
+                <div class="chart-box"><canvas id="chReason"></canvas></div>
+            </div>
+        </div>
+
+        <!-- Row 2 -->
+        <div class="grid">
+            <div class="panel">
+                <h3>Scrap entries by department</h3>
+                <div class="chart-box"><canvas id="chDept"></canvas></div>
+            </div>
+            <div class="panel">
+                <h3>Top 10 lines</h3>
+                <div class="chart-box"><canvas id="chLine"></canvas></div>
+            </div>
+        </div>
+
+        <!-- Row 3 -->
+        <div class="grid">
+            <div class="panel">
+                <h3>Scrap by shift</h3>
+                <div class="chart-box"><canvas id="chShift"></canvas></div>
+            </div>
+            <div class="panel">
+                <h3>Daily recorded weight (kg)</h3>
+                <div class="chart-box"><canvas id="chWeightTrend"></canvas></div>
+            </div>
+        </div>
+
+        <!-- Row 4 -->
+        <div class="grid">
+            <div class="panel">
+                <h3>Recorded weight by department (kg)</h3>
+                <div class="chart-box"><canvas id="chWeightDept"></canvas></div>
+            </div>
+            <div class="panel">
+                <h3>Top 10 operators (entries)</h3>
+                @if (Model.TopOperators != null && Model.TopOperators.Any())
+                {
+                    <table>
+                        <thead><tr><th>Clock number</th><th class="r">Entries</th><th class="r">Quantity</th></tr></thead>
+                        <tbody>
+                            @foreach (object op in Model.TopOperators)
+                            {
+                                <tr>
+                                    <td>@Cell(op, "ClockNumber")</td>
+                                    <td class="r">@Num(op, "EntryCount").ToString("N0")</td>
+                                    <td class="r">@Num(op, "TotalQuantity").ToString("N0")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <div class="empty">No data for the selected filters</div>
+                }
+            </div>
+        </div>
+
+        <!-- Top parts -->
+        <div class="panel" style="margin-bottom:18px;">
+            <h3>Top 10 most scrapped parts</h3>
+            <table>
+                <thead>
+                    <tr><th>#</th><th>Part number</th><th>Description</th><th class="r">Quantity</th><th class="r">Occurrences</th></tr>
+                </thead>
+                <tbody>
+                    @{
+                        var rank = 1;
+                    }
+                    @foreach (var p in Model.TopScrapItems)
+                    {
+                        var cls = rank <= 3 && p.PartNumber != "No data" ? "top3" : "";
+                        <tr>
+                            <td class="@cls">@rank</td>
+                            <td class="@cls">@p.PartNumber</td>
+                            <td>@p.Description</td>
+                            <td class="r @cls">@p.TotalQuantity.ToString("N0")</td>
+                            <td class="r">@p.OccurrenceCount.ToString("N0")</td>
+                        </tr>
+                        rank++;
+                    }
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <script>
+        const data = {
+            approval:     { labels: @Json.Serialize(Labels(Model.ApprovalFlowData, "ApprovalStage")), values: @Json.Serialize(Values(Model.ApprovalFlowData, "Count")) },
+            reason:       { labels: @Json.Serialize(Labels(Model.ScrapByReason, "ScrapReason")),     values: @Json.Serialize(Values(Model.ScrapByReason, "Count")) },
+            dept:         { labels: @Json.Serialize(Labels(Model.ScrapByDepartment, "Department")),  values: @Json.Serialize(Values(Model.ScrapByDepartment, "Count")) },
+            line:         { labels: @Json.Serialize(Labels(Model.ScrapByLine, "Line")),              values: @Json.Serialize(Values(Model.ScrapByLine, "Count")) },
+            shift:        { labels: @Json.Serialize(Labels(Model.ScrapByShift, "Shift")),            values: @Json.Serialize(Values(Model.ScrapByShift, "Count")) },
+            weightTrend:  { labels: @Json.Serialize(Labels(Model.DailyWeightTrend, "Date")),         values: @Json.Serialize(Values(Model.DailyWeightTrend, "TotalWeight")) },
+            weightDept:   { labels: @Json.Serialize(Labels(Model.WeightByDepartment, "Department")), values: @Json.Serialize(Values(Model.WeightByDepartment, "TotalWeight")) }
+        };
+
+        const palette = ['#428bca', '#28a745', '#ffc107', '#dc3545', '#0f3460', '#5bc0de', '#6f42c1', '#fd7e14', '#20c997', '#6c757d'];
+
+        const stageColours = {
+            'TL Pending': '#ffc107', 'GL Pending': '#fd7e14', 'Manager Pending': '#5bc0de',
+            'Approved': '#28a745', 'Rejected': '#dc3545'
+        };
+
+        function showEmpty(canvasId) {
+            const box = document.getElementById(canvasId).parentElement;
+            box.innerHTML = '<div class="empty">No data for the selected filters</div>';
+        }
+
+        function makeChart(canvasId, type, set, opts = {}) {
+            if (!set.labels.length) { showEmpty(canvasId); return; }
+
+            const isRound = type === 'doughnut' || type === 'pie';
+            const colours = opts.colours || (isRound ? palette : '#428bca');
+
+            new Chart(document.getElementById(canvasId), {
+                type: type,
+                data: {
+                    labels: set.labels,
+                    datasets: [{
+                        data: set.values,
+                        backgroundColor: colours,
+                        borderColor: type === 'line' ? '#428bca' : (isRound ? '#fff' : colours),
+                        borderWidth: type === 'line' ? 2 : 1,
+                        fill: type === 'line' ? { target: 'origin', above: 'rgba(66,139,202,0.12)' } : false,
+                        tension: 0.25,
+                        pointRadius: type === 'line' ? 2 : 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: opts.horizontal ? 'y' : 'x',
+                    plugins: {
+                        legend: { display: isRound, position: 'right' },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => {
+                                    const v = ctx.parsed !== null && typeof ctx.parsed === 'object'
+                                        ? (opts.horizontal ? ctx.parsed.x : ctx.parsed.y)
+                                        : ctx.parsed;
+                                    return ' ' + Number(v).toLocaleString('en-ZA', { maximumFractionDigits: 2 }) + (opts.unit || '');
+                                }
+                            }
+                        }
+                    },
+                    scales: isRound ? {} : {
+                        x: { ticks: { autoSkip: !opts.horizontal, maxRotation: 45 } },
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            if (typeof Chart === 'undefined') {
+                document.querySelectorAll('.chart-box').forEach(b =>
+                    b.innerHTML = '<div class="empty">Charts could not load (Chart.js unavailable on this network)</div>');
+            } else {
+                makeChart('chApproval', 'doughnut', data.approval,
+                    { colours: data.approval.labels.map(l => stageColours[l] || '#6c757d') });
+                makeChart('chReason', 'bar', data.reason, { horizontal: true });
+                makeChart('chDept', 'bar', data.dept);
+                makeChart('chLine', 'bar', data.line, { horizontal: true });
+                makeChart('chShift', 'doughnut', data.shift);
+                makeChart('chWeightTrend', 'line', data.weightTrend, { unit: ' kg' });
+                makeChart('chWeightDept', 'bar', data.weightDept, { unit: ' kg' });
+            }
+
+            // Reload the line list when the department changes
+            const deptSel = document.getElementById('departmentId');
+            const lineSel = document.getElementById('lineId');
+
+            deptSel.addEventListener('change', function () {
+                lineSel.innerHTML = '<option value="0">Loading…</option>';
+                fetch('/Analytics/GetLinesByDepartment?departmentId=' + encodeURIComponent(this.value))
+                    .then(r => r.json())
+                    .then(lines => {
+                        lineSel.innerHTML = '<option value="0">All Lines</option>';
+                        (lines || []).forEach(l => {
+                            const opt = document.createElement('option');
+                            opt.value = l.lineId;
+                            opt.textContent = l.lineName;
+                            lineSel.appendChild(opt);
+                        });
+                    })
+                    .catch(() => { lineSel.innerHTML = '<option value="0">All Lines</option>'; });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,45 @@
+﻿@* /Views/Shared/_AccessModalPartial.cshtml *@
+
+<div id="accessGrantModal" class="modal">
+    <div class="setup-container">
+        <div class="setup-box">
+            <h1 class="setup-title">Grant Access</h1>
+            <p class="setup-subtitle">Grant access to new user</p>
+
+            <form id="accessForm">
+                @Html.AntiForgeryToken()
+                <div class="validation-message"></div>
+
+                <div class="form-group">
+                    <label for="newUserClockNumber">User Clock Number</label>
+                    <input type="text" id="newUserClockNumber" class="form-control" required
+                           placeholder="Enter clock number" />
+                </div>
+
+                <div class="form-group">
+                    <label for="approverPassword">Your Password</label>
+                    <input type="password" id="approverPassword" class="form-control" required
+                           placeholder="Enter your password" />
+                </div>
+
+                <div class="form-group">
+                    <label for="userRole">Role</label>
+                    <select id="userRole" class="form-control" required>
+                        <option value="">Select Role</option>
+                        <option value="Operator">Operator</option>
+                        <option value="TeamLeader">Team Leader</option>
+                        <option value="GroupLeader">Group Leader</option>
+                        <option value="Manager">Manager</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="save-button">
+                    <span class="button-text">Grant Access</span>
+                    <div class="spinner-border spinner-border-sm d-none" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </button>
+            </form>
+        </div>
+    </div>
+</div>

@@ -3,20 +3,24 @@
   "defaultProvider": "cdnjs",
   "libraries": [
     {
-      "library": "bootstrap@5.3.3",
+      "library": "bootstrap@5.3.0",
       "destination": "wwwroot/lib/bootstrap/"
     },
     {
-      "library": "jquery@3.7.1",
+      "library": "jquery@3.6.0",
       "destination": "wwwroot/lib/jquery/"
     },
     {
-      "library": "jQuery-Validation-Engine@2.6.4",
-      "destination": "wwwroot/lib/jQuery-Validation-Engine/"
+      "library": "datatables@1.10.21",
+      "destination": "wwwroot/lib/datatables/"
     },
     {
-      "library": "jquery-validation-unobtrusive@4.0.0",
-      "destination": "wwwroot/lib/jquery-validation-unobtrusive/"
+      "library": "toastr.js@2.1.4",
+      "destination": "wwwroot/lib/toastr/"
+    },
+    {
+      "library": "bootstrap-icons@1.10.5",
+      "destination": "wwwroot/lib/bootstrap-icons/"
     }
   ]
 }

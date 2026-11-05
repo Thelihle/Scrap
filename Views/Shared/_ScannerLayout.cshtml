@@ -1,0 +1,314 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>@ViewData["Title"] - SCP Scanner</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Scanner-optimized styles -->
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 16px;
+            line-height: 1.4;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Prevent zoom on iOS */
+        input[type="text"], input[type="password"], select, textarea {
+            font-size: 16px !important;
+        }
+
+        /* Touch-friendly buttons */
+        .btn {
+            min-height: 44px;
+            min-width: 44px;
+            touch-action: manipulation;
+        }
+
+        /* High contrast for better readability */
+        .text-muted {
+            color: #6c757d !important;
+        }
+
+        /* Scanner status bar */
+        .scanner-status {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 8px 15px;
+            font-size: 12px;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .scanner-content {
+            margin-top: 40px;
+            padding-bottom: 20px;
+        }
+
+        /* Loading overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            flex-direction: column;
+        }
+
+        .loading-spinner {
+            font-size: 2rem;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from
+
+        {
+            transform: rotate(0deg);
+        }
+
+        to {
+            transform: rotate(360deg);
+        }
+
+        }
+
+        /* Error styles */
+        .scanner-error {
+            background: #dc3545;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px;
+            text-align: center;
+        }
+
+        /* Success styles */
+        .scanner-success {
+            background: #28a745;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px;
+            text-align: center;
+        }
+
+        /* Network status indicator */
+        .network-status {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+
+        .network-online {
+            background: #28a745;
+        }
+
+        .network-offline {
+            background: #dc3545;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50%
+
+        {
+            opacity: 1;
+        }
+
+        51%, 100% {
+            opacity: 0.3;
+        }
+
+        }
+    </style>
+
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <!-- Scanner Status Bar -->
+    <div class="scanner-status">
+        <div>
+            <span class="network-status network-online" id="networkStatus"></span>
+            <span id="scannerInfo">SCP Scanner</span>
+        </div>
+        <div>
+            <span class="current-time" id="currentTime"></span>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner">
+            <i class="fas fa-spinner fa-spin"></i>
+        </div>
+        <div class="mt-3">Processing...</div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="scanner-content">
+        @RenderBody()
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Scanner layout utilities
+        class ScannerUtils {
+            static showLoading(message = 'Processing...') {
+                const overlay = document.getElementById('loadingOverlay');
+                if (overlay) {
+                    overlay.querySelector('div:last-child').textContent = message;
+                    overlay.style.display = 'flex';
+                }
+            }
+
+            static hideLoading() {
+                const overlay = document.getElementById('loadingOverlay');
+                if (overlay) {
+                    overlay.style.display = 'none';
+                }
+            }
+
+            static showError(message, timeout = 5000) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'scanner-error';
+                errorDiv.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${message}`;
+                document.body.appendChild(errorDiv);
+
+                setTimeout(() => {
+                    errorDiv.remove();
+                }, timeout);
+            }
+
+            static showSuccess(message, timeout = 3000) {
+                const successDiv = document.createElement('div');
+                successDiv.className = 'scanner-success';
+                successDiv.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+                document.body.appendChild(successDiv);
+
+                setTimeout(() => {
+                    successDiv.remove();
+                }, timeout);
+            }
+
+            static updateNetworkStatus() {
+                const status = navigator.onLine;
+                const indicator = document.getElementById('networkStatus');
+                if (indicator) {
+                    indicator.className = `network-status ${status ? 'network-online' : 'network-offline'}`;
+                }
+            }
+
+            static updateTime() {
+                const timeElement = document.getElementById('currentTime');
+                if (timeElement) {
+                    const now = new Date();
+                    const timeStr = now.toLocaleTimeString('en-US', {
+                        hour12: false,
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    timeElement.textContent = timeStr;
+                }
+            }
+
+            static initializeScanner() {
+                // Update time every minute
+                this.updateTime();
+                setInterval(() => this.updateTime(), 60000);
+
+                // Monitor network status
+                this.updateNetworkStatus();
+                window.addEventListener('online', () => this.updateNetworkStatus());
+                window.addEventListener('offline', () => this.updateNetworkStatus());
+
+                // Prevent zoom on double tap (iOS)
+                let lastTouchEnd = 0;
+                document.addEventListener('touchend', function (event) {
+                    const now = (new Date()).getTime();
+                    if (now - lastTouchEnd <= 300) {
+                        event.preventDefault();
+                    }
+                    lastTouchEnd = now;
+                }, false);
+
+                // Handle back button
+                window.addEventListener('popstate', function(event) {
+                    // Custom back button handling if needed
+                });
+
+                // Auto-hide loading on page load
+                window.addEventListener('load', () => {
+                    setTimeout(() => this.hideLoading(), 500);
+                });
+            }
+        }
+
+        // Global error handler
+        window.addEventListener('error', function(event) {
+            console.error('Scanner error:', event.error);
+            ScannerUtils.showError('An unexpected error occurred. Please refresh the page.');
+        });
+
+        // Global AJAX error handler
+        $(document).ajaxError(function(event, xhr, settings, error) {
+            ScannerUtils.hideLoading();
+            if (xhr.status === 401) {
+                ScannerUtils.showError('Session expired. Redirecting to login...');
+                setTimeout(() => {
+                    window.location.href = '/Scanner/RoleSelection';
+                }, 2000);
+            } else if (xhr.status === 0) {
+                ScannerUtils.showError('Network connection lost. Please check your connection.');
+            } else {
+                ScannerUtils.showError('Connection error. Please try again.');
+            }
+        });
+
+        // Initialize scanner utilities when DOM is ready
+        $(document).ready(function() {
+            ScannerUtils.initializeScanner();
+
+            // Set scanner info if available
+            @if (ViewBag.Scanner != null)
+            {
+                    const scanner = @Html.Raw(Json.Serialize(ViewBag.Scanner));
+                    document.getElementById('scannerInfo').textContent = `${ scanner.deviceName}
+                    - ${ scanner.location || 'SCP Scanner'}`;
+            }
+        });
+
+        // Make ScannerUtils globally available
+        window.ScannerUtils = ScannerUtils;
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

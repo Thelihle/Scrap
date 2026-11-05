@@ -1,0 +1,90 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - SCP Control</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/font/bootstrap-icons.css" />
+    <link rel="stylesheet" href="~/lib/toastr/toastr.min.css" />
+</head>
+<body>
+    <div class="container-fluid">
+        @RenderBody()
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/toastr/toastr.min.js"></script>
+    <script src="/js/form-persistence.js"></script>
+   
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
+
+<style>
+    :root {
+        --primary-cyan: #00ffff;
+        --dark-bg: #000000;
+        --card-bg: rgba(0, 10, 10, 0.95);
+    }
+
+    body {
+        background-color: var(--dark-bg);
+        min-height: 100vh;
+        margin: 0;
+        padding: 15px;
+        font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto;
+    }
+
+    /* Header section */
+    .user-info-bar {
+        background: var(--card-bg);
+        border: 1px solid var(--primary-cyan);
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    /* Cards */
+    .action-card {
+        background: var(--card-bg);
+        border: 1px solid var(--primary-cyan);
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 15px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    /* Form elements */
+    input, select {
+        width: 100%;
+        padding: 12px;
+        background: rgba(0, 0, 0, 0.5);
+        border: 1px solid var(--primary-cyan);
+        border-radius: 4px;
+        color: var(--primary-cyan);
+        margin-bottom: 15px;
+    }
+
+    /* Mobile optimizations */
+    @@media (max-width: 768px) {
+        .user-info-bar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        input, select {
+            font-size: 16px; /* Prevents iOS zoom */
+        }
+
+        .action-card {
+            padding: 15px;
+        }
+    }
+</style>

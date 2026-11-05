@@ -1,0 +1,111 @@
+﻿@{
+    ViewData["Title"] = "Scanner Error";
+    Layout = null; // Simple layout for scanners
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+    <title>Scanner Error - SCP Control</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .error-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            max-width: 500px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .error-icon {
+            font-size: 4rem;
+            color: #dc3545;
+            margin-bottom: 20px;
+        }
+
+        .error-title {
+            color: #2c3e50;
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+        }
+
+        .error-message {
+            color: #6c757d;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        .btn {
+            background: #007bff;
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin: 5px;
+        }
+
+            .btn:hover {
+                background: #0056b3;
+            }
+
+        .btn-success {
+            background: #28a745;
+        }
+
+            .btn-success:hover {
+                background: #1e7e34;
+            }
+
+        .debug-info {
+            background: #f8f9fa;
+            border-left: 5px solid #dc3545;
+            padding: 15px;
+            margin-top: 20px;
+            text-align: left;
+            font-size: 0.9rem;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <div class="error-icon">⚠️</div>
+        <h2 class="error-title">Scanner Error</h2>
+        <p class="error-message">@Model</p>
+
+        <div>
+            <a href="/" class="btn btn-success">
+                🏠 Try Again
+            </a>
+            <a href="/Scanner/RoleSelection?scannerId=1" class="btn">
+                🔄 Direct Access
+            </a>
+        </div>
+
+        <div class="debug-info">
+            <strong>Debug Info:</strong><br>
+            Current Time: @DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")<br>
+            Scanner IP: @Context.Connection.RemoteIpAddress<br>
+            Path: @Context.Request.Path
+        </div>
+    </div>
+</body>
+</html>

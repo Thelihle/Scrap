@@ -1,0 +1,389 @@
+﻿@{
+    ViewData["Title"] = "Device Management";
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Device Management Dashboard</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.3/font/bootstrap-icons.css" />
+
+    <style>
+        :root {
+            --primary-color: #00fffc;
+            --primary-color-dark: #00a4a2;
+            --secondary-color: #0d6efd;
+            --success-color: #00ff00;
+            --danger-color: #ff0000;
+            --warning-color: #FFD700;
+            --dark-bg: rgba(0, 15, 14, 0.95);
+            --border-glow: 0 0 10px var(--primary-color);
+            --border-radius: 8px;
+        }
+
+        body {
+            background-color: #000;
+            color: var(--primary-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+
+        .card {
+            background-color: var(--dark-bg);
+            border: 1px solid var(--primary-color);
+            border-radius: var(--border-radius);
+            box-shadow: var(--border-glow);
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+
+        .card-header {
+            background-color: rgba(0, 32, 30, 0.9);
+            border-bottom: 1px solid var(--primary-color);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .page-title {
+            color: var(--primary-color);
+            font-size: 1.75rem;
+            font-weight: 600;
+            margin: 0;
+            text-shadow: 0 0 5px var(--primary-color);
+        }
+
+        .btn-cyber {
+            background-color: transparent;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+            border-radius: 4px;
+            padding: 0.5rem 1rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+
+            .btn-cyber:hover {
+                background-color: rgba(0, 255, 252, 0.1);
+                box-shadow: var(--border-glow);
+                color: var(--primary-color);
+                text-decoration: none;
+            }
+
+        .btn-cyber-green {
+            border-color: var(--success-color);
+            color: var(--success-color);
+        }
+
+            .btn-cyber-green:hover {
+                background-color: rgba(0, 255, 0, 0.1);
+                box-shadow: 0 0 10px var(--success-color);
+                color: var(--success-color);
+            }
+
+        .btn-cyber-red {
+            border-color: var(--danger-color);
+            color: var(--danger-color);
+        }
+
+            .btn-cyber-red:hover {
+                background-color: rgba(255, 0, 0, 0.1);
+                box-shadow: 0 0 10px var(--danger-color);
+                color: var(--danger-color);
+            }
+
+        .alert-cyber {
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 1rem;
+        }
+
+            .alert-cyber.info {
+                background-color: rgba(0, 32, 30, 0.3);
+                border: 1px solid var(--primary-color);
+                color: var(--primary-color);
+            }
+
+            .alert-cyber.success {
+                background-color: rgba(0, 255, 0, 0.3);
+                border: 1px solid var(--success-color);
+                color: var(--success-color);
+            }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background-color: var(--dark-bg);
+            border: 1px solid var(--primary-color);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: var(--border-glow);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-shadow: var(--border-glow);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            color: rgba(0, 255, 252, 0.7);
+        }
+
+        .cyber-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+            .cyber-table th {
+                background-color: rgba(0, 32, 30, 0.9);
+                color: var(--primary-color);
+                font-weight: 600;
+                padding: 1rem;
+                text-align: left;
+                border-bottom: 1px solid var(--primary-color);
+            }
+
+            .cyber-table td {
+                padding: 1rem;
+                border-bottom: 1px solid rgba(0, 255, 252, 0.1);
+            }
+
+            .cyber-table tr:hover td {
+                background-color: rgba(0, 255, 252, 0.05);
+            }
+
+        .status-online {
+            color: var(--success-color);
+        }
+
+        .status-offline {
+            color: var(--danger-color);
+        }
+
+        .device-info {
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="page-title">Device Management Dashboard</h1>
+            <div class="d-flex gap-2">
+                <button class="btn-cyber" onclick="refreshDevices()">
+                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                </button>
+                <a href="/ScrapApproval/Dashboard" class="btn-cyber">
+                    <i class="bi bi-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
+
+        @* Debug Info (remove this later) *@
+        @if (ViewBag.DebugInfo != null)
+        {
+            <div class="alert-cyber info">
+                <h5>Debug Info:</h5>
+                <p>@ViewBag.DebugInfo</p>
+                <p>Current User: @ViewBag.UserClockNumber (@ViewBag.UserType)</p>
+            </div>
+        }
+
+        <!-- Device Management Coming Soon Notice -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="m-0">🚀 Device Management System</h2>
+            </div>
+            <div class="card-body">
+                <div class="alert-cyber success">
+                    <h4><i class="bi bi-check-circle"></i> Access Granted!</h4>
+                    <p><strong>Welcome, @ViewBag.UserType @ViewBag.UserClockNumber!</strong></p>
+                    <p>You now have access to the Device Management system.</p>
+                </div>
+
+                <div class="alert-cyber info">
+                    <h5><i class="bi bi-info-circle"></i> System Status</h5>
+                    <p>The device management system is ready for your Zebra TC21 devices.</p>
+                    <ul style="margin-top: 1rem;">
+                        <li>✅ Database tables created</li>
+                        <li>✅ API endpoints configured</li>
+                        <li>✅ Access control working</li>
+                        <li>🔄 Device recognition script ready</li>
+                        <li>🔄 Auto-login system prepared</li>
+                    </ul>
+                </div>
+
+                <div style="margin-top: 2rem;">
+                    <h5>Next Steps:</h5>
+                    <ol style="margin-top: 1rem;">
+                        <li><strong>Test Device Registration:</strong> Access this webapp from your Zebra TC21 device</li>
+                        <li><strong>Register Devices:</strong> Give each device a unique name (e.g., "TC21-FORD-01")</li>
+                        <li><strong>Assign Users:</strong> Link devices to specific worker clock numbers</li>
+                        <li><strong>Monitor Usage:</strong> Track device status and sessions</li>
+                    </ol>
+                </div>
+
+                <div style="margin-top: 2rem;">
+                    <h5>Test API Endpoints:</h5>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button class="btn-cyber" onclick="testDeviceList()">
+                            <i class="bi bi-list"></i> Test Device List
+                        </button>
+                        <button class="btn-cyber btn-cyber-green" onclick="testDeviceRegistration()">
+                            <i class="bi bi-plus-circle"></i> Test Registration
+                        </button>
+                        <a href="/api/device/list" class="btn-cyber" target="_blank">
+                            <i class="bi bi-code"></i> View API Response
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Device List Section -->
+                <div style="margin-top: 2rem;">
+                    <h5>Registered Devices</h5>
+                    <div id="device-list-container">
+                        <p>Loading devices...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        console.log('🔧 Device Management Dashboard loaded');
+        console.log('User:', '@ViewBag.UserClockNumber', 'Type:', '@ViewBag.UserType');
+
+        // Test functions
+        async function testDeviceList() {
+            try {
+                const response = await fetch('/api/device/list');
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(`Device List API works! Found ${result.devices.length} devices.`);
+                    displayDevices(result.devices);
+                } else {
+                    alert('Device List API failed: ' + result.message);
+                }
+            } catch (error) {
+                alert('Error testing Device List API: ' + error.message);
+            }
+        }
+
+        async function testDeviceRegistration() {
+            const testDevice = {
+                deviceName: 'TEST-TC21-' + Date.now(),
+                deviceModel: 'TC210K',
+                macAddress: 'aa:bb:cc:dd:ee:ff',
+                ipAddress: '192.168.1.100',
+                androidVersion: '11',
+                buildFingerprint: 'Test/Build/Fingerprint',
+                userAgent: 'Mozilla/5.0 (Test Device)'
+            };
+
+            try {
+                const response = await fetch('/api/device/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(testDevice)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert(`Device Registration API works! Registered: ${result.deviceName}`);
+                    testDeviceList(); // Refresh the list
+                } else {
+                    alert('Device Registration API failed: ' + result.message);
+                }
+            } catch (error) {
+                alert('Error testing Device Registration API: ' + error.message);
+            }
+        }
+
+        function displayDevices(devices) {
+            const container = document.getElementById('device-list-container');
+
+            if (devices.length === 0) {
+                container.innerHTML = '<p>No devices registered yet.</p>';
+                return;
+            }
+
+            const html = `
+                        <table class="cyber-table" style="margin-top: 1rem;">
+                            <thead>
+                                <tr>
+                                    <th>Device Name</th>
+                                    <th>Model</th>
+                                    <th>Status</th>
+                                    <th>Assigned User</th>
+                                    <th>IP Address</th>
+                                    <th>Last Seen</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${devices.map(device => `
+                                    <tr>
+                                        <td><strong>${device.deviceName}</strong></td>
+                                        <td>${device.deviceModel}</td>
+                                        <td><span class="${device.isOnline ? 'status-online' : 'status-offline'}">
+                                            ${device.isOnline ? 'Online' : 'Offline'}
+                                        </span></td>
+                                        <td>${device.assignedUser || '-'}</td>
+                                        <td class="device-info">${device.ipAddress || '-'}</td>
+                                        <td>${formatDate(device.lastSeen)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    `;
+
+            container.innerHTML = html;
+        }
+
+        function formatDate(dateStr) {
+            return new Date(dateStr).toLocaleString();
+        }
+
+        function refreshDevices() {
+            testDeviceList();
+        }
+
+        // Load devices on page load
+        document.addEventListener('DOMContentLoaded', function () {
+            setTimeout(testDeviceList, 1000);
+        });
+    </script>
+</body>
+</html>

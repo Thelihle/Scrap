@@ -1,0 +1,209 @@
+﻿/* user-modals.css */
+
+/* Base Modal Styles */
+.user-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+.user-modal-content {
+    background: rgba(0, 21, 20, 0.95);
+    border: 2px solid #00fffc;
+    box-shadow: 0 0 30px #00fffc;
+    padding: 2rem;
+    width: 90%;
+    max-width: 400px;
+    border-radius: 4px;
+    animation: modalFadeIn 0.3s ease;
+}
+
+    /* Modal Title */
+    .user-modal-content h2 {
+        color: #00fffc;
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+        text-align: center;
+        text-shadow: 0 0 10px #00fffc;
+    }
+
+/* Form Groups */
+.user-form-group {
+    margin-bottom: 1.5rem;
+    position: relative;
+}
+
+    .user-form-group label {
+        display: block;
+        color: #00fffc;
+        margin-bottom: 0.5rem;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+    }
+
+.user-form-input {
+    width: 100%;
+    padding: 0.75rem;
+    background: rgba(0, 15, 14, 0.95);
+    border: 2px solid #00a4a2;
+    color: #00fffc;
+    border-radius: 4px;
+    outline: none;
+    transition: all 0.3s ease;
+}
+
+    .user-form-input:focus {
+        border-color: #00fffc;
+        box-shadow: 0 0 15px #00fffc;
+    }
+
+/* Button Group */
+.user-button-group {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+    .user-button-group button {
+        flex: 1;
+        padding: 0.75rem;
+        border: 2px solid;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: transparent;
+    }
+
+/* Submit Button */
+.user-btn-submit {
+    border-color: #00fffc;
+    color: #00fffc;
+}
+
+    .user-btn-submit:hover {
+        background: rgba(0, 255, 252, 0.1);
+        box-shadow: 0 0 15px #00fffc;
+    }
+
+/* Cancel Button */
+.user-btn-cancel {
+    border-color: #ff3333;
+    color: #ff3333;
+}
+
+    .user-btn-cancel:hover {
+        background: rgba(255, 0, 0, 0.1);
+        box-shadow: 0 0 15px #ff3333;
+    }
+
+/* Success Modal */
+.success-modal {
+    background: rgba(0, 21, 20, 0.95);
+    border: 2px solid #00fffc;
+    box-shadow: 0 0 30px #00fffc;
+    padding: 2rem;
+    width: 90%;
+    max-width: 400px;
+    animation: modalFadeIn 0.3s ease, glowPulse 2s infinite;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Success Icon */
+.success-icon {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    animation: iconScale 0.5s ease-out;
+}
+
+    .success-icon i {
+        font-size: 3rem;
+        color: #00fffc;
+        text-shadow: 0 0 10px #00fffc;
+    }
+
+/* Error Message */
+.error-message {
+    color: #ff4444;
+    background: rgba(255, 68, 68, 0.1);
+    border: 1px solid #ff4444;
+    padding: 0.75rem;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    display: none;
+    animation: fadeIn 0.3s ease;
+    border-radius: 4px;
+}
+
+/* Animations */
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes iconScale {
+    from {
+        transform: scale(0);
+    }
+
+    to {
+        transform: scale(1);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes glowPulse {
+    0% {
+        box-shadow: 0 0 20px #00fffc;
+    }
+
+    50% {
+        box-shadow: 0 0 30px #00fffc;
+    }
+
+    100% {
+        box-shadow: 0 0 20px #00fffc;
+    }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 480px) {
+    .user-modal-content,
+    .success-modal {
+        width: 95%;
+        padding: 1.5rem;
+    }
+
+    .user-button-group {
+        flex-direction: column;
+    }
+
+        .user-button-group button {
+            width: 100%;
+        }
+}

@@ -1,0 +1,39 @@
+﻿@model SCP_Control.ViewModels.ScrapApprovalDashboardViewModel
+
+<div id="locationModal" class="modal">
+    <div class="modal-content">
+        <h2 class="modal-title">Update Location</h2>
+        <form id="locationForm">
+            @Html.AntiForgeryToken()
+            <div class="form-group">
+                <label for="updateDepartment">Department</label>
+                <select id="updateDepartment" class="form-control" required>
+                    <option value="">Select Department</option>
+                   <option value="FORD">FORD</option>
+                    <option value="HILUX">HILUX</option>
+                    <option value="HIACE">HIACE</option>
+                    <option value="CSUV">CSUV</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="updateLine">Line</label>
+                <select id="updateLine" class="form-control" required disabled>
+                    <option value="">Select Line</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="updateShift">Shift</label>
+                <select id="updateShift" class="form-control" required>
+                    <option value="">Select Shift</option>
+                    <option value="A">A</option>
+                    <option value="B">B</option>
+                    <option value="Straight">Straight</option>
+                </select>
+            </div>
+            <button type="submit" class="update-button">
+                <span class="button-text">Update Location</span>
+                <div class="spinner"></div>
+            </button>
+        </form>
+    </div>
+</div>

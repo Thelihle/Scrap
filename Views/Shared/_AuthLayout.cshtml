@@ -1,0 +1,183 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Scrap Management</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/font/bootstrap-icons.css" />
+    <link rel="stylesheet" href="~/lib/toastr/toastr.min.css" />
+    <link rel="stylesheet" href="~/lib/datatables/css/dataTables.bootstrap5.min.css" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    <div class="main-container">
+        <div class="nav-header">
+            <div class="user-info">
+                <span class="info-item">
+                    <i class="bi bi-person"></i>
+                    @User.Identity?.Name
+                </span>
+                <div class="location-info">
+                    <span class="info-item">
+                        <i class="bi bi-building"></i>
+                        @ViewData["Department"]
+                    </span>
+                    <span class="info-item">
+                        <i class="bi bi-gear"></i>
+                        @ViewData["Line"]
+                    </span>
+                    <span class="info-item">
+                        <i class="bi bi-clock"></i>
+                        @ViewData["Shift"]
+                    </span>
+                </div>
+            </div>
+            <form method="post" action="@Url.Action("Logout", "Account")" style="margin: 0;">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="logout-btn">
+                    <i class="bi bi-box-arrow-right"></i>
+                    Logout
+                </button>
+            </form>
+        </div>
+
+        <div class="content-wrapper">
+            @RenderBody()
+        </div>
+    </div>
+
+    <style>
+
+        :root {
+    --neon-cyan: #00fff2;
+    --dark-bg: #000000;
+    --card-bg: rgba(0, 10, 10, 0.95);
+    --border-glow: rgba(0, 255, 242, 0.3);
+    --text-color: #ffffff;
+}
+
+body {
+    background-color: var(--dark-bg);
+    color: var(--text-color);
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+.main-container {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 20px;
+}
+
+/* Navigation Header */
+.nav-header {
+    background: var(--card-bg);
+    border: 2px solid var(--neon-cyan);
+    box-shadow: 0 0 15px var(--border-glow);
+    border-radius: 8px;
+    padding: 15px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.location-info {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.info-item {
+    background: rgba(0, 255, 242, 0.1);
+    padding: 8px 16px;
+    border-radius: 4px;
+    border: 1px solid var(--neon-cyan);
+    color: var(--neon-cyan);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.logout-btn {
+    background: transparent;
+    border: 2px solid var(--neon-cyan);
+    color: var(--neon-cyan);
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.logout-btn:hover {
+    background: var(--neon-cyan);
+    color: var(--dark-bg);
+    box-shadow: 0 0 15px var(--border-glow);
+}
+
+/* Remove all sidebar-related styles */
+/* Remove .nav-sidebar, .app-title, .nav-link styles */
+
+/* Responsive Design */
+@@media screen and (max-width: 768px) {
+    .nav-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .user-info {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .location-info {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .info-item {
+        justify-content: center;
+    }
+
+    .logout-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@@media screen and (max-width: 480px) {
+    .main-container {
+        padding: 10px;
+    }
+
+    .nav-header {
+        padding: 10px;
+    }
+}
+
+    </style>
+
+    <!-- Scripts -->
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/lib/datatables/js/jquery.dataTables.min.js"></script>
+    <script src="~/lib/datatables/js/dataTables.bootstrap5.min.js"></script>
+    <script src="~/lib/toastr/toastr.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

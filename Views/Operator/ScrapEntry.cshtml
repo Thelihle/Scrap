@@ -1,415 +1,2348 @@
 ﻿@model ScrapEntryViewModel
 @{
-    ViewData["Title"] = "Scrap Entry - SCP Control";
-    Layout = null;
+    ViewData["Title"] = "HESTO Harnesses - Scrap Entry";
+    Layout = "_TeamLeaderLayout";
 }
 
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"]</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/lib/bootstrap-icons/font/bootstrap-icons.css" />
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
-            background: #1a1a1a;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+<div class="wizard-container">
 
-        .scrap-container {
-            padding: 20px;
-        }
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <button onclick="navigateHome()" class="top-btn home-btn">
+            <i class="bi bi-house-fill"></i> Home
+        </button>
+        <div class="part-pill">
+            <i class="bi bi-upc-scan"></i>
+            <strong>@Model.PartNumber</strong>
+            <span class="dept-text">@Model.Department &bull; @Model.Line &bull; Shift @Model.Shift</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+            <!-- Pending entries indicator — shown by JS when there are saved entries -->
+            <button id="pendingIndicatorBtn"
+                    onclick="showPendingPartsModal()"
+                    style="display:none;
+                       background:linear-gradient(135deg,#ffc107,#fd7e14);
+                       border:none;border-radius:8px;
+                       color:white;padding:8px 14px;
+                       font-size:13px;font-weight:700;
+                       cursor:pointer;
+                       display:none;
+                       align-items:center;gap:6px;
+                       white-space:nowrap;
+                       box-shadow:0 2px 8px rgba(255,193,7,0.4);
+                       transition:all 0.2s;"
+                    onmouseover="this.style.transform='scale(1.03)'"
+                    onmouseout="this.style.transform='scale(1)'">
+                <i class="bi bi-clock-history"></i>
+                <span id="pendingIndicatorCount">0</span> pending
+            </button>
+            <form action="/Account/Logout" method="post" style="margin:0;" id="logoutForm">
+                <input type="hidden" value="@User.Identity?.Name" />
+                @Html.AntiForgeryToken()
+                <button type="submit" class="top-btn logout-btn">
+                    <i class="bi bi-box-arrow-right"></i> Logout
+                </button>
+            </form>
+        </div>
+    </div>
 
-        .header-info {
-            background: rgba(0, 255, 255, 0.1);
-            border: 1px solid #00ffff;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
+    <!-- Hidden fields -->
+    <input type="hidden" id="materialCost" value="@Model.MaterialCost.ToString(System.Globalization.CultureInfo.InvariantCulture)" />
+    <input type="hidden" id="stockUom" value="@Model.StockUom" />
+    <input type="hidden" id="partCategory" value="@Model.PartCategory" />
+    <input type="hidden" id="plant" value="@Model.Plant" />
+    <input type="hidden" id="company" value="@Model.Company" />
+    <span id="partNumber" style="display:none;">@Model.PartNumber</span>
+    <span id="department" style="display:none;">@Model.Department</span>
+    <span id="line" style="display:none;">@Model.Line</span>
+    <span id="shift" style="display:none;">@Model.Shift</span>
 
-        .header-info span {
-            color: #00ffff;
-            background: rgba(0, 0, 0, 0.3);
-            padding: 8px 16px;
-            border-radius: 4px;
-            font-size: 14px;
-        }
+    <!-- STEP INDICATOR -->
+    <div class="steps-bar" id="stepsBar">
+        <div class="step active" id="step-ind-1">
+            <div class="step-circle">1</div>
+            <div class="step-label">Select Reason</div>
+        </div>
+        <div class="step-line"></div>
+        <div class="step" id="step-ind-2">
+            <div class="step-circle">2</div>
+            <div class="step-label">Quantity</div>
+        </div>
+        <div class="step-line"></div>
+        <div class="step" id="step-ind-3">
+            <div class="step-circle">3</div>
+            <div class="step-label">Review &amp; Submit</div>
+        </div>
+    </div>
 
-        .scrap-content {
-            background: rgba(18, 18, 18, 0.95);
-            border: 1px solid #00ffff;
-            border-radius: 8px;
-            padding: 30px;
-            animation: glow 2s infinite alternate;
-        }
-
-        .steps-container {
-            margin-bottom: 30px;
-        }
-
-        .step {
-            display: none;
-        }
-
-        .step.active {
-            display: block;
-        }
-
-        .step-title {
-            color: #00ffff;
-            font-size: 24px;
-            margin-bottom: 20px;
-            text-align: center;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            color: #00ffff;
-            margin-bottom: 8px;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 12px;
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid #00ffff;
-            border-radius: 4px;
-            color: #fff;
-        }
-
-        .form-control:focus {
-            outline: none;
-            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
-        }
-
-        .form-control:disabled {
-            opacity: 0.5;
-        }
-
-        .part-info {
-            background: rgba(0, 255, 255, 0.1);
-            padding: 15px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-        }
-
-        .part-info .label {
-            color: #00ffff;
-            font-size: 14px;
-            opacity: 0.8;
-            margin-bottom: 5px;
-        }
-
-        .part-info .value {
-            color: #fff;
-            font-size: 18px;
-            font-weight: 500;
-        }
-
-        .navigation-buttons {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 30px;
-            gap: 15px;
-        }
-
-        .nav-button {
-            padding: 12px 24px;
-            border: 1px solid #00ffff;
-            background: transparent;
-            color: #00ffff;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            min-width: 120px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        .nav-button:hover {
-            background: rgba(0, 255, 255, 0.1);
-            box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
-        }
-
-        .nav-button.submit-button {
-            background: #00ffff;
-            color: #000;
-            border: none;
-        }
-
-        .nav-button.submit-button:hover {
-            background: #00cccc;
-        }
-
-        .review-table {
-            width: 100%;
-            margin-bottom: 20px;
-            color: #fff;
-        }
-
-        .review-table th {
-            color: #00ffff;
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid rgba(0, 255, 255, 0.2);
-        }
-
-        .review-table td {
-            padding: 12px;
-            border-bottom: 1px solid rgba(0, 255, 255, 0.1);
-        }
-
-        .validation-message {
-            display: none;
-            background: rgba(255, 0, 0, 0.1);
-            border: 1px solid #ff4444;
-            color: #ff4444;
-            padding: 10px;
-            border-radius: 4px;
-            margin-bottom: 20px;
-            font-size: 14px;
-        }
-
-        @@keyframes glow {
-            from {
-                box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
-            }
-            to {
-                box-shadow: 0 0 30px rgba(0, 255, 255, 0.4);
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="scrap-container">
-        <div class="header-info">
-            <span>Department: @Model.Department</span>
-            <span>Line: @Model.Line</span>
-            <span>Shift: @Model.Shift</span>
+    <!-- STEP 1: SELECT SECTION + REASON -->
+    <div class="wizard-card" id="step1">
+        <div class="card-heading">
+            <span class="card-num">1</span>
+            <div>
+                <h2>What went wrong?</h2>
+                <p>Select the area and reason for the scrap</p>
+            </div>
         </div>
 
-        <div class="scrap-content">
-            <div class="validation-message"></div>
+        <div class="field-row">
+            <div class="field-block">
+                <label for="scrapSection">Scrap Section</label>
+                <select id="scrapSection" class="sel">
+                    <option value="">Select section...</option>
+                </select>
+            </div>
 
-            <div class="steps-container">
-                <!-- Step 1: Initial Entry -->
-                <div class="step active" id="step1">
-                    <h2 class="step-title">Scrap Entry</h2>
-                    
-                    <div class="part-info">
-                        <div class="label">Part Number</div>
-                        <div class="value">@Model.PartNumber</div>
-                    </div>
+            <div class="field-block hidden" id="machineTypeDiv">
+                <label for="machineType"><i class="bi bi-gear-fill"></i> Machine Type</label>
+                <select id="machineType" class="sel accent-sel">
+                    <option value="">Select machine type...</option>
+                </select>
+            </div>
 
-                    <form id="scrapForm">
-                        <input type="hidden" id="partNumber" value="@Model.PartNumber" />
-                        
-                        <div class="form-group">
-    <label>Scrap Section</label>
-    <select id="scrapSection" class="form-control" required>
-        <option value="">Select Section</option>
-        @foreach (var scrapSec in Model.ScrapSections)
-        {
-            <option value="@scrapSec.ScrapSectionId"
-                    data-requires-position="@scrapSec.RequiresPosition.ToString().ToLower()">
-                @scrapSec.SectionName
-            </option>
-        }
-    </select>
-</div>
+            <div class="field-block hidden" id="machineNumberDiv">
+                <label for="machineNumber"><i class="bi bi-hash"></i> Machine Number</label>
+                <select id="machineNumber" class="sel accent-sel">
+                    <option value="">Select machine number...</option>
+                </select>
+            </div>
 
-                        <div class="form-group">
-                            <label>Error Type</label>
-                            <select id="errorType" class="form-control" disabled required>
-                                <option value="">Select Error Type</option>
-                            </select>
-                        </div>
+            <div class="field-block hidden" id="engineeringPlantDiv">
+                <label for="engineeringPlant"><i class="bi bi-building"></i> Plant</label>
+                <select id="engineeringPlant" class="sel eng-sel">
+                    <option value="">Select plant...</option>
+                    <option value="Plant A">Plant A</option>
+                    <option value="Plant B">Plant B</option>
+                    <option value="Plant C">Plant C</option>
+                    <option value="Fielli">Fielli</option>
+                </select>
+            </div>
 
-                        <div class="form-group" id="positionGroup" style="display: none;">
-                            <label>Part Position</label>
-                            <input type="text" id="partPosition" class="form-control" />
-                        </div>
+            <div class="field-block" id="reasonBlock">
+                <label for="scrapReason">Scrap Reason</label>
+                <select id="scrapReason" class="sel" disabled>
+                    <option value="">Select section first...</option>
+                </select>
+            </div>
 
-                        <div class="form-group">
-                            <label>Quantity</label>
-                            <input type="number" id="quantity" class="form-control" min="1" required />
-                        </div>
+            <div class="field-block hidden" id="positionDiv">
+                <label for="partPosition">Position</label>
+                <select id="partPosition" class="sel">
+                    <option value="">Select position...</option>
+                </select>
+            </div>
+        </div>
 
-                        <div class="navigation-buttons">
-                            <button type="button" class="nav-button" onclick="window.history.back()">
-                                <i class="bi bi-arrow-left"></i> Back
-                            </button>
-                            <button type="button" class="nav-button" onclick="nextStep(1)">
-                                Review <i class="bi bi-arrow-right"></i>
-                            </button>
-                        </div>
-                    </form>
+        <div class="step-footer">
+            <button class="btn-next" id="toStep2Btn" onclick="goToStep2()" disabled>
+                Next: Enter Quantity <i class="bi bi-arrow-right"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- STEP 2: QUANTITY -->
+    <div class="wizard-card hidden" id="step2">
+        <div class="card-heading">
+            <span class="card-num">2</span>
+            <div>
+                <h2>How many pieces?</h2>
+                <p>Enter the quantity for <strong id="selectedReasonLabel"></strong></p>
+            </div>
+        </div>
+
+        <div class="summary-chip" id="selectionSummary"></div>
+
+        <div class="qty-block" id="qtyBlock">
+            <label for="quantity">Quantity</label>
+            <div class="qty-row">
+                <button type="button" class="qty-stepper" onclick="changeQty(-1)">&#8722;</button>
+                <input type="number" id="quantity" class="qty-input" min="1" value="1" />
+                <button type="button" class="qty-stepper" onclick="changeQty(1)">+</button>
+            </div>
+        </div>
+
+        <div class="field-block hidden" id="lengthDiv" style="max-width:240px;margin:0 auto 20px;">
+            <label for="lengthCm"><i class="bi bi-rulers"></i> Length (cm)</label>
+            <input type="number" id="lengthCm" class="sel" min="0" step="0.1" placeholder="Enter length in cm" />
+        </div>
+
+        <div class="field-block hidden" id="weightDiv" style="max-width:240px;margin:0 auto 20px;">
+            <label for="weightKg"><i class="bi bi-speedometer"></i> Weight (kg)</label>
+            <input type="number" id="weightKg" class="sel" min="0" step="0.01" placeholder="Enter weight in kg (optional)" />
+        </div>
+
+        <div class="step-footer two-btns">
+            <button class="btn-back" onclick="goToStep1()">
+                <i class="bi bi-arrow-left"></i> Back
+            </button>
+            <button class="btn-next" id="addEntryBtn" onclick="addEntryAndContinue()">
+                <i class="bi bi-plus-circle-fill"></i> Add to List
+            </button>
+        </div>
+    </div>
+
+    <!-- STEP 3: REVIEW & SUBMIT -->
+    <div class="wizard-card hidden" id="step3">
+        <div class="card-heading">
+            <span class="card-num">3</span>
+            <div>
+                <h2>Review &amp; Submit</h2>
+                <p>Check your entries then submit</p>
+            </div>
+        </div>
+
+        <div id="entryList"></div>
+
+        <div class="totals-row">
+            <div class="total-chip">
+                <span>Total Entries</span>
+                <strong id="totalItems">0</strong>
+            </div>
+            <div class="total-chip">
+                <span>Total Qty</span>
+                <strong id="totalQty">0</strong>
+            </div>
+        </div>
+
+        <div class="step-footer" style="display:flex; flex-direction:column; gap:10px;">
+            <div style="display:flex; justify-content:space-between; gap:10px;">
+                <button class="btn-back" onclick="addAnotherReason()">
+                    <i class="bi bi-plus"></i> Add Reason (Same Part)
+                </button>
+                <button class="btn-submit" id="submitAllBtn" onclick="handleSubmitAll()">
+                    <i class="bi bi-check-circle-fill"></i> Submit All
+                </button>
+            </div>
+            <!-- This is the one that goes to ScanPart -->
+            <button class="btn-scan-new" onclick="scanNewPart()">
+                <div class="scan-new-icon">
+                    <i class="bi bi-upc-scan"></i>
                 </div>
-
-                <!-- Step 2: Review -->
-                <div class="step" id="step2">
-                    <h2 class="step-title">Review Entry</h2>
-
-                    <table class="review-table">
-                        <tr>
-                            <th>Part Number:</th>
-                            <td id="review-partNumber"></td>
-                        </tr>
-                        <tr>
-                            <th>Section:</th>
-                            <td id="review-section"></td>
-                        </tr>
-                        <tr>
-                            <th>Error Type:</th>
-                            <td id="review-errorType"></td>
-                        </tr>
-                        <tr id="review-position-row" style="display: none;">
-                            <th>Position:</th>
-                            <td id="review-position"></td>
-                        </tr>
-                        <tr>
-                            <th>Quantity:</th>
-                            <td id="review-quantity"></td>
-                        </tr>
-                    </table>
-
-                    <div class="navigation-buttons">
-                        <button type="button" class="nav-button" onclick="previousStep(2)">
-                            <i class="bi bi-arrow-left"></i> Edit
-                        </button>
-                        <button type="button" class="nav-button submit-button" onclick="submitScrap()">
-                            <span class="button-text">Submit Scrap</span>
-                            <div class="spinner-border spinner-border-sm d-none" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
-                        </button>
-                    </div>
+                <div class="scan-new-text">
+                    <span class="scan-new-title">Scan / Add New Part</span>
+                    <span class="scan-new-sub">Scan a different part number for a new scrap entry</span>
                 </div>
+                <div class="scan-new-arrow">
+                    <i class="bi bi-chevron-right"></i>
+                </div>
+            </button>
+        </div>
+    </div>
+
+    <!-- SUCCESS STATE -->
+    <div class="wizard-card success-card hidden" id="successCard">
+        <div class="success-icon">&#x2705;</div>
+        <h2>Submitted!</h2>
+        <p>All scrap entries have been saved successfully.</p>
+
+        <div id="printLabelPrompt" style="
+        margin-top:20px;padding:16px;
+        background:rgba(255,193,7,0.12);border:2px solid #ffc107;
+        border-radius:12px;text-align:left;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                <i class="bi bi-printer-fill" style="font-size:22px;color:#fd7e14;"></i>
+                <strong style="color:#1a1a2e;font-size:15px;">Weigh &amp; print label for Batch #<span id="successBatchId">—</span></strong>
+            </div>
+            <p style="font-size:13px;color:#6c757d;margin-bottom:14px;line-height:1.5;">
+                If the physical scrap for this batch is ready, weigh it and print its location label now.
+                Only print once <strong>all</strong> scrap for this batch has been captured above — a weight
+                can no longer be recorded without a matching scrap submission.
+            </p>
+            <button class="btn-next" style="width:100%;justify-content:center;" onclick="confirmAndOpenPrintModal()">
+                <i class="bi bi-printer"></i> Weigh &amp; Print Label
+            </button>
+        </div>
+
+        <div class="step-footer two-btns" style="justify-content:center;gap:1rem;margin-top:1.5rem;">
+            <button class="btn-back" onclick="window.location.href='/Operator/ScrapHistory'">
+                <i class="bi bi-clock-history"></i> View History
+            </button>
+            <button class="btn-next" onclick="window.location.href='/Operator/ScanPart'">
+                <i class="bi bi-upc-scan"></i> New Part
+            </button>
+        </div>
+    </div>
+
+    <!-- Blocking confirmation before weighing/printing -->
+    <div id="scrapConfirmModal" style="
+    display:none; position:fixed; top:0; left:0;
+    width:100vw; height:100vh; background:rgba(0,0,0,0.85);
+    z-index:100000; align-items:center; justify-content:center; padding:16px;">
+        <div style="background:#1e293b;border:2px solid #ffc107;border-radius:12px;
+                max-width:420px;width:100%;padding:24px;box-shadow:0 25px 50px rgba(0,0,0,0.8);">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+                <i class="bi bi-exclamation-triangle-fill" style="font-size:26px;color:#ffc107;"></i>
+                <h5 style="color:white;margin:0;font-size:17px;">Confirm Before Printing</h5>
+            </div>
+            <p style="color:#cbd5e1;font-size:14px;line-height:1.6;margin-bottom:20px;">
+                Have you captured <strong style="color:#ffc107;">ALL</strong> the scrap for this batch?
+                <br><br>
+                Once you weigh and print this label, the weight will be recorded against
+                <strong style="color:#93c5fd;">Batch #<span id="confirmBatchId"></span></strong> only,
+                and cannot be linked to any scrap added afterwards.
+            </p>
+            <div style="display:flex;gap:10px;">
+                <button onclick="closeScrapConfirmModal()" style="
+                flex:1;background:transparent;border:2px solid #475569;color:#94a3b8;
+                padding:11px;border-radius:8px;cursor:pointer;font-weight:600;font-size:14px;">
+                    No, I still have scrap to add
+                </button>
+                <button onclick="proceedToWeighAfterConfirm()" style="
+                flex:1;background:#28a745;border:2px solid #28a745;color:white;
+                padding:11px;border-radius:8px;cursor:pointer;font-weight:700;font-size:14px;">
+                    Yes, Weigh &amp; Print
+                </button>
             </div>
         </div>
     </div>
 
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script>
-        $(document).ready(function() {
-            // Handle scrap section change
-            $('#scrapSection').change(function() {
-                const sectionId = $(this).val();
-                const $errorSelect = $('#errorType');
-                const $positionGroup = $('#positionGroup');
-                const requiresPosition = $(this).find(':selected').data('requires-position');
-                
-                $errorSelect.prop('disabled', true)
-                    .empty()
-                    .append('<option value="">Select Error Type</option>');
-                
-                if (sectionId) {
-                    $.get('/Operator/GetScrapErrors', { sectionId: sectionId })
-                        .done(function(data) {
-                            if (data.success) {
-                                data.errors.forEach(function(error) {
-                                    $errorSelect.append(`<option value="${error.errorId}">${error.errorName}</option>`);
-                                });
-                                $errorSelect.prop('disabled', false);
-                                
-                                // Show/hide position input based on section requirement
-                                $positionGroup.toggle(requiresPosition === 'true');
-                                $('#partPosition').prop('required', requiresPosition === 'true');
-                            }
-                        });
-                } else {
-                    $positionGroup.hide();
-                    $('#partPosition').prop('required', false);
-                }
-            });
+    <!-- Print Location Label Modal (moved here from Index.cshtml) -->
+    <div id="printLocationModal" style="
+    display:none; position:fixed; top:0; left:0;
+    width:100vw; height:100vh; background:rgba(0,0,0,0.85);
+    z-index:99999; align-items:center; justify-content:center;
+    padding:16px; box-sizing:border-box; overflow-y:auto;">
+
+        <div style="
+        background:#1e293b; border:2px solid #428bca; border-radius:12px;
+        width:100%; max-width:460px; margin:auto;
+        box-shadow:0 25px 50px rgba(0,0,0,0.8);
+        display:flex; flex-direction:column;
+        height:calc(100vh - 32px); max-height:600px;
+        overflow:hidden;">
+
+            <div style="
+            background:linear-gradient(135deg,#2563eb,#3b82f6);
+            padding:1rem 1.25rem;
+            display:flex; justify-content:space-between; align-items:center;
+            flex-shrink:0;">
+                <h5 style="color:white; margin:0; font-size:16px; font-weight:700;
+                   display:flex; align-items:center; gap:8px;">
+                    <i class="bi bi-printer"></i> Print Location Label — Batch #<span id="modalBatchId"></span>
+                </h5>
+                <button onclick="closePrintLocationModal()" style="
+                background:rgba(255,255,255,0.15); border:none; color:white;
+                width:32px; height:32px; border-radius:50%; cursor:pointer;
+                font-size:16px; display:flex; align-items:center; justify-content:center;
+                line-height:1; flex-shrink:0;">
+                    ✕
+                </button>
+            </div>
+
+            <div style="padding:1.25rem; overflow-y:auto; flex:1; min-height:0;">
+                <div style="
+                background:rgba(66,139,202,0.15); border:1px solid rgba(66,139,202,0.4);
+                border-radius:8px; padding:0.6rem 0.75rem; margin-bottom:1rem;
+                font-size:12px; color:#93c5fd; line-height:1.4;
+                display:flex; align-items:flex-start; gap:6px;">
+                    <i class="bi bi-info-circle" style="flex-shrink:0; margin-top:1px;"></i>
+                    <span>Label attaches to physical scrap for location traceability.</span>
+                </div>
+
+                <div style="margin-bottom:0.875rem;">
+                    <label style="display:block; font-weight:600; font-size:11px;
+                color:#94a3b8; text-transform:uppercase; letter-spacing:.6px; margin-bottom:0.3rem;">
+                        Printer *
+                    </label>
+                    <select id="locationPrinterSelect" style="
+                width:100%; padding:10px 12px; background:#334155;
+                border:2px solid #428bca; border-radius:8px;
+                color:white; font-size:14px; box-sizing:border-box;
+                appearance:none; cursor:pointer;">
+                        <option value="">Loading printers...</option>
+                    </select>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.875rem;">
+                    <div>
+                        <label style="display:block; font-weight:600; font-size:11px;
+                    color:#94a3b8; text-transform:uppercase; letter-spacing:.6px; margin-bottom:0.3rem;">
+                            Department
+                        </label>
+                        <input type="text" id="locationDept" readonly style="
+                    width:100%; padding:10px 12px; background:#0f172a;
+                    border:2px solid #334155; border-radius:8px;
+                    color:#64748b; font-size:13px; box-sizing:border-box;" />
+                    </div>
+                    <div>
+                        <label style="display:block; font-weight:600; font-size:11px;
+                    color:#94a3b8; text-transform:uppercase; letter-spacing:.6px; margin-bottom:0.3rem;">
+                            Line
+                        </label>
+                        <input type="text" id="locationLine" readonly style="
+                    width:100%; padding:10px 12px; background:#0f172a;
+                    border:2px solid #334155; border-radius:8px;
+                    color:#64748b; font-size:13px; box-sizing:border-box;" />
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.875rem;">
+                    <div>
+                        <label style="display:block; font-weight:600; font-size:11px;
+                    color:#94a3b8; text-transform:uppercase; letter-spacing:.6px; margin-bottom:0.3rem;">
+                            Shift
+                        </label>
+                        <input type="text" id="locationShift" readonly style="
+                    width:100%; padding:10px 12px; background:#0f172a;
+                    border:2px solid #334155; border-radius:8px;
+                    color:#64748b; font-size:13px; box-sizing:border-box;" />
+                    </div>
+                    <div>
+                        <label style="display:block; font-weight:600; font-size:11px;
+                    color:#94a3b8; text-transform:uppercase; letter-spacing:.6px; margin-bottom:0.3rem;">
+                            Machine No. <span style="color:#475569;font-weight:400;text-transform:none;">(optional)</span>
+                        </label>
+                        <input type="text" id="locationMachine" style="
+                    width:100%; padding:10px 12px; background:#334155;
+                    border:2px solid #475569; border-radius:8px;
+                    color:white; font-size:13px; box-sizing:border-box;" />
+                    </div>
+                </div>
+
+                <div style="margin-bottom:0.875rem;">
+                    <label style="display:block; font-weight:600; font-size:11px;
+                color:#94a3b8; text-transform:uppercase; letter-spacing:.6px; margin-bottom:0.3rem;">
+                        Weight (kg) *
+                    </label>
+                    <div style="position:relative;">
+                        <input type="number" id="locationWeight" step="0.001" min="0.001"
+                               placeholder="0.000" style="
+                    width:100%; padding:10px 48px 10px 12px; background:#334155;
+                    border:2px solid #428bca; border-radius:8px;
+                    color:white; font-size:15px; box-sizing:border-box;
+                    font-weight:600;" />
+                        <span style="
+                    position:absolute; right:12px; top:50%; transform:translateY(-50%);
+                    color:#64748b; font-size:13px; font-weight:600;
+                    pointer-events:none;">kg</span>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:0.875rem;">
+                    <label style="display:block; font-weight:600; font-size:11px;
+                color:#94a3b8; text-transform:uppercase; letter-spacing:.6px; margin-bottom:0.3rem;">
+                        Notes <span style="color:#475569; font-weight:400; text-transform:none;">(optional)</span>
+                    </label>
+                    <input type="text" id="locationNotes" placeholder="e.g. Morning batch, Rework scrap..." style="
+                width:100%; padding:10px 12px; background:#334155;
+                border:2px solid #475569; border-radius:8px;
+                color:white; font-size:14px; box-sizing:border-box;" />
+                </div>
+
+                <div id="printLocationError" style="
+            display:none; background:rgba(220,53,69,0.15);
+            border:1px solid #dc3545; border-radius:8px;
+            padding:0.75rem; color:#f87171; font-size:13px;
+            line-height:1.4;">
+                </div>
+            </div>
+
+            <div style="
+        padding:0.875rem 1.25rem;
+        border-top:1px solid rgba(66,139,202,0.2);
+        display:flex; gap:0.75rem; flex-shrink:0;">
+                <button onclick="closePrintLocationModal()" style="
+            flex:1; background:transparent; border:2px solid #475569;
+            color:#94a3b8; padding:11px; border-radius:8px;
+            cursor:pointer; font-weight:600; font-size:14px;">
+                    Cancel
+                </button>
+                <button id="confirmPrintLocationBtn" onclick="submitPrintLocationLabel()" style="
+            flex:2; background:#2563eb; border:2px solid #2563eb;
+            color:white; padding:11px; border-radius:8px;
+            cursor:pointer; font-weight:700; font-size:14px;
+            display:flex; align-items:center; justify-content:center; gap:8px;">
+                    <i class="bi bi-printer"></i> Print &amp; Record Weight
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Submission spinner -->
+    <div class="spinner-overlay hidden" id="spinnerOverlay">
+        <div class="spinner-box">
+            <div class="spin-ring"></div>
+            <p>Submitting...</p>
+        </div>
+    </div>
+
+</div>
+
+<style>
+    *, *::before, *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
+
+    body {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        min-height: 100vh;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+        color: #1a1a2e;
+    }
+
+    .hidden {
+        display: none !important;
+    }
+
+    .wizard-container {
+        max-width: 760px;
+        margin: 0 auto;
+        padding: 16px;
+    }
+
+    /* Top bar */
+    .top-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        background: rgba(255,255,255,0.97);
+        border-radius: 12px;
+        padding: 12px 16px;
+        margin-bottom: 16px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+        flex-wrap: wrap;
+    }
+
+    .part-pill {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 1;
+        min-width: 0;
+        font-size: 14px;
+        color: #1a1a2e;
+        overflow: hidden;
+    }
+
+        .part-pill strong {
+            color: #428bca;
+            font-size: 16px;
+            white-space: nowrap;
+        }
+
+    .dept-text {
+        color: #6c757d;
+        font-size: 12px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .top-btn {
+        border: 2px solid;
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s;
+        background: transparent;
+        white-space: nowrap;
+    }
+
+    .home-btn {
+        border-color: #428bca;
+        color: #428bca;
+    }
+
+        .home-btn:hover {
+            background: #428bca;
+            color: white;
+        }
+
+    .logout-btn {
+        border-color: #dc3545;
+        color: #dc3545;
+    }
+
+        .logout-btn:hover {
+            background: #dc3545;
+            color: white;
+        }
+
+    /* Steps bar */
+    .steps-bar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+        background: rgba(255,255,255,0.12);
+        border-radius: 50px;
+        padding: 10px 20px;
+    }
+
+    .step {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .step-circle {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.25);
+        color: rgba(255,255,255,0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 14px;
+        transition: all 0.3s;
+        border: 2px solid rgba(255,255,255,0.2);
+    }
+
+    .step-label {
+        font-size: 11px;
+        color: rgba(255,255,255,0.5);
+        font-weight: 600;
+        white-space: nowrap;
+        transition: color 0.3s;
+    }
+
+    .step.active .step-circle {
+        background: #428bca;
+        color: white;
+        border-color: #5daeed;
+        box-shadow: 0 0 0 4px rgba(66,139,202,0.3);
+    }
+
+    .step.active .step-label {
+        color: white;
+    }
+
+    .step.done .step-circle {
+        background: #28a745;
+        color: white;
+        border-color: #34c759;
+    }
+
+    .step.done .step-label {
+        color: rgba(255,255,255,0.8);
+    }
+
+    .step-line {
+        flex: 1;
+        height: 2px;
+        background: rgba(255,255,255,0.2);
+        min-width: 30px;
+        max-width: 80px;
+        margin: 0 8px;
+        margin-bottom: 16px;
+    }
+
+    /* Wizard card */
+    .wizard-card {
+        background: rgba(255,255,255,0.97);
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+        margin-bottom: 16px;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .wizard-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #428bca, #28a745);
+        }
+
+    .card-heading {
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .card-num {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #428bca, #5daeed);
+        color: white;
+        font-size: 18px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        box-shadow: 0 4px 12px rgba(66,139,202,0.4);
+    }
+
+    .card-heading h2 {
+        font-size: 20px;
+        font-weight: 700;
+        color: #1a1a2e;
+        margin-bottom: 2px;
+    }
+
+    .card-heading p {
+        font-size: 13px;
+        color: #6c757d;
+    }
+
+    /* Fields */
+    .field-row {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .field-block {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+        .field-block label {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #495057;
+        }
+
+    .sel {
+        width: 100%;
+        padding: 13px 16px;
+        border: 2px solid #dee2e6;
+        border-radius: 10px;
+        font-size: 15px;
+        color: #1a1a2e;
+        background: white;
+        cursor: pointer;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        font-family: inherit;
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236c757d' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 14px center;
+        padding-right: 40px;
+    }
+
+        .sel:focus {
+            outline: none;
+            border-color: #428bca;
+            box-shadow: 0 0 0 3px rgba(66,139,202,0.2);
+        }
+
+        .sel:disabled {
+            background-color: #f8f9fa;
+            color: #adb5bd;
+            cursor: not-allowed;
+        }
+
+    .accent-sel {
+        border-color: rgba(66,139,202,0.4);
+        background-color: rgba(66,139,202,0.03);
+    }
+
+    .eng-sel {
+        border-color: rgba(108,117,125,0.4);
+        background-color: rgba(108,117,125,0.03);
+    }
+
+    .entry-edit {
+        background: transparent;
+        border: 1px solid #428bca;
+        color: #428bca;
+        border-radius: 6px;
+        padding: 6px 10px;
+        cursor: pointer;
+        font-size: 13px;
+        transition: all 0.2s;
+        flex-shrink: 0;
+    }
+
+        .entry-edit:hover {
+            background: #428bca;
+            color: white;
+        }
+    /* Summary chip */
+    .summary-chip {
+        background: linear-gradient(135deg, rgba(66,139,202,0.08), rgba(40,167,69,0.08));
+        border: 2px solid rgba(66,139,202,0.2);
+        border-radius: 10px;
+        padding: 12px 16px;
+        font-size: 14px;
+        color: #1a1a2e;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        min-height: 44px;
+    }
+
+        .summary-chip .chip-item {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #428bca;
+        }
+
+
+
+    .btn-scan-new {
+        width: 100%;
+        background: linear-gradient(135deg, #1a1a2e, #16213e);
+        border: 2px solid rgba(66,139,202,0.4);
+        color: white;
+        border-radius: 12px;
+        padding: 0;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0;
+        transition: all 0.25s;
+        overflow: hidden;
+        text-decoration: none;
+    }
+
+        .btn-scan-new:hover {
+            background: linear-gradient(135deg, #16213e, #0f3460);
+            border-color: #428bca;
+            box-shadow: 0 4px 16px rgba(66,139,202,0.35);
+            transform: translateY(-1px);
+        }
+
+    .scan-new-icon {
+        background: rgba(66,139,202,0.25);
+        width: 64px;
+        height: 64px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 26px;
+        border-right: 1px solid rgba(66,139,202,0.3);
+    }
+
+    .scan-new-text {
+        flex: 1;
+        padding: 14px 18px;
+        text-align: left;
+    }
+
+    .scan-new-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: white;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        display: block;
+        margin-bottom: 2px;
+    }
+
+    .scan-new-sub {
+        font-size: 12px;
+        color: rgba(255,255,255,0.5);
+        font-weight: 400;
+        text-transform: none;
+        letter-spacing: 0;
+        display: block;
+    }
+
+    .scan-new-arrow {
+        padding: 0 18px;
+        font-size: 20px;
+        color: rgba(255,255,255,0.4);
+        flex-shrink: 0;
+    }
+
+    .btn-scan-new:hover .scan-new-arrow {
+        color: #5daeed;
+    }
+
+    /* Quantity */
+    .qty-block {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+        padding: 20px 0;
+    }
+
+        .qty-block label {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #495057;
+        }
+
+    .qty-row {
+        display: flex;
+        align-items: center;
+        border: 2px solid #428bca;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+
+    .qty-stepper {
+        width: 56px;
+        height: 56px;
+        background: #428bca;
+        color: white;
+        border: none;
+        font-size: 24px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .qty-stepper:hover {
+            background: #3071a9;
+        }
+
+    .qty-input {
+        width: 100px;
+        height: 56px;
+        border: none;
+        text-align: center;
+        font-size: 28px;
+        font-weight: 700;
+        color: #1a1a2e;
+        outline: none;
+        font-family: inherit;
+        -moz-appearance: textfield;
+    }
+
+        .qty-input::-webkit-outer-spin-button,
+        .qty-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+        }
+
+    /* Buttons */
+    .step-footer {
+        margin-top: 24px;
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .two-btns {
+        justify-content: space-between;
+    }
+
+    .btn-next, .btn-submit {
+        background: #428bca;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 14px 28px;
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+        .btn-next:hover {
+            background: #3071a9;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(66,139,202,0.4);
+        }
+
+        .btn-next:disabled {
+            background: #adb5bd;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+    .btn-submit {
+        background: #28a745;
+    }
+
+        .btn-submit:hover {
+            background: #218838;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(40,167,69,0.4);
+        }
+
+    .btn-back {
+        background: transparent;
+        color: #428bca;
+        border: 2px solid #428bca;
+        border-radius: 10px;
+        padding: 14px 24px;
+        font-size: 15px;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+        .btn-back:hover {
+            background: #428bca;
+            color: white;
+        }
+
+    /* Entry list */
+    .entry-card {
+        border: 1px solid #dee2e6;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-bottom: 10px;
+        transition: all 0.2s;
+    }
+
+        .entry-card:hover {
+            border-color: #428bca;
+            box-shadow: 0 2px 8px rgba(66,139,202,0.15);
+        }
+
+    .entry-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 16px;
+        background: #f8f9fa;
+        gap: 12px;
+    }
+
+    .entry-reason {
+        font-weight: 600;
+        font-size: 15px;
+        color: #1a1a2e;
+        flex: 1;
+    }
+
+    .entry-section-tag {
+        font-size: 11px;
+        color: #6c757d;
+        background: #e9ecef;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-weight: 600;
+    }
+
+    .entry-qty-badge {
+        background: rgba(40,167,69,0.12);
+        border: 1px solid #28a745;
+        color: #28a745;
+        font-weight: 700;
+        font-size: 14px;
+        padding: 4px 12px;
+        border-radius: 6px;
+        white-space: nowrap;
+    }
+
+    .entry-machine {
+        font-size: 12px;
+        color: #17a2b8;
+        font-weight: 600;
+        font-family: 'Courier New', monospace;
+        background: rgba(23,162,184,0.1);
+        padding: 2px 8px;
+        border-radius: 4px;
+    }
+
+    .entry-delete {
+        background: transparent;
+        border: 1px solid #dc3545;
+        color: #dc3545;
+        border-radius: 6px;
+        padding: 6px 10px;
+        cursor: pointer;
+        font-size: 13px;
+        transition: all 0.2s;
+        flex-shrink: 0;
+    }
+
+        .entry-delete:hover {
+            background: #dc3545;
+            color: white;
+        }
+
+    .no-entries-msg {
+        text-align: center;
+        color: #6c757d;
+        padding: 30px;
+        font-size: 15px;
+        font-style: italic;
+    }
+
+    /* Totals */
+    .totals-row {
+        display: flex;
+        gap: 12px;
+        margin-top: 16px;
+        padding-top: 16px;
+        border-top: 2px solid #dee2e6;
+    }
+
+    .total-chip {
+        flex: 1;
+        background: linear-gradient(135deg, rgba(66,139,202,0.08), rgba(40,167,69,0.08));
+        border: 1px solid rgba(66,139,202,0.2);
+        border-radius: 10px;
+        padding: 14px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+        .total-chip span {
+            font-size: 12px;
+            color: #6c757d;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .total-chip strong {
+            font-size: 24px;
+            color: #428bca;
+            font-weight: 700;
+        }
+
+    /* Success */
+    .success-card {
+        text-align: center;
+        padding: 40px 24px;
+    }
+
+    .success-icon {
+        font-size: 56px;
+        margin-bottom: 16px;
+    }
+
+    .success-card h2 {
+        font-size: 28px;
+        font-weight: 700;
+        color: #28a745;
+        margin-bottom: 8px;
+    }
+
+    .success-card p {
+        color: #6c757d;
+        font-size: 15px;
+    }
+
+    /* Spinner */
+    .spinner-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+    }
+
+    .spinner-box {
+        background: white;
+        border-radius: 16px;
+        padding: 32px 48px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .spin-ring {
+        width: 48px;
+        height: 48px;
+        border: 4px solid rgba(66,139,202,0.2);
+        border-top-color: #428bca;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+
+    .spinner-box p {
+        font-size: 16px;
+        font-weight: 600;
+        color: #1a1a2e;
+    }
+
+    @@keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    @@media (max-width: 600px) {
+        .wizard-container {
+            padding: 10px;
+        }
+
+        .top-bar {
+            padding: 10px 12px;
+        }
+
+        .dept-text {
+            display: none;
+        }
+
+        .steps-bar {
+            padding: 8px 12px;
+        }
+
+        .step-label {
+            font-size: 10px;
+        }
+
+        .wizard-card {
+            padding: 16px;
+        }
+
+        .card-heading h2 {
+            font-size: 17px;
+        }
+
+        .qty-input {
+            width: 80px;
+            font-size: 24px;
+        }
+
+        .qty-stepper {
+            width: 48px;
+            height: 48px;
+        }
+
+        .btn-next, .btn-back, .btn-submit {
+            padding: 12px 18px;
+            font-size: 13px;
+        }
+
+        .totals-row {
+            flex-direction: column;
+        }
+    }
+</style>
+
+<script>
+    let entries = [];
+    let scrapType = 'component';
+
+    const MACHINE_TYPES = [
+        { value:"komax",             text:"Komax" },
+        { value:"manual",            text:"Manual" },
+        { value:"battery",           text:"Battery" },
+        { value:"twisting",          text:"Twisting" },
+        { value:"wrapshield",        text:"WrapShield" },
+        { value:"bonders",           text:"Bonders" },
+        { value:"shielded",          text:"Shielded" },
+        { value:"sleeves",           text:"Sleeves" },
+        { value:"internallogistics", text:"Internal Logistics" },
+        { value:"moulding",          text:"Moulding" },
+        { value:"combimeter",        text:"Combimeter" },
+        { value:"manualcrimping",    text:"Manual Crimping" },
+        { value:"weldsplice",        text:"WeldSplice" },
+        { value:"bonder",            text:"Bonder" }
+    ];
+
+    const NO_MACHINE_NUM = ['manualcrimping','bonder'];
+
+    const MACHINE_NUMBERS = {
+        komax: ["K1","K2","K3","K4","K5","K6","K7","K8","K9","K10",
+                "K11","K12","K13","K14","K15","K16","K17","K18","K19","K20",
+                "K21","K22","K23","K24","K25","K26","K27","K28","K29","K30",
+                "M1","M2","M3","M4","M5","M6","M7",
+                "AC1","AC2","AC3","AC4","AC5","AC6","AC7","AC8","AC9","AC10",
+                "AC11","AC12","AC13","AC14","AC15","AC/AC95","AC95",
+                "AC95-1","AC95-2","AC95-3","AC95-4"],
+        manual:             ["M1","M2","M3","M4","M5","M6","M7","M8","M9","M10","M11","M12","M13","M14","M15"],
+        battery:            ["B1","B2","B3","B4","B5","B6","B7","B8","B9","B10","B11"],
+        twisting: ["Tw1","Tw2","Tw3","Tw4","Tw5","Tw6","Tw7","Tw8","Tw9","Tw10",
+                   "Tw11","Tw12","Tw13","Tw14","Tw15","Tw16","Tw17","Tw18","Tw19","Tw20",
+                   "Tw21","Tw22","Tw23","Tw24","Tw25","Tw26","Tw27","Tw28","Tw29","Tw30",
+                   "Tw31","Tw32","Tw33","Tw34","Tw35","Tw36","Tw37","Tw38","Tw39","Tw40",
+                   "Tw41","Tw42","Tw43","Tw44","Tw45","Tw46","Tw47","Tw48","Tw49","Tw50"],
+        wrapshield:         ["W1","W2","W3","W4","W5"],
+        bonders:            ["Bm1","Bm2","Bm3","Bm4","Bm5"],
+        shielded:   ["Sc1","Sc2","Sc3","Sc4","Sc5","Sc6","Sc7",
+                     "Cutting Machine","Cut down","Stripping Machine"],
+        sleeves:            ["Extrusion","Sleeve-Cutting"],
+        internallogistics:  ["Feeders","Chasers"],
+        moulding:           ["Moulding"],
+        combimeter:         ["481D","Segment","TFT"],
+        weldsplice: ["M1","M2","M3","M4","M5","M6","M7","M8","M9","M10"]
+    };
+
+    const SECTIONS = [
+        { value:"1",  text:"Production" },   { value:"2",  text:"CombiMeter" },
+        { value:"3",  text:"Moulding" },     { value:"4",  text:"Sleeve" },
+        { value:"5",  text:"Ground" },       { value:"6",  text:"Battery" },
+        { value:"7",  text:"Rework" },       { value:"8",  text:"Pre-Assembly Ford" },
+        { value:"9",  text:"Pre-Assembly Isuzu" }, { value:"10", text:"Pre-Assembly Csuv" },
+        { value:"11", text:"Pre-Assembly TSAM" },  { value:"12", text:"Engineering" }, { value:"13", text:"SQA" },
+        { value:"14", text:"STORES" }, { value:"15", text:"PROCESS" }, { value:"16", text:"QUALITY" }, { value:"17", text:"PURCHASING" }
+    ];
+
+    const COMBIMETER_POSITIONS = [
+        "AMBIENT PRISM","BEZEL","BARCODE LABEL","CASE","COMBI METER","DIAL HOLDER",
+        "DISPLAY LCD","FRONT GLASS","FUEL POINTER","ID LABEL","LCD PRISM","LCD",
+        "MODULE CASE","PCB ASSY","REAR COVER","RING","RUBBER BUSH","SPEED METER",
+        "SPEED PRISM","SPEED SCREW","TEMPO POINTER","TRIP POINTER PCB ASSY",
+        "TRIP KNOB","STEPPER MOTOR"
+    ];
+
+        const SLEEVE_POSITIONS = [
+        "COT start up/set up",
+        "COT production quality (hard/soft sleeve)",
+        "COT production quality (wall thickness)",
+        "COT Production quality (hole on sleeve)",
+        "COT Purging",
+        "VOB Purging",
+        "VOB start up/diameter change",
+        "VOB Production (wall thickness)",
+        "VOB Production (hole on sleeve)"
+    ];
+
+    // Init
+    document.addEventListener('DOMContentLoaded', function() {
+        const params = new URLSearchParams(window.location.search);
+        scrapType = params.get('scrapType')?.toLowerCase() || 'component';
+
+        const dept = document.getElementById('department')?.textContent?.trim().toUpperCase();
+        const sel  = document.getElementById('scrapSection');
+        sel.innerHTML = '<option value="">Select section...</option>';
+
+        let toShow = SECTIONS;
+        if      (dept === 'FORD')  toShow = SECTIONS.filter(s => ["1","5","8"].includes(s.value));
+        else if (dept === 'ISUZU') toShow = SECTIONS.filter(s => ["1","6","9"].includes(s.value));
+
+        toShow.forEach(s => {
+            const o = document.createElement('option');
+            o.value = s.value; o.textContent = s.text;
+            sel.appendChild(o);
         });
 
-        function nextStep(currentStep) {
-            if (currentStep === 1) {
-                const form = document.getElementById('scrapForm');
-                if (!form.checkValidity()) {
-                    form.reportValidity();
-                    return;
-                }
-                
-                // Update review information
-                $('#review-partNumber').text($('#partNumber').val());
-                $('#review-section').text($('#scrapSection option:selected').text());
-                $('#review-errorType').text($('#errorType option:selected').text());
-                $('#review-quantity').text($('#quantity').val());
-                
-                const position = $('#partPosition').val();
-                if (position) {
-                    $('#review-position').text(position);
-                    $('#review-position-row').show();
-                } else {
-                    $('#review-position-row').hide();
+        sel.addEventListener('change', onSectionChange);
+        document.getElementById('machineType').addEventListener('change', onMachineTypeChange);
+        document.getElementById('scrapReason').addEventListener('change', updateNextBtn);
+        document.getElementById('engineeringPlant')?.addEventListener('change', updateNextBtn);
+        document.getElementById('partPosition')?.addEventListener('change', updateNextBtn);
+        document.getElementById('machineNumber')?.addEventListener('change', updateNextBtn);
+
+        loadSavedEntries();
+        renderEntryList();
+    });
+
+    async function onSectionChange() {
+        const sId = document.getElementById('scrapSection').value;
+        const rSel = document.getElementById('scrapReason');
+
+        rSel.innerHTML = '<option value="">Loading reasons...</option>';
+        rSel.disabled = true;
+
+        ['machineTypeDiv','machineNumberDiv','engineeringPlantDiv','positionDiv'].forEach(id => {
+            document.getElementById(id)?.classList.add('hidden');
+        });
+        document.getElementById('machineType').value = '';
+        document.getElementById('machineNumber').value = '';
+
+        if (!sId) {
+            rSel.innerHTML = '<option value="">Select section first...</option>';
+            updateNextBtn();
+            return;
+        }
+
+        if (["8","9","10","11"].includes(sId)) {
+            document.getElementById('machineTypeDiv').classList.remove('hidden');
+            const mt = document.getElementById('machineType');
+            mt.innerHTML = '<option value="">Select machine type...</option>';
+            MACHINE_TYPES.forEach(m => {
+                const o = document.createElement('option');
+                o.value = m.value; o.textContent = m.text;
+                mt.appendChild(o);
+            });
+        }
+
+        if (sId === "12") {
+            document.getElementById('engineeringPlantDiv').classList.remove('hidden');
+            document.getElementById('engineeringPlant').value = '';
+        }
+
+    if (sId === "2" || sId === "4") {
+        document.getElementById('positionDiv').classList.remove('hidden');
+        const pp = document.getElementById('partPosition');
+        pp.innerHTML = '<option value="">Select position...</option>';
+        const positionList = sId === "2" ? COMBIMETER_POSITIONS : SLEEVE_POSITIONS;
+        positionList.forEach(p => {
+            const o = document.createElement('option');
+            o.value = p; o.textContent = p;
+            pp.appendChild(o);
+        });
+    }
+
+        // Fetch reasons live from the database instead of the hardcoded REASONS object
+    try {
+        const res = await fetch(`/Operator/GetScrapReasonsBySection?sectionId=${sId}`);
+        const data = await res.json();
+
+        rSel.innerHTML = '<option value="">Select reason...</option>';
+
+        if (data.success && Array.isArray(data.data)) {
+            const groups = { Component: [], Wire: [], Other: [] };
+            data.data.forEach(r => {
+                const key = r.category === 'Component' ? 'Component'
+                          : r.category === 'Wire'      ? 'Wire'
+                          : 'Other';
+                groups[key].push(r);
+            });
+
+            function addGroup(label, items) {
+                if (items.length === 0) return;
+                const og = document.createElement('optgroup');
+                og.label = label;
+                items.forEach(r => {
+                    const o = document.createElement('option');
+                    o.value = r.value;
+                    o.textContent = r.text;
+                    og.appendChild(o);
+                });
+                rSel.appendChild(og);
+            }
+
+            // Sections with no categorized reasons render flat, same as before
+            if (groups.Component.length === 0 && groups.Wire.length === 0) {
+                data.data.forEach(r => {
+                    const o = document.createElement('option');
+                    o.value = r.value; o.textContent = r.text;
+                    rSel.appendChild(o);
+                });
+            } else {
+                addGroup('COMPONENT / CONNECTOR REASONS', groups.Component);
+                addGroup('WIRE REASONS', groups.Wire);
+                addGroup('OTHER', groups.Other);
+            }
+        } else {
+            rSel.innerHTML = '<option value="">No reasons found</option>';
+        }
+    } catch (e) {
+        rSel.innerHTML = '<option value="">Error loading reasons</option>';
+        console.error('Failed to load scrap reasons:', e);
+    }
+
+        rSel.disabled = false;
+        updateNextBtn();
+    }
+
+    function onMachineTypeChange() {
+        const mtVal = document.getElementById('machineType').value;
+        const mnDiv = document.getElementById('machineNumberDiv');
+        const mnSel = document.getElementById('machineNumber');
+
+        if (!mtVal || NO_MACHINE_NUM.includes(mtVal)) {
+            mnDiv.classList.add('hidden');
+            mnSel.value = '';
+            updateNextBtn();
+            return;
+        }
+
+        mnSel.innerHTML = '<option value="">Select machine number...</option>';
+        (MACHINE_NUMBERS[mtVal] || []).forEach(n => {
+            const o = document.createElement('option');
+            o.value = n; o.textContent = n;
+            mnSel.appendChild(o);
+        });
+        mnDiv.classList.remove('hidden');
+        updateNextBtn();
+    }
+
+    function validateStep1() {
+        const sId  = document.getElementById('scrapSection').value;
+        const rVal = document.getElementById('scrapReason').value;
+        if (!sId || !rVal) return false;
+
+        if (["8","9","10","11"].includes(sId)) {
+            const mt = document.getElementById('machineType').value;
+            if (!mt) return false;
+            if (!NO_MACHINE_NUM.includes(mt) && !document.getElementById('machineNumber').value) return false;
+        }
+
+    if (sId === "12" && !document.getElementById('engineeringPlant').value) return false;
+    if ((sId === "2" || sId === "4") && !document.getElementById('partPosition').value) return false;
+
+        return true;
+    }
+
+    function updateNextBtn() {
+        const btn = document.getElementById('toStep2Btn');
+        if (btn) btn.disabled = !validateStep1();
+    }
+
+    function goToStep2() {
+        if (!validateStep1()) return;
+
+        const sId  = document.getElementById('scrapSection').value;
+        const rSel = document.getElementById('scrapReason');
+        const sSel = document.getElementById('scrapSection');
+        const rText = rSel.options[rSel.selectedIndex]?.text || '';
+        const sText = sSel.options[sSel.selectedIndex]?.text || '';
+        const mt    = document.getElementById('machineType').value;
+        const mn    = document.getElementById('machineNumber').value;
+        const ep    = document.getElementById('engineeringPlant').value;
+        const pp    = document.getElementById('partPosition').value;
+
+        document.getElementById('selectedReasonLabel').textContent = rText;
+
+        let chips = `<span class="chip-item">${sText}</span>`;
+        if (mt) chips += `<span class="chip-item">${MACHINE_TYPES.find(m=>m.value===mt)?.text||mt}</span>`;
+        if (mn) chips += `<span class="chip-item">${mn}</span>`;
+        if (ep) chips += `<span class="chip-item">${ep}</span>`;
+        if (pp) chips += `<span class="chip-item">${pp}</span>`;
+        chips += `<span class="chip-item" style="color:#1a1a2e;border-color:#428bca;">${rText}</span>`;
+
+        document.getElementById('selectionSummary').innerHTML = chips;
+    document.getElementById('quantity').value = 1;
+
+    const lengthDiv = document.getElementById('lengthDiv');
+    const lengthInput = document.getElementById('lengthCm');
+    lengthDiv.classList.add('hidden');
+    lengthInput.value = '';
+
+    const weightDiv = document.getElementById('weightDiv');
+    const weightInput = document.getElementById('weightKg');
+    if ((sId === "3" || sId === "4") && mt !== 'shielded') {
+        weightDiv.classList.remove('hidden');
+        weightInput.value = '';
+    } else {
+        weightDiv.classList.add('hidden');
+        weightInput.value = '';
+    }
+
+    const qtyBlock = document.getElementById('qtyBlock');
+    if (mt === 'shielded') {
+        qtyBlock.classList.add('hidden');
+        document.getElementById('quantity').value = 1; // backend still stores a qty
+    } else {
+        qtyBlock.classList.remove('hidden');
+    }
+
+    // Pre-fill if editing
+    if (editingIndex >= 0) {
+        const e = entries[editingIndex];
+        document.getElementById('quantity').value = e.quantity;
+        if ((sId === "3" || sId === "4") && mt !== 'shielded' && e.weight > 0) {
+            weightInput.value = e.weight;
+        }
+    }
+
+    showStep(2);
+    }
+
+    function goToStep1() {
+        editingIndex = -1;
+        showStep(1);
+    }
+
+    function addAnotherReason() {
+        document.getElementById('scrapSection').value = '';
+        const rSel = document.getElementById('scrapReason');
+        rSel.innerHTML = '<option value="">Select section first...</option>';
+        rSel.disabled = true;
+        ['machineTypeDiv','machineNumberDiv','engineeringPlantDiv','positionDiv'].forEach(id => {
+            document.getElementById(id)?.classList.add('hidden');
+        });
+        updateNextBtn();
+        showStep(1);
+    }
+
+    function showStep(n) {
+        ['step1','step2','step3'].forEach((id,i) => {
+            document.getElementById(id)?.classList.toggle('hidden', i+1 !== n);
+        });
+        ['step-ind-1','step-ind-2','step-ind-3'].forEach((id,i) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.classList.remove('active','done');
+            if (i+1 === n) el.classList.add('active');
+            if (i+1 <  n)  el.classList.add('done');
+        });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+        function scanNewPart() {
+        if (entries.length > 0) {
+            if (!confirm('You have ' + entries.length + ' unsaved entry(ies) that have NOT been submitted.\n\nThey will be saved and you can come back to submit them.\n\nGo to scan a new part?')) {
+                return;
+            }
+        }
+        window.location.href = '/Operator/ScanPart';
+    }
+
+    function changeQty(delta) {
+        const inp = document.getElementById('quantity');
+        inp.value = Math.max(1, (parseInt(inp.value) || 0) + delta);
+    }
+
+    function addEntryAndContinue() {
+        const sSel = document.getElementById('scrapSection');
+        const rSel = document.getElementById('scrapReason');
+        const sId  = sSel.value;
+        const mt   = document.getElementById('machineType').value;
+
+        // Quantity — Shielded doesn't track piece count, defaults to 1
+        let qty;
+        if (mt === 'shielded') {
+            qty = 1;
+        } else {
+            qty = parseInt(document.getElementById('quantity').value);
+            if (!qty || qty < 1) { alert('Please enter a valid quantity'); return; }
+        }
+
+        // Length — no longer captured for Shielded at all
+        let lengthVal = 0;
+
+        // Weight — required for Moulding (3) / Sleeve (4) only; not for Shielded
+    // Weight — optional for Moulding (3) / Sleeve (4); operator decides whether to capture it
+    let weightVal = 0;
+    if ((sId === "3" || sId === "4") && mt !== 'shielded') {
+        const weightInput = document.getElementById('weightKg').value;
+        if (weightInput) {
+            weightVal = parseFloat(weightInput);
+            if (isNaN(weightVal) || weightVal < 0) {
+                alert('Please enter a valid weight in kg');
+                document.getElementById('weightKg').focus();
+                return;
+            }
+        }
+    }
+
+        const newEntry = {
+            partNumber:       document.getElementById('partNumber')?.textContent?.trim() || '',
+            department:       document.getElementById('department')?.textContent?.trim() || '',
+            line:             document.getElementById('line')?.textContent?.trim() || '',
+            shift:            document.getElementById('shift')?.textContent?.trim() || '',
+            scrapSectionId:   parseInt(sId),
+            sectionName:      sSel.options[sSel.selectedIndex]?.text || '',
+            reasonId:         parseInt(rSel.value),
+            scrapReason:      rSel.options[rSel.selectedIndex]?.text || '',
+            position: (sId === "2" || sId === "4") ? (document.getElementById('partPosition').value || "") : "",
+            machineType:      mt || "",
+            machineNumber:    document.getElementById('machineNumber').value || "",
+            engineeringPlant: document.getElementById('engineeringPlant').value || "",
+            quantity:         qty,
+            scrapType,
+            weight: weightVal, hasWeight: weightVal > 0, length: lengthVal,
+            stockUom:     document.getElementById('stockUom')?.value || 'EA',
+            materialCost: parseFloat(document.getElementById('materialCost')?.value) || 0,
+            partCategory: document.getElementById('partCategory')?.value || '',
+            plant:        document.getElementById('plant')?.value || '',
+            company:      document.getElementById('company')?.value || 'B',
+            timestamp:    new Date().toISOString()
+        };
+
+        if (editingIndex >= 0) {
+            entries[editingIndex] = newEntry;
+            editingIndex = -1;
+        } else {
+            entries.push(newEntry);
+        }
+
+        saveToStorage();
+        renderEntryList();
+        showStep(3);
+    }
+
+    function renderEntryList() {
+        const container = document.getElementById('entryList');
+        if (!container) return;
+
+        if (entries.length === 0) {
+            container.innerHTML = '<div class="no-entries-msg">No entries yet.</div>';
+            document.getElementById('totalItems').textContent = '0';
+            document.getElementById('totalQty').textContent   = '0';
+            document.getElementById('clearAllBtn')?.remove();
+            return;
+        }
+
+        let totalQty = 0;
+        container.innerHTML = entries.map((e, i) => {
+            totalQty += e.quantity;
+            const machineInfo = e.machineType
+                ? `<span class="entry-machine">${e.machineType.toUpperCase()}${e.machineNumber ? ' — ' + e.machineNumber : ''}</span>`
+                : '';
+            const plantInfo   = e.engineeringPlant ? `<span class="entry-machine">${e.engineeringPlant}</span>` : '';
+            const posInfo     = e.position         ? `<span class="entry-machine">${e.position}</span>`         : '';
+                const lengthInfo  = e.length > 0       ? `<span class="entry-machine">${e.length} cm</span>`         : '';
+    const weightInfo  = e.weight > 0       ? `<span class="entry-machine">${e.weight} kg</span>`          : '';
+            return `
+            <div class="entry-card">
+                <div class="entry-row">
+                    <div style="flex:1;min-width:0;cursor:pointer;" onclick="editEntry(${i})">
+                        <div class="entry-reason">${e.scrapReason}</div>
+                        <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;align-items:center;">
+                            <span class="entry-section-tag">${e.sectionName}</span>
+                            ${machineInfo}${plantInfo}${posInfo}${lengthInfo}${weightInfo}
+                        </div>
+                    </div>
+                    <span class="entry-qty-badge">Qty: ${e.quantity}</span>
+                    <button class="entry-edit" onclick="editEntry(${i})" title="Edit">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="entry-delete" onclick="deleteEntry(${i})" title="Delete">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            </div>`;
+        }).join('');
+
+        document.getElementById('totalItems').textContent = entries.length;
+        document.getElementById('totalQty').textContent   = totalQty;
+
+        addClearAllButton();
+    }
+
+    function addClearAllButton() {
+        if (document.getElementById('clearAllBtn')) return;
+
+        const btn = document.createElement('button');
+        btn.id = 'clearAllBtn';
+        btn.className = 'btn-back';
+        btn.style.cssText = 'border-color:#dc3545;color:#dc3545;width:100%;justify-content:center;margin-top:10px;';
+        btn.innerHTML = '<i class="bi bi-trash3"></i> Clear All Entries';
+        btn.onclick = clearAllEntries;
+
+        const totalsRow = document.querySelector('.totals-row');
+        if (totalsRow) totalsRow.insertAdjacentElement('afterend', btn);
+    }
+
+    function clearAllEntries() {
+        if (!confirm('Remove all ' + entries.length + ' entries? This cannot be undone.')) return;
+        entries = [];
+        saveToStorage();
+        renderEntryList();
+        showStep(1);
+    }
+
+
+    let editingIndex = -1;
+
+    async function editEntry(index) {
+        const e = entries[index];
+        editingIndex = index;
+
+        // Populate Step 1 fields
+        document.getElementById('scrapSection').value = e.scrapSectionId;
+        await onSectionChange();   // wait for reasons to actually load before selecting one
+
+        document.getElementById('scrapReason').value = e.reasonId;
+
+        if (e.machineType) {
+            document.getElementById('machineType').value = e.machineType;
+            onMachineTypeChange();
+            setTimeout(() => {
+                if (e.machineNumber) document.getElementById('machineNumber').value = e.machineNumber;
+                updateNextBtn();
+            }, 50);
+        }
+        if (e.engineeringPlant) document.getElementById('engineeringPlant').value = e.engineeringPlant;
+        if (e.position) document.getElementById('partPosition').value = e.position;
+
+        updateNextBtn();
+        showStep(1);
+    }
+
+
+
+    function deleteEntry(index) {
+        if (!confirm('Remove this entry?')) return;
+        entries.splice(index, 1);
+        saveToStorage();
+        renderEntryList();
+        if (entries.length === 0) showStep(1);
+    }
+
+    function getStorageKey() {
+        const clockNumber = '@User.Identity?.Name' || 'unknown';
+        return 'scrapEntries_' + clockNumber;
+    }
+
+    function saveToStorage() {
+        try {
+            const d = JSON.stringify(entries);
+            const key = getStorageKey();
+            sessionStorage.setItem(key, d);
+            localStorage.setItem(key, d);
+        } catch(e) {}
+    }
+
+    function loadSavedEntries() {
+        try {
+            const key = getStorageKey();
+            const d = sessionStorage.getItem(key) || localStorage.getItem(key);
+            if (d) {
+                const arr = JSON.parse(d);
+                if (Array.isArray(arr) && arr.length > 0) {
+                    entries = arr;
+                    renderEntryList();
+                    showPendingIndicator(entries.length);
+                    showPendingPromptBanner();
                 }
             }
-            
-            $(`#step${currentStep}`).removeClass('active');
-            $(`#step${currentStep + 1}`).addClass('active');
+        } catch(e) {}
+        showStep(1);
+    }
+
+    function showPendingPromptBanner() {
+        const existing = document.getElementById('pendingPromptBanner');
+        if (existing) existing.remove();
+
+        const totalQty = entries.reduce((s, e) => s + (e.quantity || 0), 0);
+
+        const banner = document.createElement('div');
+        banner.id = 'pendingPromptBanner';
+        banner.style.cssText = `
+            background: white;
+            border: 2px solid #ffc107;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 16px rgba(255,193,7,0.2);
+            position: relative;
+            overflow: hidden;
+        `;
+        banner.innerHTML = `
+            <div style="position:absolute;top:0;left:0;right:0;height:4px;
+                        background:linear-gradient(90deg,#ffc107,#fd7e14);"></div>
+
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+                <div style="width:44px;height:44px;border-radius:50%;
+                            background:rgba(255,193,7,0.15);border:2px solid #ffc107;
+                            display:flex;align-items:center;justify-content:center;
+                            font-size:20px;flex-shrink:0;">
+                    ⏳
+                </div>
+                <div>
+                    <div style="font-size:16px;font-weight:700;color:#1a1a2e;">
+                        You have ${entries.length} unsaved entry(ies)
+                    </div>
+                    <div style="font-size:13px;color:#6c757d;margin-top:2px;">
+                        ${entries.length} reason(s) &bull; Total qty: ${totalQty} &bull; Not yet submitted
+                    </div>
+                </div>
+            </div>
+
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                <button onclick="goToSubmitPending()" style="
+                    flex:2;min-width:160px;
+                    background:linear-gradient(135deg,#28a745,#20c35a);
+                    border:none;color:white;border-radius:10px;
+                    padding:14px 20px;font-size:15px;font-weight:700;
+                    cursor:pointer;display:flex;align-items:center;
+                    justify-content:center;gap:8px;
+                    box-shadow:0 4px 12px rgba(40,167,69,0.35);
+                    transition:all 0.2s;"
+                    onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 16px rgba(40,167,69,0.45)';"
+                    onmouseout="this.style.transform='none';this.style.boxShadow='0 4px 12px rgba(40,167,69,0.35)';">
+                    <i class="bi bi-check-circle-fill"></i>
+                    Submit Pending Scrap
+                </button>
+                <button onclick="dismissPendingBanner()" style="
+                    flex:1;min-width:120px;
+                    background:transparent;border:2px solid #dee2e6;
+                    color:#6c757d;border-radius:10px;
+                    padding:14px 16px;font-size:14px;font-weight:600;
+                    cursor:pointer;display:flex;align-items:center;
+                    justify-content:center;gap:6px;
+                    transition:all 0.2s;"
+                    onmouseover="this.style.borderColor='#adb5bd';this.style.color='#495057';"
+                    onmouseout="this.style.borderColor='#dee2e6';this.style.color='#6c757d';">
+                    <i class="bi bi-plus-circle"></i>
+                    Add New Entry First
+                </button>
+            </div>
+        `;
+
+        // Insert before the steps bar
+        const stepsBar = document.getElementById('stepsBar');
+        if (stepsBar) {
+            stepsBar.parentNode.insertBefore(banner, stepsBar);
         }
+    }
 
-        function previousStep(currentStep) {
-            $(`#step${currentStep}`).removeClass('active');
-            $(`#step${currentStep - 1}`).addClass('active');
+    function goToSubmitPending() {
+        document.getElementById('pendingPromptBanner')?.remove();
+        renderEntryList();
+        showStep(3);
+    }
+
+    function dismissPendingBanner() {
+        document.getElementById('pendingPromptBanner')?.remove();
+        // User wants to add a new entry first — stay on Step 1
+    }
+
+    function showPendingIndicator(count) {
+        const btn       = document.getElementById('pendingIndicatorBtn');
+        const countSpan = document.getElementById('pendingIndicatorCount');
+        if (!btn || count === 0) return;
+        countSpan.textContent = count;
+        btn.style.display = 'flex';
+    }
+
+        function showPendingPartsModal() {
+        const existing = document.getElementById('pendingModal');
+        if (existing) existing.remove();
+
+        if (entries.length === 0) return;
+
+        const rows = entries.map((e, i) => `
+            <div style="border:1px solid #dee2e6;border-radius:10px;padding:14px 16px;
+                        margin-bottom:10px;background:#f8f9fa;
+                        display:flex;justify-content:space-between;align-items:center;gap:12px;">
+                <div style="flex:1;min-width:0;">
+                    <div style="font-weight:700;font-size:14px;color:#1a1a2e;">${e.scrapReason}</div>
+                    <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;align-items:center;">
+                        <span style="font-size:11px;color:#6c757d;background:#e9ecef;
+                                     padding:2px 8px;border-radius:4px;font-weight:600;">
+                            ${e.partNumber}
+                        </span>
+                        <span style="font-size:11px;color:#6c757d;background:#e9ecef;
+                                     padding:2px 8px;border-radius:4px;font-weight:600;">
+                            ${e.sectionName}
+                        </span>
+                        ${e.machineType ? `<span style="font-size:11px;color:#17a2b8;background:rgba(23,162,184,0.1);
+                                     padding:2px 8px;border-radius:4px;font-weight:600;font-family:monospace;">
+                            ${e.machineType.toUpperCase()}${e.machineNumber ? ' — ' + e.machineNumber : ''}
+                        </span>` : ''}
+                    </div>
+                </div>
+                <span style="background:rgba(40,167,69,0.12);border:1px solid #28a745;
+                             color:#28a745;font-weight:700;font-size:13px;
+                             padding:4px 10px;border-radius:6px;white-space:nowrap;">
+                    Qty: ${e.quantity}
+                </span>
+                <button onclick="deleteEntryFromModal(${i})" style="
+                    background:transparent;border:1px solid #dc3545;color:#dc3545;
+                    border-radius:6px;padding:6px 10px;cursor:pointer;font-size:13px;
+                    flex-shrink:0;transition:all 0.2s;"
+                    onmouseover="this.style.background='#dc3545';this.style.color='white';"
+                    onmouseout="this.style.background='transparent';this.style.color='#dc3545';">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>`).join('');
+
+        const totalQty = entries.reduce((s, e) => s + (e.quantity || 0), 0);
+
+        const modal = document.createElement('div');
+        modal.id = 'pendingModal';
+        modal.style.cssText = `
+            position:fixed;inset:0;background:rgba(0,0,0,0.6);
+            z-index:9999;display:flex;align-items:center;
+            justify-content:center;padding:20px;`;
+        modal.innerHTML = `
+            <div style="background:white;border-radius:16px;width:100%;max-width:520px;
+                        max-height:85vh;display:flex;flex-direction:column;
+                        box-shadow:0 8px 32px rgba(0,0,0,0.3);">
+                <div style="background:linear-gradient(135deg,#ffc107,#fd7e14);
+                            padding:16px 20px;border-radius:16px 16px 0 0;
+                            display:flex;justify-content:space-between;align-items:center;
+                            flex-shrink:0;">
+                    <div>
+                        <div style="color:white;font-size:17px;font-weight:700;">
+                            <i class="bi bi-clock-history"></i>
+                            Saved Entries (${entries.length})
+                        </div>
+                        <div style="color:rgba(255,255,255,0.85);font-size:12px;margin-top:2px;">
+                            These will all be submitted together
+                        </div>
+                    </div>
+                    <button onclick="document.getElementById('pendingModal').remove()" style="
+                        background:rgba(255,255,255,0.2);border:none;color:white;
+                        border-radius:6px;width:32px;height:32px;cursor:pointer;font-size:18px;">
+                        &#x2715;
+                    </button>
+                </div>
+                <div style="padding:16px;overflow-y:auto;flex:1;">${rows}</div>
+                <div style="padding:16px;border-top:1px solid #dee2e6;flex-shrink:0;
+                            display:flex;justify-content:space-between;align-items:center;gap:10px;">
+                    <div style="font-size:13px;color:#6c757d;">
+                        <strong style="color:#1a1a2e;">${entries.length}</strong> entries &bull;
+                        <strong style="color:#1a1a2e;">${totalQty}</strong> total qty
+                    </div>
+                    <div style="display:flex;gap:8px;">
+                        <button onclick="discardAll()" style="
+                            background:transparent;border:2px solid #dc3545;color:#dc3545;
+                            border-radius:8px;padding:8px 16px;cursor:pointer;
+                            font-size:13px;font-weight:700;transition:all 0.2s;"
+                            onmouseover="this.style.background='#dc3545';this.style.color='white';"
+                            onmouseout="this.style.background='transparent';this.style.color='#dc3545';">
+                            <i class="bi bi-trash"></i> Discard All
+                        </button>
+                        <button onclick="goToSubmit()" style="
+                            background:#28a745;border:none;color:white;
+                            border-radius:8px;padding:8px 16px;cursor:pointer;
+                            font-size:13px;font-weight:700;transition:all 0.2s;"
+                            onmouseover="this.style.background='#218838';"
+                            onmouseout="this.style.background='#28a745';">
+                            <i class="bi bi-check-circle-fill"></i> Go to Submit
+                        </button>
+                    </div>
+                </div>
+            </div>`;
+        document.body.appendChild(modal);
+    }
+
+    function deleteEntryFromModal(index) {
+        if (!confirm('Remove this entry?')) return;
+        entries.splice(index, 1);
+        saveToStorage();
+        // Refresh modal
+        document.getElementById('pendingModal')?.remove();
+        if (entries.length > 0) {
+            showPendingPartsModal();
+            showPendingIndicator(entries.length);
+        } else {
+            document.getElementById('pendingIndicatorBtn').style.display = 'none';
         }
+    }
 
-        function submitScrap() {
-            const submitButton = $('.submit-button');
-            const spinner = $('.spinner-border');
-            const buttonText = $('.button-text');
-            const validationMessage = $('.validation-message');
+    function discardAll() {
+        if (!confirm('Discard ALL ' + entries.length + ' saved entries?')) return;
+        clearStorage();
+        document.getElementById('pendingModal')?.remove();
+        document.getElementById('pendingIndicatorBtn').style.display = 'none';
+        renderEntryList();
+    }
 
-            const data = {
-                partNumber: $('#partNumber').val(),
-                scrapSectionId: $('#scrapSection').val(),
-                errorTypeId: $('#errorType').val(),
-                partPosition: $('#partPosition').val(),
-                quantity: $('#quantity').val()
-            };
+    function goToSubmit() {
+        document.getElementById('pendingModal')?.remove();
+        renderEntryList();
+        showStep(3);
+    }
 
-            submitButton.prop('disabled', true);
-            spinner.removeClass('d-none');
-            buttonText.text('Submitting...');
-            validationMessage.hide();
+    function showSavedBanner() {
+        const existing = document.getElementById('savedBanner');
+        if (existing) return;
 
-            $.post('/Operator/SubmitScrap', data)
-                .done(function(response) {
-                    if (response.success) {
-                        window.location.href = response.redirectUrl;
-                    } else {
-                        validationMessage.html(response.message).show();
-                        submitButton.prop('disabled', false);
-                        spinner.addClass('d-none');
-                        buttonText.text('Submit Scrap');
-                    }
-                })
-                .fail(function() {
-                    validationMessage.html('An error occurred. Please try again.').show();
-                    submitButton.prop('disabled', false);
-                    spinner.addClass('d-none');
-                    buttonText.text('Submit Scrap');
+        const banner = document.createElement('div');
+        banner.id = 'savedBanner';
+        banner.style.cssText = `
+            background: rgba(255,193,7,0.15);
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 12px 16px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        `;
+        banner.innerHTML = `
+            <div style="display:flex;align-items:center;gap:10px;">
+                <i class="bi bi-exclamation-triangle-fill" style="color:#ffc107;font-size:18px;"></i>
+                <div>
+                    <strong style="color:#856404;font-size:14px;">You have ${entries.length} unsaved entry(ies) from your previous session.</strong>
+                    <div style="font-size:12px;color:#6c757d;margin-top:2px;">Submit them or discard and start fresh.</div>
+                </div>
+            </div>
+            <button onclick="discardAndStartFresh()" style="
+                background:transparent;border:2px solid #dc3545;color:#dc3545;
+                border-radius:8px;padding:6px 14px;font-size:13px;font-weight:600;
+                cursor:pointer;white-space:nowrap;transition:all 0.2s;"
+                onmouseover="this.style.background='#dc3545';this.style.color='white';"
+                onmouseout="this.style.background='transparent';this.style.color='#dc3545';">
+                <i class="bi bi-trash"></i> Discard All
+            </button>
+        `;
+
+        const step3 = document.getElementById('step3');
+        if (step3) step3.insertBefore(banner, step3.firstChild);
+    }
+
+    function discardAndStartFresh() {
+        if (!confirm('Discard all ' + entries.length + ' saved entry(ies) and start fresh?')) return;
+        clearStorage();
+        entries = [];
+        renderEntryList();
+        document.getElementById('savedBanner')?.remove();
+        // Reset step indicators
+        ['step-ind-1','step-ind-2','step-ind-3'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) { el.classList.remove('done','active'); }
+        });
+        document.getElementById('step-ind-1')?.classList.add('active');
+        showStep(1);
+    }
+
+    function clearStorage() {
+        const key = getStorageKey();
+        sessionStorage.removeItem(key);
+        localStorage.removeItem(key);
+        entries = [];
+
+        const pendingBtn = document.getElementById('pendingIndicatorBtn');
+        if (pendingBtn) pendingBtn.style.display = 'none';
+    }
+
+
+        let lastSubmittedBatchId = null;   // ← NEW: set once SubmitScrap tells us the real batch id
+
+    async function handleSubmitAll() {
+        if (entries.length === 0) { alert('No entries to submit.'); return; }
+        if (!confirm(`Submit ${entries.length} entry(ies)?`)) return;
+
+        const submitBtn = document.getElementById('submitAllBtn');
+        const spinner   = document.getElementById('spinnerOverlay');
+        submitBtn.disabled = true;
+        spinner.classList.remove('hidden');
+
+        const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+        let successCount = 0, failCount = 0, batchId = null;
+
+        for (const entry of entries) {
+            try {
+                const res = await fetch('/Operator/SubmitScrap', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': token
+                    },
+                    body: JSON.stringify({
+                        partNumber:       entry.partNumber,
+                        scrapSectionId:   parseInt(entry.scrapSectionId),
+                        reasonId:         parseInt(entry.reasonId),
+                        scrapReason:      entry.scrapReason,
+                        quantity:         parseInt(entry.quantity),
+                        position:         entry.position    || "",
+                        length:           parseFloat(entry.length) || 0,
+                        weight:           parseFloat(entry.weight) || 0,
+                        scrapType:        entry.scrapType   || 'component',
+                        machineType:      entry.machineType || "",
+                        machineNumber:    entry.machineNumber || "",
+                        department:       entry.department,
+                        line:             entry.line,
+                        shift:            entry.shift,
+                        stockUom:         entry.stockUom    || "",
+                        materialCost:     parseFloat(entry.materialCost) || 0,
+                        partCategory:     entry.partCategory || "",
+                        plant:            entry.plant        || "",
+                        company:          entry.company      || "B",
+                        batchScrapId:     batchId,
+                        status:           "Pending TL",
+                        engineeringPlant: entry.engineeringPlant || ""
+                    })
                 });
+
+                if (res.ok) {
+                    const result = await res.json();
+                    if (result.success) {
+                        successCount++;
+                        if (!batchId && result.data?.batchScrapId) batchId = result.data.batchScrapId;
+                    } else { failCount++; }
+                } else { failCount++; }
+            } catch(e) { failCount++; }
+
+            await new Promise(r => setTimeout(r, 150));
         }
-    </script>
-</body>
-</html>
+
+        spinner.classList.add('hidden');
+        submitBtn.disabled = false;
+
+        if (failCount === 0) {
+            try {
+                await fetch('/Operator/FinalizeAllActiveSessions', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            } catch(e) {}
+            clearStorage();
+            lastSubmittedBatchId = batchId;                          // ← NEW
+            showSuccessState();
+        } else {
+            alert('Submitted: ' + successCount + ', Failed: ' + failCount + '. Please try again.');
+        }
+    }
+
+    function showSuccessState() {
+        ['step1','step2','step3'].forEach(id => document.getElementById(id)?.classList.add('hidden'));
+        document.getElementById('successCard').classList.remove('hidden');
+
+        ['step-ind-1','step-ind-2','step-ind-3'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) { el.classList.remove('active'); el.classList.add('done'); }
+        });
+
+        const pendingBtn = document.getElementById('pendingIndicatorBtn');
+        if (pendingBtn) pendingBtn.style.display = 'none';
+        document.getElementById('pendingModal')?.remove();
+
+        // ✅ NEW: show which batch this was, and enable the print prompt only if we actually have one
+        const batchLabel = lastSubmittedBatchId ? lastSubmittedBatchId : '—';
+        document.getElementById('successBatchId').textContent = batchLabel;
+        document.getElementById('confirmBatchId').textContent = batchLabel;
+        document.getElementById('modalBatchId').textContent   = batchLabel;
+        document.getElementById('printLabelPrompt').style.display = lastSubmittedBatchId ? 'block' : 'none';
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // ✅ NEW: the blocking confirmation gate
+    function confirmAndOpenPrintModal() {
+        if (!lastSubmittedBatchId) {
+            alert('No batch found for this submission. Please contact IT support.');
+            return;
+        }
+        document.getElementById('scrapConfirmModal').style.display = 'flex';
+    }
+
+    function closeScrapConfirmModal() {
+        document.getElementById('scrapConfirmModal').style.display = 'none';
+    }
+
+    function proceedToWeighAfterConfirm() {
+        closeScrapConfirmModal();
+        openPrintLocationModal();
+    }
+
+    // ── Print Location Label (moved from Index.cshtml, now batch-aware) ──────
+    async function openPrintLocationModal() {
+        const modal = document.getElementById('printLocationModal');
+        const errorDiv = document.getElementById('printLocationError');
+        if (errorDiv) errorDiv.style.display = 'none';
+
+        document.getElementById('locationDept').value    = document.getElementById('department')?.textContent?.trim() || '';
+        document.getElementById('locationLine').value    = document.getElementById('line')?.textContent?.trim() || '';
+        document.getElementById('locationShift').value   = document.getElementById('shift')?.textContent?.trim() || '';
+        document.getElementById('locationMachine').value = '';
+        document.getElementById('locationNotes').value   = '';
+        document.getElementById('locationWeight').value  = '';
+
+        modal.style.display = 'flex';
+
+        const printerSelect = document.getElementById('locationPrinterSelect');
+        printerSelect.innerHTML = '<option value="">Loading...</option>';
+
+        try {
+            const res  = await fetch('/Operator/GetAvailablePrinters');
+            const data = await res.json();
+
+            if (data.success && data.printers?.length > 0) {
+                printerSelect.innerHTML = '<option value="">Select Printer</option>';
+                data.printers.forEach(p => {
+                    const opt = document.createElement('option');
+                    const id   = p.printerConfigId ?? p.printerconfigid ?? p.PrinterConfigId;
+                    const name = p.printerName     ?? p.printername     ?? p.PrinterName ?? '';
+                    const desc = p.description     ?? p.Description     ?? '';
+                    opt.value       = id;
+                    opt.textContent = desc ? `${name} — ${desc}` : name;
+                    printerSelect.appendChild(opt);
+                });
+            } else {
+                printerSelect.innerHTML = '<option value="">No printers available</option>';
+            }
+        } catch (err) {
+            printerSelect.innerHTML = '<option value="">Error loading printers</option>';
+        }
+    }
+
+    function closePrintLocationModal() {
+        document.getElementById('printLocationModal').style.display = 'none';
+    }
+
+    async function submitPrintLocationLabel() {
+        const printerConfigId = document.getElementById('locationPrinterSelect').value;
+        const department      = document.getElementById('locationDept').value;
+        const line            = document.getElementById('locationLine').value;
+        const shift            = document.getElementById('locationShift').value;
+        const machine          = document.getElementById('locationMachine').value;
+        const notes            = document.getElementById('locationNotes').value;
+        const weightRaw        = document.getElementById('locationWeight')?.value?.trim();
+        const weight            = weightRaw && !isNaN(parseFloat(weightRaw)) ? parseFloat(weightRaw) : 0;
+        const errorDiv          = document.getElementById('printLocationError');
+        const btn                = document.getElementById('confirmPrintLocationBtn');
+        const token              = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+
+        errorDiv.style.display = 'none';
+
+        if (!lastSubmittedBatchId) {
+            errorDiv.textContent   = 'No scrap batch found for this session. Please submit scrap first.';
+            errorDiv.style.display = 'block';
+            return;
+        }
+        if (!printerConfigId) {
+            errorDiv.textContent  = 'Please select a printer.';
+            errorDiv.style.display = 'block';
+            return;
+        }
+        if (!department || !line || !shift) {
+            errorDiv.textContent  = 'Location details are missing. Please update your user location first.';
+            errorDiv.style.display = 'block';
+            return;
+        }
+        if (!weight || weight <= 0 || isNaN(weight)) {
+            errorDiv.textContent   = 'Please enter a valid weight greater than zero.';
+            errorDiv.style.display = 'block';
+            document.getElementById('locationWeight').focus();
+            return;
+        }
+
+        btn.disabled     = true;
+        btn.textContent  = 'Sending...';
+
+        try {
+            const res  = await fetch('/Operator/PrintLocationLabel', {
+                method:  'POST',
+                headers: {
+                    'Content-Type':             'application/json',
+                    'RequestVerificationToken': token
+                },
+                body: JSON.stringify({
+                    printerConfigId: parseInt(printerConfigId),
+                    department, line, shift, notes,
+                    machineNumber: machine,
+                    weight: weight,
+                    batchScrapId: lastSubmittedBatchId   // ← NEW: the enforced link
+                })
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                closePrintLocationModal();
+                alert('✅ ' + data.message);
+                document.getElementById('printLabelPrompt').style.display = 'none'; // one weigh/print per batch
+            } else {
+                errorDiv.textContent  = data.message || 'Print failed.';
+                errorDiv.style.display = 'block';
+            }
+        } catch (err) {
+            errorDiv.textContent  = `Error: ${err.message}`;
+            errorDiv.style.display = 'block';
+        } finally {
+            btn.disabled    = false;
+            btn.innerHTML   = '<i class="bi bi-printer"></i> Print & Record Weight';
+        }
+    }
+
+    document.getElementById('printLocationModal')
+        ?.addEventListener('click', function (e) {
+            if (e.target === this) closePrintLocationModal();
+        });
+
+
+    function navigateHome() { window.location.href = '/Operator/Index'; }
+</script>

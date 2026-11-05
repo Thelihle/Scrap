@@ -1,9 +1,24 @@
 ﻿@model ScrapEntryViewModel
 @{
-    ViewData["Title"] = "Scan Part - SCP Control";
+    ViewData["Title"] = "HESTO Harnesses - Scan Part";
+    Layout = "_TeamLeaderLayout";
 }
 
 <div class="scan-container">
+    <!-- Navigation Bar (keep existing) -->
+    <div class="navigation-bar">
+        <a href="@Url.Action("Index", "Operator")" class="nav-button back-button">
+            <i class="bi bi-house"></i> Home
+        </a>
+        <form action="/Account/Logout" method="post" style="margin: 0;">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="nav-button logout-button">
+                <i class="bi bi-box-arrow-right"></i> Logout
+            </button>
+        </form>
+    </div>
+
+    <!-- Operator Info (keep existing) -->
     <div class="scan-header">
         <div class="operator-info">
             <span class="department">@Model.Department</span>
@@ -12,193 +27,993 @@
         </div>
     </div>
 
+    <!-- Scan Form (keep existing) -->
     <div class="scan-box">
-        <h2>Scan Part</h2>
+        <h2>SCAN PART</h2>
+        <div id="validationMessage" class="error-message" style="display: none;"></div>
+
         <form id="scanForm" class="scan-form">
             <div class="form-group">
                 <label for="partNumber">Part Number</label>
                 <div class="scan-input-group">
-                    <input type="text" id="partNumber" 
-                           class="form-control" 
+                    <input type="text"
+                           id="partNumber"
+                           class="form-control"
                            placeholder="Scan or enter part number"
-                           autofocus required>
-                    <button type="submit" class="scan-button">
+                           autocomplete="off"
+                           autofocus>
+                    <button type="submit" id="scanButton" class="scan-button">
                         <i class="bi bi-upc-scan"></i>
-                        Scan
+                        <span class="button-text">Scan</span>
+                        <div class="loading-spinner" style="display: none;"></div>
                     </button>
                 </div>
-                <div class="invalid-feedback">Please enter a valid part number</div>
             </div>
         </form>
+    </div>
+
+    <!-- 🆕 NEW: Part Info with Category Selection -->
+    <div id="partInfoSection" style="display: none;" class="part-info-section">
+        <div class="part-info-card">
+            <div class="part-info-header">
+                <h3>Part Information</h3>
+            </div>
+            <div class="part-info-content">
+                <div class="info-row">
+                    <label>Part Number:</label>
+                    <span id="validatedPartNumber" class="info-value"></span>
+                </div>
+
+                <div class="info-row">
+                    <label>Category:</label>
+                    <span id="partCategoryValue" class="info-value"></span>
+                </div>
+
+                <!-- 🆕 NEW: Scrap Type Selection -->
+                <div class="info-row category-selection">
+                    <label style="color: #dc3545; font-weight: 700;">Scrap Type: *</label>
+                    <div class="category-buttons">
+                        <button type="button" class="category-btn" data-type="component">
+                            <i class="bi bi-cpu"></i>
+                            <span>COMPONENT</span>
+                        </button>
+                        <button type="button" class="category-btn" data-type="wire">
+                            <i class="bi bi-bezier2"></i>
+                            <span>WIRE</span>
+                        </button>
+                        <button type="button" class="category-btn" data-type="harness">
+                            <i class="bi bi-diagram-3"></i>
+                            <span>HARNESS</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hidden inputs for backend processing -->
+            <input type="hidden" id="stockUomValue" />
+            <input type="hidden" id="materialCostValue" />
+            <input type="hidden" id="partCategoryHidden" />
+            <input type="hidden" id="scrapTypeValue" />
+
+            <div class="part-info-actions">
+                <button type="button" id="proceedBtn" class="action-button proceed-button" disabled>
+                    Proceed to Scrap Entry
+                </button>
+                <button type="button" id="editPartBtn" class="action-button edit-button">Edit Part Number</button>
+                <button type="button" id="cancelBtn" class="action-button cancel-button">Cancel</button>
+            </div>
+        </div>
     </div>
 </div>
 
 <style>
-    .scan-container {
+    /* HESTO Harnesses Corporate Theme - Scan Part */
+    :root {
+        --hesto-primary: #428bca;
+        --hesto-secondary: #28a745;
+        --hesto-accent: #17a2b8;
+        --hesto-warning: #ffc107;
+        --hesto-danger: #dc3545;
+        --hesto-success: #28a745;
+        --hesto-dark: #1a1a2e;
+        --hesto-light: #f8f9fa;
+        --hesto-white: #ffffff;
+        --hesto-gray: #6c757d;
+        --border-radius: 8px;
+    }
+
+    body {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        color: var(--hesto-dark);
+        font-family: -webkit-system-font, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", Arial, sans-serif;
+        margin: 0;
+        padding: 0;
         min-height: 100vh;
-        background: #1a1a1a;
+        position: relative;
+    }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: radial-gradient(circle at 25% 25%, rgba(66, 139, 202, 0.08) 0%, transparent 50%), radial-gradient(circle at 75% 75%, rgba(40, 167, 69, 0.08) 0%, transparent 50%);
+            z-index: -1;
+        }
+
+    .scan-container {
+        max-width: 1200px;
+        margin: 0 auto;
         padding: 20px;
     }
 
+    .navigation-bar {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 25px;
+        padding: 15px;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: var(--border-radius);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .nav-button {
+        background: transparent;
+        border: 2px solid var(--hesto-primary);
+        color: var(--hesto-primary);
+        padding: 10px 20px;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+        .nav-button:hover {
+            background: var(--hesto-primary);
+            color: var(--hesto-white);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(66, 139, 202, 0.3);
+        }
+
+    .logout-button {
+        border-color: var(--hesto-danger);
+        color: var(--hesto-danger);
+    }
+
+        .logout-button:hover {
+            background: var(--hesto-danger);
+            color: var(--hesto-white);
+            box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+        }
+
     .scan-header {
-        background: rgba(0, 255, 255, 0.1);
-        border: 1px solid #00ffff;
-        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid #dee2e6;
+        border-radius: var(--border-radius);
         padding: 20px;
         margin-bottom: 30px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
 
     .operator-info {
         display: flex;
         gap: 20px;
         flex-wrap: wrap;
+        justify-content: center;
     }
 
-    .operator-info span {
-        background: rgba(0, 255, 255, 0.1);
-        padding: 8px 16px;
-        border-radius: 4px;
-        color: #00ffff;
-        font-size: 14px;
-    }
+        .operator-info span {
+            background: var(--hesto-light);
+            padding: 10px 20px;
+            border-radius: var(--border-radius);
+            color: var(--hesto-primary);
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            border: 1px solid #dee2e6;
+            transition: all 0.3s ease;
+        }
+
+            .operator-info span:hover {
+                background: #e3f2fd;
+                border-color: var(--hesto-primary);
+                transform: translateY(-1px);
+            }
 
     .scan-box {
-        background: rgba(18, 18, 18, 0.95);
-        border: 1px solid #00ffff;
-        border-radius: 8px;
-        padding: 30px;
-        max-width: 600px;
-        margin: 0 auto;
-        animation: glow 2s infinite alternate;
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid #dee2e6;
+        border-radius: var(--border-radius);
+        padding: 40px;
+        margin: 0 auto 30px;
+        max-width: 700px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        position: relative;
+        overflow: hidden;
     }
 
-    .scan-box h2 {
-        color: #00ffff;
-        text-align: center;
-        margin-bottom: 30px;
-        font-size: 24px;
-        text-transform: uppercase;
-        letter-spacing: 1px;
+        .scan-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(45deg, var(--hesto-primary), var(--hesto-secondary));
+        }
+
+        .scan-box h2 {
+            color: var(--hesto-dark);
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 28px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 700;
+        }
+
+    .scan-form {
+        max-width: 600px;
+        margin: 0 auto;
     }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+        .form-group label {
+            display: block;
+            color: var(--hesto-dark);
+            margin-bottom: 10px;
+            font-weight: 600;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
 
     .scan-input-group {
         display: flex;
-        gap: 10px;
-    }
-
-    .form-group label {
-        display: block;
-        color: #00ffff;
-        margin-bottom: 8px;
-        font-weight: 500;
+        gap: 15px;
     }
 
     .form-control {
         flex: 1;
-        padding: 12px;
-        background: rgba(0, 0, 0, 0.3);
-        border: 1px solid #00ffff;
-        border-radius: 4px;
-        color: #fff;
+        padding: 15px;
+        background: var(--hesto-white);
+        border: 2px solid #dee2e6;
+        border-radius: var(--border-radius);
+        color: var(--hesto-dark);
         font-size: 18px;
         letter-spacing: 1px;
+        transition: all 0.3s ease;
+        font-family: inherit;
     }
 
-    .form-control:focus {
-        outline: none;
-        box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
-    }
+        .form-control:focus {
+            outline: none;
+            border-color: var(--hesto-primary);
+            box-shadow: 0 0 0 0.2rem rgba(66, 139, 202, 0.25);
+        }
+
+        .form-control::placeholder {
+            color: var(--hesto-gray);
+            opacity: 0.8;
+        }
 
     .scan-button {
-        padding: 12px 24px;
-        background: #00ffff;
-        color: #000;
-        border: none;
-        border-radius: 4px;
-        font-weight: bold;
+        padding: 0 24px;
+        background: var(--hesto-primary);
+        color: var(--hesto-white);
+        border: 2px solid var(--hesto-primary);
+        border-radius: var(--border-radius);
+        font-weight: 700;
         cursor: pointer;
         display: flex;
         align-items: center;
         gap: 8px;
+        min-width: 120px;
+        justify-content: center;
+        transition: all 0.3s ease;
+        font-size: 16px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
 
-    .scan-button:hover {
-        background: #00cccc;
-        box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
-    }
-
-    .invalid-feedback {
-        color: #ff4444;
-        font-size: 12px;
-        margin-top: 5px;
-        display: none;
-    }
-
-    @@keyframes glow {
-        from {
-            box-shadow: 0 0 20px rgba(0, 255, 255, 0.2);
+        .scan-button:hover {
+            background: #3071a9;
+            border-color: #3071a9;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(66, 139, 202, 0.3);
         }
-        to {
-            box-shadow: 0 0 30px rgba(0, 255, 255, 0.4);
+
+        .scan-button:active {
+            transform: translateY(0);
         }
+
+        .scan-button:disabled {
+            background: var(--hesto-gray);
+            border-color: var(--hesto-gray);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+    .loading-spinner {
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top-color: var(--hesto-white);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    .error-message {
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        color: #721c24;
+        padding: 12px;
+        border-radius: var(--border-radius);
+        margin-bottom: 20px;
+        font-size: 14px;
+        text-align: center;
+        font-weight: 500;
+        animation: shake 0.5s;
+    }
+
+    .success-message {
+        background: #d4edda;
+        border: 1px solid #c3e6cb;
+        color: #155724;
+        padding: 12px;
+        border-radius: var(--border-radius);
+        margin-bottom: 20px;
+        font-size: 14px;
+        text-align: center;
+        font-weight: 500;
+    }
+
+    @@keyframes shake {
+        0%, 100%
+
+    {
+        transform: translateX(0);
+    }
+
+    10%, 30%, 50%, 70%, 90% {
+        transform: translateX(-5px);
+    }
+
+    20%, 40%, 60%, 80% {
+        transform: translateX(5px);
+    }
+
+    }
+
+    /* Part Info Section */
+    .part-info-section {
+        max-width: 700px;
+        margin: 0 auto 30px;
+    }
+
+    .part-info-card {
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid #dee2e6;
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    }
+
+    .part-info-header {
+        background: var(--hesto-light);
+        padding: 20px;
+        border-bottom: 2px solid var(--hesto-primary);
+    }
+
+        .part-info-header h3 {
+            color: var(--hesto-dark);
+            margin: 0;
+            font-size: 20px;
+            letter-spacing: 1px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+    .part-info-content {
+        padding: 25px;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 0;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-row label {
+            font-size: 15px;
+            color: var(--hesto-gray);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-row.material-cost .info-value {
+            color: var(--hesto-warning);
+            font-weight: 700;
+        }
+
+    .info-value {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--hesto-primary);
+        letter-spacing: 0.5px;
+    }
+
+    .part-info-actions {
+        display: flex;
+        gap: 15px;
+        padding: 25px;
+        border-top: 1px solid #dee2e6;
+        background: var(--hesto-light);
+    }
+
+    .action-button {
+        padding: 12px 20px;
+        border-radius: var(--border-radius);
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        flex: 1;
+        text-align: center;
+        font-size: 15px;
+        border: none;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .proceed-button {
+        background: var(--hesto-primary);
+        color: var(--hesto-white);
+        border: 2px solid var(--hesto-primary);
+    }
+
+        .proceed-button:hover {
+            background: #3071a9;
+            border-color: #3071a9;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(66, 139, 202, 0.3);
+        }
+
+    .edit-button {
+        background: var(--hesto-warning);
+        color: var(--hesto-dark);
+        border: 2px solid var(--hesto-warning);
+    }
+
+        .edit-button:hover {
+            background: #e0a800;
+            border-color: #e0a800;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(255, 193, 7, 0.3);
+        }
+
+    .cancel-button {
+        background: transparent;
+        border: 2px solid var(--hesto-primary);
+        color: var(--hesto-primary);
+    }
+
+        .cancel-button:hover {
+            background: var(--hesto-primary);
+            color: var(--hesto-white);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(66, 139, 202, 0.3);
+        }
+
+
+    /* Category Selection Styles */
+    .category-selection {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        padding: 20px 0;
+        border-top: 2px solid #dee2e6;
+        border-bottom: 2px solid #dee2e6;
+        margin: 15px 0;
+    }
+
+        .category-selection label {
+            font-size: 16px;
+            margin: 0;
+        }
+
+    .category-buttons {
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+    }
+
+    .category-btn {
+        flex: 1;
+        padding: 20px;
+        background: var(--hesto-white);
+        border: 3px solid #dee2e6;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-size: 16px;
+        color: var(--hesto-gray);
+    }
+
+        .category-btn[data-type="harness"].selected {
+            border-color: var(--hesto-accent);
+            background: rgba(23, 162, 184, 0.1);
+            color: var(--hesto-accent);
+        }
+
+            .category-btn[data-type="harness"].selected i {
+                color: var(--hesto-accent);
+            }
+
+        .category-btn i {
+            font-size: 48px;
+            color: var(--hesto-gray);
+            transition: all 0.3s ease;
+        }
+
+        .category-btn:hover {
+            border-color: var(--hesto-primary);
+            background: #e3f2fd;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(66, 139, 202, 0.3);
+        }
+
+            .category-btn:hover i {
+                color: var(--hesto-primary);
+            }
+
+        .category-btn.selected {
+            border-color: var(--hesto-secondary);
+            background: rgba(40, 167, 69, 0.1);
+            color: var(--hesto-secondary);
+        }
+
+            .category-btn.selected i {
+                color: var(--hesto-secondary);
+            }
+
+        .category-btn[data-type="component"].selected {
+            border-color: var(--hesto-primary);
+            background: rgba(66, 139, 202, 0.1);
+            color: var(--hesto-primary);
+        }
+
+            .category-btn[data-type="component"].selected i {
+                color: var(--hesto-primary);
+            }
+
+    @@media (max-width: 480px) {
+        .category-buttons
+
+    {
+        flex-direction: column;
+    }
+
+    .category-btn i {
+        font-size: 36px;
+    }
+
+    }
+
+
+    @@keyframes spin {
+        to
+
+    {
+        transform: rotate(360deg);
+    }
+
     }
 
     @@media (max-width: 768px) {
-        .scan-header {
+        .scan-container
+
+    {
+        padding: 15px;
+    }
+
+    .scan-header {
+        padding: 15px;
+    }
+
+    .operator-info {
+        flex-direction: column;
+        gap: 10px;
+        align-items: stretch;
+    }
+
+        .operator-info span {
             text-align: center;
         }
 
-        .operator-info {
-            justify-content: center;
+    .scan-input-group {
+        flex-direction: column;
+    }
+
+    .scan-button {
+        width: 100%;
+        padding: 15px;
+    }
+
+    .part-info-actions {
+        flex-direction: column;
+    }
+
+    .navigation-bar {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .scan-box {
+        padding: 25px;
+    }
+
+    }
+
+    @@media (max-width: 480px) {
+        .scan-box h2
+
+    {
+        font-size: 24px;
+    }
+
+    .form-control {
+        font-size: 16px;
+    }
+
+    .scan-box {
+        padding: 20px;
+    }
+
+    }
+
+    /* Developer Link Styling */
+    .developer-link {
+        margin-top: 20px;
+        padding-top: 15px;
+        border-top: 1px solid #dee2e6;
+        text-align: center;
+    }
+
+    .dev-link-button {
+        display: inline-block;
+        padding: 8px 16px;
+        background: rgba(255, 193, 7, 0.1);
+        border: 1px solid var(--hesto-warning);
+        color: #856404;
+        text-decoration: none;
+        border-radius: var(--border-radius);
+        font-size: 12px;
+        transition: all 0.3s ease;
+        font-family: 'Courier New', monospace;
+    }
+
+        .dev-link-button:hover {
+            background: rgba(255, 193, 7, 0.2);
+            border-color: #ffc107;
+            color: #856404;
+            text-decoration: none;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(255, 193, 7, 0.3);
         }
 
-        .scan-input-group {
-            flex-direction: column;
+        .dev-link-button:focus {
+            outline: none;
+            box-shadow: 0 0 0 0.2rem rgba(255, 193, 7, 0.25);
         }
 
-        .scan-button {
+    /* Enhanced focus states for accessibility */
+    .form-control:focus,
+    .action-button:focus,
+    .nav-button:focus,
+    .scan-button:focus {
+        outline: 2px solid var(--hesto-primary);
+        outline-offset: 2px;
+    }
+
+    /* Professional loading states */
+    .scan-button.loading {
+        position: relative;
+        overflow: hidden;
+    }
+
+        .scan-button.loading::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
             width: 100%;
-            justify-content: center;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            animation: loading 1.5s infinite;
         }
+
+    @@keyframes loading {
+        0%
+
+    {
+        left: -100%;
+    }
+
+    100% {
+        left: 100%;
+    }
+
     }
 </style>
 
-@section Scripts {
-    <script>
-        $(document).ready(function() {
-            const $form = $('#scanForm');
-            const $input = $('#partNumber');
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log("Manual Scan Mode with Category Selection");
 
-            $form.on('submit', function(e) {
+        const form = document.getElementById('scanForm');
+        const input = document.getElementById('partNumber');
+        const button = document.getElementById('scanButton');
+        const validationMessage = document.getElementById('validationMessage');
+        const partInfoSection = document.getElementById('partInfoSection');
+        const validatedPartNumber = document.getElementById('validatedPartNumber');
+        const stockUomValue = document.getElementById('stockUomValue');
+        const materialCostValue = document.getElementById('materialCostValue');
+        const partCategoryValue = document.getElementById('partCategoryValue');
+        const partCategoryHidden = document.getElementById('partCategoryHidden');
+        const scrapTypeValue = document.getElementById('scrapTypeValue'); // 🆕 MISSING - Now added
+        const proceedBtn = document.getElementById('proceedBtn'); // ✅ FIXED: Removed duplicate
+        const editPartBtn = document.getElementById('editPartBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const buttonText = button?.querySelector('.button-text');
+        const loadingSpinner = button?.querySelector('.loading-spinner');
+        const categoryButtons = document.querySelectorAll('.category-btn'); // ✅ FIXED: Removed duplicate
+
+        let isValidating = false;
+        let partNumberValue = '';
+        let stockUom = '';
+        let materialCost = 0;
+        let partCategory = '';
+        let selectedScrapType = '';
+
+        // Initial focus
+        if (input) {
+            input.focus();
+        }
+
+        // Simple input handling - NO auto-processing
+        if (input) {
+            // Allow Enter key to submit form (like clicking the button)
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.keyCode === 13) {
+                    e.preventDefault();
+                    form.dispatchEvent(new Event('submit'));
+                }
+            });
+        }
+
+        // ONLY validate when form is submitted (button click or Enter key)
+        if (form) {
+            form.addEventListener('submit', function(e) {
                 e.preventDefault();
-                const partNumber = $input.val().trim();
-                
-                if (!partNumber) {
-                    $('.invalid-feedback').show();
+
+                if (isValidating) {
+                    console.log("Already validating, ignoring submit");
                     return;
                 }
 
-                // Redirect to the scrap entry page with the part number
-                window.location.href = `/Operator/ScrapEntry?partNumber=${encodeURIComponent(partNumber)}`;
-            });
+                const partNumber = input?.value.trim().trim();
 
-            // Auto-submit on barcode scan
-            let lastInput = '';
-            let inputTimeout;
-
-            $input.on('input', function() {
-                clearTimeout(inputTimeout);
-                const currentInput = $(this).val();
-
-                if (currentInput.length > lastInput.length) {
-                    inputTimeout = setTimeout(function() {
-                        if (currentInput === $input.val()) {
-                            $form.submit();
-                        }
-                    }, 100);
+                if (!partNumber) {
+                    showError('Please enter a part number');
+                    if (input) input.focus();
+                    return;
                 }
-                lastInput = currentInput;
+
+                console.log("Form submitted - validating:", partNumber);
+                handlePartValidation(partNumber);
+            });
+        }
+
+        // 🆕 NEW: Handle category button selection
+        categoryButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const scrapType = this.getAttribute('data-type');
+
+                // Remove selected class from all buttons
+                categoryButtons.forEach(b => b.classList.remove('selected'));
+
+                // Add selected class to clicked button
+                this.classList.add('selected');
+
+                // Store selected type
+                selectedScrapType = scrapType;
+                if (scrapTypeValue) scrapTypeValue.value = scrapType;
+
+                // Enable proceed button
+                if (proceedBtn) proceedBtn.disabled = false;
+
+                console.log(`✅ Scrap type selected: ${scrapType}`);
             });
         });
-    </script>
-}
+
+        // Validation functions
+        function showError(message) {
+            console.error("Error:", message);
+            if (validationMessage) {
+                validationMessage.textContent = message;
+                validationMessage.style.display = 'block';
+                validationMessage.className = 'error-message';
+            }
+        }
+
+        function showSuccess(message) {
+            console.log("Success:", message);
+            if (validationMessage) {
+                validationMessage.textContent = message;
+                validationMessage.style.display = 'block';
+                validationMessage.className = 'success-message';
+                validationMessage.style.background = '#d4edda';
+                validationMessage.style.borderColor = '#c3e6cb';
+                validationMessage.style.color = '#155724';
+            }
+        }
+
+        async function handlePartValidation(partNumber) {
+            if (isValidating) return;
+            isValidating = true;
+
+            try {
+                if (button) {
+                    button.classList.add('loading');
+                    button.disabled = true;
+                    if (buttonText) buttonText.style.display = 'none';
+                    if (loadingSpinner) loadingSpinner.style.display = 'block';
+                }
+                if (validationMessage) validationMessage.style.display = 'none';
+
+                console.log("Validating part number:", partNumber);
+
+                const response = await fetch(`/Operator/ValidatePartNumber?partNumber=${encodeURIComponent(partNumber)}`);
+                const data = await response.json();
+
+                console.log("Server response:", data);
+
+                    if (data.isValid) {
+        // BEFORE — uses what user typed ❌
+        partNumberValue = partNumber;
+
+        // AFTER — uses exact casing returned from Syspro ✅
+        partNumberValue = data.partNumber;
+
+        stockUom = data.stockUom || 'N/A';
+        materialCost = data.materialCost !== null && data.materialCost !== undefined ? data.materialCost : 0;
+        partCategory = data.partCategory || 'Unknown';
+
+        // Display Syspro's exact part number
+        if (validatedPartNumber) validatedPartNumber.textContent = data.partNumber;
+        if (partCategoryValue) partCategoryValue.textContent = partCategory;
+
+        if (stockUomValue) stockUomValue.value = stockUom;
+        if (materialCostValue) materialCostValue.value = materialCost;
+        if (partCategoryHidden) partCategoryHidden.value = partCategory;
+
+        // Success message also uses exact code
+        showSuccess(`Part ${data.partNumber} validated successfully! Please select scrap type.`);
+
+        if (form) form.style.display = 'none';
+        if (partInfoSection) partInfoSection.style.display = 'block';
+
+        selectedScrapType = '';
+        categoryButtons.forEach(b => b.classList.remove('selected'));
+        if (proceedBtn) proceedBtn.disabled = true;
+    } else {
+                    showError(data.message || 'Invalid part number - please check and try again');
+                    if (input) {
+                        setTimeout(() => {
+                            input.select();
+                            input.focus();
+                        }, 100);
+                    }
+                }
+            } catch (error) {
+                console.error('Validation error:', error);
+                showError('Error validating part number - please try again');
+                if (input) {
+                    setTimeout(() => {
+                        input.select();
+                        input.focus();
+                    }, 100);
+                }
+            } finally {
+                isValidating = false;
+                if (button) {
+                    button.classList.remove('loading');
+                    button.disabled = false;
+                    if (buttonText) buttonText.style.display = 'inline';
+                    if (loadingSpinner) loadingSpinner.style.display = 'none';
+                }
+            }
+        }
+
+        // Proceed button handler
+        if (proceedBtn) {
+            proceedBtn.addEventListener('click', function() {
+                if (!selectedScrapType) {
+                    alert('Please select scrap type (Component or Wire)');
+                    return;
+                }
+
+                console.log("Proceeding with:", {
+                    partNumber: partNumberValue,
+                    scrapType: selectedScrapType
+                });
+
+                // Navigate with scrap type parameter
+                const targetUrl = `/Operator/ScrapEntry?partNumber=${encodeURIComponent(partNumberValue)}&scrapType=${selectedScrapType}`;
+                console.log(`Navigating to: ${targetUrl}`);
+                window.location.href = targetUrl;
+            });
+        }
+
+        // Edit button handler
+        if (editPartBtn) {
+            editPartBtn.addEventListener('click', function() {
+                console.log("Edit Part button clicked");
+                resetForm();
+            });
+        }
+
+        // Cancel button handler
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', function() {
+                console.log("Cancel button clicked");
+                resetForm();
+            });
+        }
+
+        function resetForm() {
+            if (partInfoSection) partInfoSection.style.display = 'none';
+            if (form) form.style.display = 'block';
+            if (input) {
+                input.value = partNumberValue || '';
+                input.focus();
+                input.select();
+            }
+            if (validationMessage) validationMessage.style.display = 'none';
+
+            // Reset category selection
+            selectedScrapType = '';
+            categoryButtons.forEach(b => b.classList.remove('selected'));
+            if (proceedBtn) proceedBtn.disabled = true;
+
+            console.log("Form reset - editing part:", partNumberValue);
+        }
+
+        console.log("Manual scan mode with category selection ready");
+    });
+</script>

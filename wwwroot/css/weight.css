@@ -1,0 +1,281 @@
+﻿/* Weight Management Section Styles */
+.weight-management {
+    background: rgba(0, 21, 20, 0.95);
+    border: 2px solid #00fffc;
+    border-radius: 8px;
+    padding: 2rem;
+    margin: 1.5rem 0;
+    box-shadow: 0 0 20px rgba(0, 255, 252, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+    .weight-management::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: linear-gradient(90deg, transparent, #00fffc, transparent);
+        animation: scanline 2s linear infinite;
+    }
+
+    .weight-management h2 {
+        color: #00fffc;
+        font-size: 1.5rem;
+        margin: 0 0 1rem 0;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        text-shadow: 0 0 10px rgba(0, 255, 252, 0.5);
+        position: relative;
+        display: inline-block;
+    }
+/* Warning Message */
+.weight-warning {
+    color: #ffcc00;
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+    padding: 0.75rem;
+    border: 1px solid #ffcc00;
+    border-radius: 4px;
+    background: rgba(255, 204, 0, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+    .weight-warning i {
+        color: #ffcc00;
+        font-size: 1.1rem;
+    }
+/* Input Group Styles */
+.weight-input-group {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    position: relative;
+}
+
+.weight-input {
+    flex: 1;
+    background: rgba(0, 15, 14, 0.95);
+    border: 2px solid #00a4a2;
+    color: #00fffc;
+    padding: 0.75rem;
+    border-radius: 4px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    outline: none;
+}
+
+    .weight-input:focus {
+        border-color: #00fffc;
+        box-shadow: 0 0 15px rgba(0, 255, 252, 0.3);
+    }
+
+    .weight-input::placeholder {
+        color: rgba(0, 255, 252, 0.5);
+    }
+
+/* Button Styles */
+.weight-button {
+    background: transparent;
+    border: 2px solid #00fffc;
+    color: #00fffc;
+    padding: 0.75rem 1.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+    .weight-button::before {
+        content: '';
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        background: linear-gradient(45deg, transparent, rgba(0, 255, 252, 0.2), transparent);
+        z-index: -1;
+        animation: buttonGlow 2s linear infinite;
+    }
+
+    .weight-button:hover {
+        background: rgba(0, 255, 252, 0.1);
+        box-shadow: 0 0 20px rgba(0, 255, 252, 0.4);
+    }
+
+    .weight-button:active {
+        transform: translateY(1px);
+    }
+
+    .weight-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+/* HESTO HARNESSES Logo */
+.hesto-logo-container {
+    position: absolute;
+    right: 20px;
+    top: 15px;
+    display: flex;
+    align-items: center;
+    font-family: Arial, sans-serif;
+    pointer-events: none;
+}
+
+.hesto-text {
+    color: #0033cc;
+    font-weight: bold;
+    font-size: 14px;
+    letter-spacing: -0.5px;
+    text-shadow: 0 0 5px rgba(0, 51, 204, 0.7);
+    animation: softGlow 3s infinite;
+}
+
+.harnesses-text {
+    color: #333333;
+    font-size: 14px;
+    font-weight: normal;
+    margin-left: 1px;
+    opacity: 0.9;
+}
+
+/* Error Message */
+.weight-error {
+    color: #ff4444;
+    background: rgba(255, 68, 68, 0.1);
+    border: 1px solid #ff4444;
+    padding: 0.75rem;
+    margin-top: 1rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+
+    .weight-error.show {
+        display: block;
+    }
+
+/* Loading State */
+.weight-button.loading {
+    position: relative;
+    color: transparent;
+}
+
+    .weight-button.loading::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 20px;
+        height: 20px;
+        border: 2px solid transparent;
+        border-top-color: #00fffc;
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        animation: spin 1s linear infinite;
+    }
+
+/* Success State */
+.weight-saved {
+    position: relative;
+}
+
+    .weight-saved::after {
+        content: '✓';
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #00fffc;
+        animation: checkmark 0.5s ease-in-out;
+    }
+
+/* Animations */
+@keyframes scanline {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+@keyframes buttonGlow {
+    0%, 100% {
+        opacity: 0.5;
+    }
+
+    50% {
+        opacity: 1;
+    }
+}
+
+@keyframes spin {
+    0% {
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
+
+    100% {
+        transform: translate(-50%, -50%) rotate(360deg);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes checkmark {
+    0% {
+        opacity: 0;
+        transform: translateY(-50%) scale(0);
+    }
+
+    70% {
+        transform: translateY(-50%) scale(1.2);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(-50%) scale(1);
+    }
+}
+
+@keyframes softGlow {
+    0%, 100% {
+        text-shadow: 0 0 5px rgba(0, 51, 204, 0.7);
+    }
+
+    50% {
+        text-shadow: 0 0 8px rgba(0, 51, 204, 0.9);
+    }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .weight-input-group {
+        flex-direction: column;
+    }
+
+    .weight-button {
+        width: 100%;
+    }
+}

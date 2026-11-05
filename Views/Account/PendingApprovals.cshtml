@@ -1,0 +1,143 @@
+﻿@model List<UserRegistrationRequest>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pending Approvals - Hesto Harnesses</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/lib/bootstrap-icons/font/bootstrap-icons.css" />
+    <style>
+        body {
+            background: #1a1a1a;
+            color: #00ffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .approvals-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+
+        .approval-card {
+            background: rgba(18, 18, 18, 0.95);
+            border: 1px solid #00ffff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            animation: glow 3s infinite alternate;
+        }
+
+        .table {
+            color: #00ffff;
+        }
+
+        .table th {
+            border-color: #00ffff;
+        }
+
+        .table td {
+            border-color: rgba(0, 255, 255, 0.2);
+        }
+
+        .approve-btn {
+            background: #00ffff;
+            color: #000;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .approve-btn:hover {
+            background: #00cccc;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
+        }
+
+        @@keyframes glow {
+            from {
+                box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
+            }
+            to {
+                box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="approvals-container">
+        <h2 class="mb-4">Pending Approvals</h2>
+        
+        @if (!Model.Any())
+        {
+            <div class="approval-card">
+                <p>No pending approvals found.</p>
+            </div>
+        }
+        else
+        {
+            <div class="approval-card">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Request Date</th>
+                            <th>User Type</th>
+                            <th>Name/Clock Number</th>
+                            <th>Department</th>
+                            <th>Line</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var request in Model)
+                        {
+                            <tr>
+                                <td>@request.RequestDate.ToShortDateString()</td>
+                                <td>@request.UserType</td>
+                                <td>@(string.IsNullOrEmpty(request.ClockNumber) ? $"{request.Name} {request.Surname}" : request.ClockNumber)</td>
+                                <td>@request.DepartmentId</td>
+                                <td>@request.LineId</td>
+                                <td>@request.Status</td>
+                                <td>
+                                    <button class="approve-btn" onclick="approveRequest(@request.RequestId)">
+                                        Approve
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script>
+        function approveRequest(requestId) {
+            const comments = prompt('Enter any comments for this approval:');
+            if (comments === null) return;
+
+            $.ajax({
+                url: '/Account/ApproveRequest',
+                type: 'POST',
+                data: { requestId, comments },
+                success: function(response) {
+                    if (response.success) {
+                        alert('Request approved successfully');
+                        location.reload();
+                    } else {
+                        alert('Failed to approve request');
+                    }
+                },
+                error: function() {
+                    alert('An error occurred while processing the approval');
+                }
+            });
+        }
+    </script>
+</body>
+</html>
