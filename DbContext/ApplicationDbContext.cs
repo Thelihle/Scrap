@@ -130,9 +130,9 @@ namespace SCP_Control.DbContext
                 entity.Property(e => e.Line).IsRequired().HasMaxLength(100);
                 entity.Property(e => e.Shift).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.Weight).HasColumnType("decimal(18, 3)").IsRequired();
-                entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()").IsRequired();
+                entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETDATE()").IsRequired();
                 entity.Property(e => e.CreatedBy).IsRequired().HasMaxLength(50);
-                entity.Property(e => e.ModifiedAt).HasDefaultValueSql("GETUTCDATE()").IsRequired();
+                entity.Property(e => e.ModifiedAt).HasDefaultValueSql("GETDATE()").IsRequired();
                 entity.Property(e => e.ModifiedBy).IsRequired().HasMaxLength(50);
                 entity.Property(e => e.Description).HasMaxLength(500).IsRequired(false);
                 entity.Property(e => e.SecurityStamp).HasMaxLength(100).IsRequired(false);

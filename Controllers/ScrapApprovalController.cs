@@ -1953,7 +1953,7 @@ public class ScrapApprovalController : Controller
             DateTime targetDate;
             if (string.IsNullOrWhiteSpace(date) || !DateTime.TryParse(date, out targetDate))
             {
-                targetDate = DateTime.UtcNow.Date;
+                targetDate = DateTime.Today;
             }
             else
             {
@@ -1984,7 +1984,7 @@ public class ScrapApprovalController : Controller
                 AND s.Line = wh.Line 
                 AND s.Shift = wh.Shift
             WHERE s.Status = 'Approved'
-                AND (wh.LastWeightDate IS NULL OR wh.LastWeightDate < DATEADD(day, -1, GETUTCDATE()))";
+                AND (wh.LastWeightDate IS NULL OR wh.LastWeightDate < DATEADD(day, -1, GETDATE()))";
 
             // Get departments count
             const string departmentsQuery = @"
@@ -2252,7 +2252,7 @@ public class ScrapApprovalController : Controller
     (WeightId, Department, Line, Shift, Weight, Description, CreatedAt, CreatedBy, ModifiedAt, ModifiedBy, IsBulkWeighing)
     VALUES
     (NEXT VALUE FOR [IntegrationCompanyB].[dbo].[seq_WeightHistoryId],
-     @Department, 'ALL LINES', 'ALL', @Weight, @Description, GETUTCDATE(), @CreatedBy, GETUTCDATE(), @CreatedBy, 1)";
+     @Department, 'ALL LINES', 'ALL', @Weight, @Description, GETDATE(), @CreatedBy, GETDATE(), @CreatedBy, 1)";
 
             await connection.ExecuteAsync(insertQuery, new
             {
@@ -2307,7 +2307,7 @@ public class ScrapApprovalController : Controller
     (WeightId, Department, Line, Shift, Weight, Description, CreatedAt, CreatedBy, ModifiedAt, ModifiedBy, IsBulkWeighing, BinNumber, RecordMonth)
     VALUES
     (NEXT VALUE FOR [IntegrationCompanyB].[dbo].[seq_WeightHistoryId],
-     @Department, @Line, 'MONTHLY', @Weight, @Description, GETUTCDATE(), @CreatedBy, GETUTCDATE(), @CreatedBy, 1, @BinNumber, @RecordMonth)";
+     @Department, @Line, 'MONTHLY', @Weight, @Description, GETDATE(), @CreatedBy, GETDATE(), @CreatedBy, 1, @BinNumber, @RecordMonth)";
 
             await connection.ExecuteAsync(insertSql, new
             {
@@ -2490,7 +2490,7 @@ public class ScrapApprovalController : Controller
 SELECT CategoryName, Line, Weight AS NetWeightKg, GrossWeightKg, TareWeightKg, CreatedBy, CreatedAt, Description
 FROM [IntegrationCompanyB].[dbo].[scpWeightHistory]
 WHERE Plant = @Plant AND Shift = 'BULK-BIN'
-  AND CreatedAt >= DATEADD(DAY, -@Days, GETUTCDATE())
+  AND CreatedAt >= DATEADD(DAY, -@Days, GETDATE())
 ORDER BY CreatedAt DESC",
                 new { Plant = plant, Days = days });
 
@@ -2546,7 +2546,7 @@ ORDER BY CreatedAt DESC",
             try
             {
                 int recordsCreated = 0;
-                var currentTime = DateTime.UtcNow;
+                var currentTime = DateTime.Now;
                 var securityStamp = Guid.NewGuid().ToString();
 
                 foreach (var location in request.Locations)
@@ -2877,7 +2877,7 @@ ORDER BY SaleDate DESC, CreatedAt DESC",
              IsBulkWeighing, Plant, RecordDate)
             VALUES
             (NEXT VALUE FOR [IntegrationCompanyB].[dbo].[seq_WeightHistoryId],
-             @Department, 'DAILY-TOTAL', 'DAILY', @Weight, @Description, GETUTCDATE(), @CreatedBy, GETUTCDATE(), @CreatedBy,
+             @Department, 'DAILY-TOTAL', 'DAILY', @Weight, @Description, GETDATE(), @CreatedBy, GETDATE(), @CreatedBy,
              1, @Plant, @RecordDate)";
 
             await connection.ExecuteAsync(insertSql, new
@@ -2929,14 +2929,14 @@ ORDER BY SaleDate DESC, CreatedAt DESC",
             if (existing != null)
             {
                 await connection.ExecuteAsync(
-                    "UPDATE scpDailyReportNote SET Notes = @Notes, ModifiedAt = GETUTCDATE(), ModifiedBy = @ClockNumber WHERE NoteId = @NoteId",
+                    "UPDATE scpDailyReportNote SET Notes = @Notes, ModifiedAt = GETDATE(), ModifiedBy = @ClockNumber WHERE NoteId = @NoteId",
                     new { request.Notes, ClockNumber = user.ClockNumber, NoteId = (int)existing.NoteId });
             }
             else
             {
                 await connection.ExecuteAsync(@"
                 INSERT INTO scpDailyReportNote (NoteId, Plant, RecordDate, Notes, CreatedBy, CreatedAt)
-                VALUES ((SELECT ISNULL(MAX(NoteId),0)+1 FROM scpDailyReportNote), @Plant, @RecordDate, @Notes, @ClockNumber, GETUTCDATE())",
+                VALUES ((SELECT ISNULL(MAX(NoteId),0)+1 FROM scpDailyReportNote), @Plant, @RecordDate, @Notes, @ClockNumber, GETDATE())",
                     new { request.Plant, RecordDate = recordDate.Date, request.Notes, ClockNumber = user.ClockNumber });
             }
 
@@ -3280,7 +3280,7 @@ ORDER BY SaleDate DESC, CreatedAt DESC",
     (WeightId, Department, Line, Shift, Weight, Description, CreatedAt, CreatedBy, ModifiedAt, ModifiedBy, IsBulkWeighing)
     VALUES (
         NEXT VALUE FOR [IntegrationCompanyB].[dbo].[seq_WeightHistoryId],
-        @Department, @Line, @Shift, @Weight, @Description, GETUTCDATE(), @CreatedBy, GETUTCDATE(), @ModifiedBy, 0
+        @Department, @Line, @Shift, @Weight, @Description, GETDATE(), @CreatedBy, GETDATE(), @ModifiedBy, 0
     )";
 
             await connection.ExecuteAsync(insertQuery, new
@@ -3361,7 +3361,7 @@ ORDER BY SaleDate DESC, CreatedAt DESC",
             (WeightId, Department, Line, Shift, Weight, Description, CreatedAt, CreatedBy, ModifiedAt, ModifiedBy, SecurityStamp, IsBulkWeighing)
             OUTPUT INSERTED.WeightId, INSERTED.SecurityStamp
             VALUES (NEXT VALUE FOR [IntegrationCompanyB].[dbo].[seq_WeightHistoryId],
-                    @Department, @Line, @Shift, @Weight, @Description, GETUTCDATE(), @CreatedBy, GETUTCDATE(), @ModifiedBy, NEWID(), 1);";
+                    @Department, @Line, @Shift, @Weight, @Description, GETDATE(), @CreatedBy, GETDATE(), @ModifiedBy, NEWID(), 1);";
 
             var result = await connection.QuerySingleAsync(insertQuery, new
             {
@@ -3433,7 +3433,7 @@ ORDER BY SaleDate DESC, CreatedAt DESC",
             }
 
             // Apply date filter
-            var cutoffDate = DateTime.UtcNow.AddDays(-days);
+            var cutoffDate = DateTime.Now.AddDays(-days);
             query = query.Where(w => w.CreatedAt >= cutoffDate);
 
             var weightHistory = await query
@@ -3459,7 +3459,7 @@ ORDER BY SaleDate DESC, CreatedAt DESC",
                 success = true,
                 data = weightHistory,
                 totalRecords = weightHistory.Count,
-                dateRange = new { from = cutoffDate, to = DateTime.UtcNow }
+                dateRange = new { from = cutoffDate, to = DateTime.Now }
             });
         }
         catch (Exception ex)
@@ -3521,7 +3521,7 @@ ORDER BY SaleDate DESC, CreatedAt DESC",
                     MAX(Weight) as MaxWeight,
                     MAX(CreatedAt) as LastWeightDate
                 FROM [IntegrationCompanyB].[dbo].[scpWeightHistory]
-                WHERE CreatedAt >= DATEADD(day, -30, GETUTCDATE())
+                WHERE CreatedAt >= DATEADD(day, -30, GETDATE())
                 GROUP BY Department, Line, Shift
                 ORDER BY Department, Line, Shift";
 
@@ -3544,7 +3544,7 @@ ORDER BY SaleDate DESC, CreatedAt DESC",
                     MAX(Weight) as MaxWeight,
                     MAX(CreatedAt) as LastWeightDate
                 FROM [IntegrationCompanyB].[dbo].[scpWeightHistory]
-                WHERE CreatedAt >= DATEADD(day, -30, GETUTCDATE())
+                WHERE CreatedAt >= DATEADD(day, -30, GETDATE())
                     AND Department = @Department 
                     AND Line = @Line 
                     AND Shift = @Shift
@@ -3564,7 +3564,7 @@ ORDER BY SaleDate DESC, CreatedAt DESC",
             {
                 success = true,
                 data = summary,
-                reportDate = DateTime.UtcNow
+                reportDate = DateTime.Now
             });
         }
         catch (Exception ex)
@@ -3606,7 +3606,7 @@ ORDER BY SaleDate DESC, CreatedAt DESC",
                     IsBulkWeighing,
                     CASE WHEN IsBulkWeighing = 1 THEN 'Bulk' ELSE 'Single' END as WeightType
                 FROM [IntegrationCompanyB].[dbo].[scpWeightHistory]
-                WHERE CreatedAt >= DATEADD(hour, @Hours, GETUTCDATE())
+                WHERE CreatedAt >= DATEADD(hour, @Hours, GETDATE())
                 ORDER BY CreatedAt DESC";
 
                 parameters = new { Hours = -hours };
@@ -3627,7 +3627,7 @@ ORDER BY SaleDate DESC, CreatedAt DESC",
                     IsBulkWeighing,
                     CASE WHEN IsBulkWeighing = 1 THEN 'Bulk' ELSE 'Single' END as WeightType
                 FROM [IntegrationCompanyB].[dbo].[scpWeightHistory]
-                WHERE CreatedAt >= DATEADD(hour, @Hours, GETUTCDATE())
+                WHERE CreatedAt >= DATEADD(hour, @Hours, GETDATE())
                     AND Department = @Department 
                     AND Line = @Line 
                     AND Shift = @Shift
@@ -3697,7 +3697,7 @@ ORDER BY SaleDate DESC, CreatedAt DESC",
             WHERE Department = @Department 
                 AND Line = @Line 
                 AND Shift = @Shift
-                AND CreatedAt >= DATEADD(day, -30, GETUTCDATE())";
+                AND CreatedAt >= DATEADD(day, -30, GETDATE())";
 
             var parameters = new
             {

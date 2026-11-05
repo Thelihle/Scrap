@@ -24,14 +24,14 @@ namespace SCP_Control.Models
         public decimal Weight { get; set; }
 
         [Required]
-        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime CreatedAt { get; set; } = DateTime.Now;   // local time, same as all weight inserts
 
         [Required]
         [StringLength(50)]
         public string CreatedBy { get; set; } = "";
 
         [Required]
-        public DateTime ModifiedAt { get; set; } = DateTime.UtcNow;
+        public DateTime ModifiedAt { get; set; } = DateTime.Now;
 
         [Required]
         [StringLength(50)]
