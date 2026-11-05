@@ -386,6 +386,154 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        /* ── Menu button + drawer (matches the approval dashboard) ── */
+        .menu-btn {
+            background: linear-gradient(135deg, #428bca, #5daeed);
+            border: none;
+            border-radius: 6px;
+            color: #fff;
+            padding: 8px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 8px rgba(66,139,202,.4);
+            transition: transform .2s, box-shadow .2s;
+        }
+
+            .menu-btn:hover {
+                transform: scale(1.03);
+                box-shadow: 0 4px 14px rgba(66,139,202,.6);
+            }
+
+        .menu-chevron {
+            font-size: 11px;
+            opacity: .8;
+        }
+
+        .nav-menu-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.5);
+            z-index: 99998;
+            display: none;
+        }
+
+            .nav-menu-overlay.show {
+                display: block;
+            }
+
+        .nav-drawer {
+            position: fixed;
+            top: 0;
+            right: -320px;
+            width: 300px;
+            height: 100vh;
+            background: #1e293b;
+            border-left: 2px solid #3b82f6;
+            z-index: 99999;
+            transition: right .3s ease;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+            .nav-drawer.open {
+                right: 0;
+            }
+
+        .nav-drawer-header {
+            background: linear-gradient(135deg, #2563eb, #3b82f6);
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+            .nav-drawer-header h3 {
+                color: #fff;
+                font-size: 16px;
+                font-weight: 600;
+                margin: 0;
+            }
+
+        .nav-close {
+            background: rgba(255,255,255,.15);
+            border: none;
+            border-radius: 6px;
+            color: #fff;
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+        }
+
+        .nav-section {
+            padding: 1rem 1rem 0;
+        }
+
+        .nav-section-title {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255,255,255,.4);
+            padding: 0 .5rem;
+            margin-bottom: .5rem;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: .75rem;
+            border-radius: 6px;
+            cursor: pointer;
+            color: rgba(255,255,255,.85);
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 2px;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            text-decoration: none;
+            transition: background .2s;
+        }
+
+            .nav-item:hover {
+                background: rgba(59,130,246,.2);
+                color: #fff;
+            }
+
+            .nav-item.active {
+                background: rgba(59,130,246,.3);
+                color: #fff;
+            }
+
+            .nav-item i {
+                font-size: 16px;
+                width: 20px;
+                text-align: center;
+                color: #60a5fa;
+            }
+
+        .nav-item-warn, .nav-item-warn i {
+            color: #fbbf24 !important;
+        }
+
+        .nav-item-danger, .nav-item-danger i {
+            color: #f87171 !important;
+        }
+
+        .nav-divider {
+            height: 1px;
+            background: rgba(255,255,255,.08);
+            margin: .75rem 1rem;
+        }
     </style>
 </head>
 <body>
@@ -407,8 +555,58 @@
             <form method="post" action="/Account/Logout" class="d-inline">
                 <button type="submit" class="btn btn-danger"><i class="bi bi-box-arrow-right"></i> Logout</button>
             </form>
+            <button type="button" class="menu-btn" onclick="openNavMenu()">
+                <i class="bi bi-grid-3x3-gap-fill"></i> Menu <i class="bi bi-chevron-right menu-chevron"></i>
+            </button>
         </div>
     </nav>
+
+    <!-- Nav menu (same items as the approval dashboard; pop-up items open there) -->
+    <div id="navOverlay" class="nav-menu-overlay" onclick="closeNavMenu()"></div>
+    <div id="navDrawer" class="nav-drawer" aria-hidden="true">
+        <div class="nav-drawer-header">
+            <h3><i class="bi bi-grid-3x3-gap"></i> Menu</h3>
+            <button type="button" class="nav-close" onclick="closeNavMenu()" aria-label="Close menu"><i class="bi bi-x-lg"></i></button>
+        </div>
+
+        <div class="nav-section">
+            <div class="nav-section-title">Navigation</div>
+            <a href="/ScrapApproval/Dashboard" class="nav-item"><i class="bi bi-speedometer2"></i> Approval Dashboard</a>
+            <a href="/Analytics/Index" class="nav-item"><i class="bi bi-graph-up"></i> Analytics Dashboard</a>
+            <a href="/ScrapApproval/AdminWeightDashboard" class="nav-item active"><i class="bi bi-scale"></i> Weight Management</a>
+        </div>
+
+        <div class="nav-divider"></div>
+        <div class="nav-section">
+            <div class="nav-section-title">Location</div>
+            <a href="/ScrapApproval/Dashboard?open=location" class="nav-item"><i class="bi bi-geo-alt"></i> Update My Location</a>
+        </div>
+
+        <div class="nav-divider"></div>
+        <div class="nav-section">
+            <div class="nav-section-title">User Management</div>
+            <a href="/ScrapApproval/Dashboard?open=newUser" class="nav-item"><i class="bi bi-person-plus"></i> New User Request</a>
+            <a href="/ScrapApproval/Dashboard?open=resetPassword" class="nav-item"><i class="bi bi-key"></i> Reset User Password</a>
+            <a href="/ScrapApproval/Dashboard?open=viewUsers" class="nav-item"><i class="bi bi-people"></i> View All Users</a>
+            <a href="/ScrapApproval/Dashboard?open=pendingRequests" class="nav-item"><i class="bi bi-clock-history"></i> Pending Requests</a>
+            <a href="/ScrapApproval/Dashboard?open=bomBackfill" class="nav-item nav-item-warn"><i class="bi bi-database-fill-gear"></i> Backfill BOM Components</a>
+        </div>
+
+        <div class="nav-divider"></div>
+        <div class="nav-section">
+            <div class="nav-section-title">Scanners</div>
+            <a href="/ScrapApproval/Dashboard?open=scannerHandover" class="nav-item"><i class="bi bi-hand-thumbs-up"></i> Scanner Handover</a>
+            <a href="/ScrapApproval/Dashboard?open=scannerStatus" class="nav-item"><i class="bi bi-info-circle"></i> My Scanner Status</a>
+            <a href="/ScrapApproval/Dashboard?open=scannerReturn" class="nav-item"><i class="bi bi-arrow-return-left"></i> Return Scanner</a>
+        </div>
+
+        <div class="nav-divider"></div>
+        <div class="nav-section" style="padding-bottom:1.5rem;">
+            <form method="post" action="/Account/Logout">
+                <button type="submit" class="nav-item nav-item-danger"><i class="bi bi-box-arrow-right"></i> Logout</button>
+            </form>
+        </div>
+    </div>
 
     <div class="page">
 
@@ -852,7 +1050,28 @@
             document.getElementById('binExportForm').addEventListener('submit', function () {
                 document.getElementById('binExportToken').value = TOKEN();
             });
+
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') closeNavMenu();
+            });
         });
+
+        // ═══════════════════════════════════════════════════════════
+        // MENU DRAWER
+        // ═══════════════════════════════════════════════════════════
+        function openNavMenu() {
+            document.getElementById('navDrawer').classList.add('open');
+            document.getElementById('navDrawer').setAttribute('aria-hidden', 'false');
+            document.getElementById('navOverlay').classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeNavMenu() {
+            document.getElementById('navDrawer').classList.remove('open');
+            document.getElementById('navDrawer').setAttribute('aria-hidden', 'true');
+            document.getElementById('navOverlay').classList.remove('show');
+            document.body.style.overflow = '';
+        }
     </script>
 </body>
 </html>

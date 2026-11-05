@@ -4510,6 +4510,41 @@ function closeNavMenu() {
 
 
 
+// Open a menu pop-up from a link elsewhere, e.g. /ScrapApproval/Dashboard?open=viewUsers
+// (used by the Weight Management page's menu). Whitelisted actions only, with the
+// same permission rules as the menu on this page.
+(function () {
+    var userLevelOk = @(userLevel >= 1 ? "true" : "false");
+    var allDataOk = @(canViewAllData ? "true" : "false");
+
+    var actions = {
+        location:        { allowed: true,                     run: function () { populateLocationForm(); showModal('locationModal'); } },
+        newUser:         { allowed: userLevelOk,              run: function () { showModal('newUserModal'); } },
+        resetPassword:   { allowed: userLevelOk,              run: function () { showModal('resetPasswordModal'); } },
+        viewUsers:       { allowed: userLevelOk && allDataOk, run: function () { loadAllUsers(); showModal('viewUsersModal'); } },
+        pendingRequests: { allowed: userLevelOk && allDataOk, run: function () { loadPendingRequests(); showModal('viewRequestsModal'); } },
+        bomBackfill:     { allowed: userLevelOk && allDataOk, run: function () { confirmBomBackfill(); } },
+        scannerHandover: { allowed: userLevelOk,              run: function () { loadAvailableScanners(); showModal('scannerHandoverModal'); } },
+        scannerStatus:   { allowed: userLevelOk,              run: function () { loadScannerStatus(); } },
+        scannerReturn:   { allowed: userLevelOk,              run: function () { loadScannerForReturn(); showModal('scannerReturnModal'); } }
+    };
+
+    window.addEventListener('load', function () {
+        var params = new URLSearchParams(window.location.search);
+        var key = params.get('open');
+        if (!key) return;
+
+        // Drop ?open= so a refresh doesn't reopen the pop-up
+        params.delete('open');
+        var qs = params.toString();
+        history.replaceState(null, '', window.location.pathname + (qs ? '?' + qs : '') + window.location.hash);
+
+        var action = Object.prototype.hasOwnProperty.call(actions, key) ? actions[key] : null;
+        if (!action || !action.allowed) return;
+        try { action.run(); } catch (e) { console.error('Could not open menu item', key, e); }
+    });
+})();
+
 // Make functions available globally
 window.openNavMenu = openNavMenu;
 window.closeNavMenu = closeNavMenu;

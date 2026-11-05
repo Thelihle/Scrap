@@ -75,8 +75,6 @@
 	  <Content Remove="wwwroot\debug.html" />
 	  <Content Remove="wwwroot\js\chart.min.js" />
 	  <Content Remove="wwwroot\js\copy-password.js" />
-	  <Content Remove="wwwroot\js\dashboard-fixes.js" />
-	  <Content Remove="wwwroot\js\enhanced-weight-management.js" />
 	  <Content Remove="wwwroot\js\EntryResetButton.js" />
 	  <Content Remove="wwwroot\js\form-persistence.js" />
 	  <Content Remove="wwwroot\js\jquery-3.6.0.min.js" />
