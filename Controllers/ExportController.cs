@@ -309,6 +309,230 @@ ws.Column(8).Style.NumberFormat.Format = "R #,##0.00";   // Total Cost — was C
         }
 
         // ══════════════════════════════════════════════════════════════════
+        //  BIN WEIGHT EXPORT (ADMIN ONLY) — admin bulk bin recordings + sales
+        // ══════════════════════════════════════════════════════════════════
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ExportBinWeightsToExcel(
+            DateTime? startDate, DateTime? endDate, string plant = "All Plants")
+        {
+            try
+            {
+                if (!await IsCurrentUserAdminAsync())
+                {
+                    TempData["ErrorMessage"] = "Bin weight export is available to administrators only.";
+                    return RedirectBack();
+                }
+
+                string? plantFilter = (plant == "Plant A" || plant == "Plant B") ? plant : null;
+                var (start, end) = ResolveDates(startDate, endDate);
+
+                using var conn = new SqlConnection(_connectionString);
+
+                var bins = (await conn.QueryAsync<BinWeightRow>(@"
+SELECT w.WeightId,
+       w.CreatedAt,
+       CAST(w.Plant AS nvarchar(100))                 AS Plant,
+       CAST(w.CategoryName AS nvarchar(200))          AS CategoryName,
+       CAST(c.ParentCategory AS nvarchar(200))        AS ParentCategory,
+       COALESCE(CAST(w.BinNumber AS nvarchar(50)), REPLACE(w.Line, 'Bin ', '')) AS BinNumber,
+       CAST(w.GrossWeightKg AS decimal(18,3))         AS GrossWeightKg,
+       CAST(w.TareWeightKg AS decimal(18,3))          AS TareWeightKg,
+       CAST(w.Weight AS decimal(18,3))                AS NetWeightKg,
+       w.CreatedBy, w.Description
+FROM [IntegrationCompanyB].[dbo].[scpWeightHistory] w
+OUTER APPLY (
+    SELECT TOP 1 sc.ParentCategory
+    FROM [IntegrationCompanyB].[dbo].[scpScrapCategory] sc
+    WHERE sc.Plant = w.Plant AND sc.CategoryName = w.CategoryName
+) c
+WHERE w.Shift = 'BULK-BIN'
+  AND w.CreatedAt >= @Start AND w.CreatedAt < @End
+  AND (@Plant IS NULL OR w.Plant = @Plant)
+ORDER BY w.CreatedAt DESC",
+                    new { Start = start, End = end, Plant = plantFilter })).ToList();
+
+                var sales = (await conn.QueryAsync<BinSaleRow>(@"
+SELECT SaleDate,
+       CAST(Plant AS nvarchar(100))          AS Plant,
+       CAST(CategoryName AS nvarchar(200))   AS CategoryName,
+       CAST(WeightSoldKg AS decimal(18,3))   AS WeightSoldKg,
+       Buyer, Reference, Notes, CreatedBy, CreatedAt
+FROM [IntegrationCompanyB].[dbo].[scpBinSale]
+WHERE SaleDate >= @Start AND SaleDate < @End
+  AND (@Plant IS NULL OR Plant = @Plant)
+ORDER BY SaleDate DESC, CreatedAt DESC",
+                    new { Start = start, End = end, Plant = plantFilter })).ToList();
+
+                // All-time on-hand (weighed − sold), independent of the date range
+                var onHand = (await conn.QueryAsync<(string Plant, string CategoryName, decimal Weighed, decimal Sold)>(@"
+SELECT k.Plant, k.CategoryName,
+       ISNULL((SELECT SUM(CAST(w.Weight AS decimal(18,3))) FROM [IntegrationCompanyB].[dbo].[scpWeightHistory] w
+               WHERE w.Shift = 'BULK-BIN' AND w.Plant = k.Plant AND w.CategoryName = k.CategoryName), 0) AS Weighed,
+       ISNULL((SELECT SUM(CAST(s.WeightSoldKg AS decimal(18,3))) FROM [IntegrationCompanyB].[dbo].[scpBinSale] s
+               WHERE s.Plant = k.Plant AND s.CategoryName = k.CategoryName), 0) AS Sold
+FROM (
+    SELECT CAST(Plant AS nvarchar(100)) AS Plant, CAST(CategoryName AS nvarchar(200)) AS CategoryName
+    FROM [IntegrationCompanyB].[dbo].[scpWeightHistory] WHERE Shift = 'BULK-BIN' AND CategoryName IS NOT NULL
+    UNION
+    SELECT CAST(Plant AS nvarchar(100)), CAST(CategoryName AS nvarchar(200)) FROM [IntegrationCompanyB].[dbo].[scpBinSale]
+) k
+WHERE (@Plant IS NULL OR k.Plant = @Plant)",
+                    new { Plant = plantFilter }))
+                    .ToDictionary(x => (x.Plant, x.CategoryName), x => x.Weighed - x.Sold);
+
+                using var workbook = new XLWorkbook();
+
+                // ── Sheet 1: Summary ─────────────────────────────────────
+                var sum = workbook.Worksheets.Add("Summary");
+                var info = new[] {
+                    ("Plant", plantFilter ?? "All Plants"),
+                    ("Date Range", $"{start:dd MMM yyyy} – {end.AddDays(-1):dd MMM yyyy}"),
+                    ("Generated", DateTime.Now.ToString("dd MMM yyyy HH:mm")),
+                    ("Bin Recordings", bins.Count.ToString()),
+                    ("Net Weighed (kg)", bins.Sum(b => b.NetWeightKg).ToString("N3")),
+                    ("Sold (kg)", sales.Sum(s => s.WeightSoldKg).ToString("N3"))
+                };
+                int r = 1;
+                foreach (var (lbl, val) in info)
+                {
+                    sum.Cell(r, 1).Value = lbl;
+                    sum.Cell(r, 1).Style.Font.Bold = true;
+                    sum.Cell(r, 1).Style.Fill.BackgroundColor = XLColor.FromHtml("#428bca");
+                    sum.Cell(r, 1).Style.Font.FontColor = XLColor.White;
+                    sum.Cell(r, 2).Value = val;
+                    r++;
+                }
+                r += 2;
+
+                var sumHeaders = new[] { "Plant", "Category", "Recordings", "Net Weighed (kg)", "Sold (kg)", "Net In Period (kg)", "On Hand – All Time (kg)" };
+                WriteHeader(sum, r, sumHeaders);
+                int sumHeaderRow = r++;
+
+                var keys = bins.Select(b => (b.Plant ?? "", b.CategoryName ?? ""))
+                    .Concat(sales.Select(s => (s.Plant ?? "", s.CategoryName ?? "")))
+                    .Distinct()
+                    .OrderBy(k => k.Item1).ThenBy(k => k.Item2);
+
+                foreach (var (p, cat) in keys)
+                {
+                    var catBins = bins.Where(b => (b.Plant ?? "") == p && (b.CategoryName ?? "") == cat).ToList();
+                    decimal weighed = catBins.Sum(b => b.NetWeightKg);
+                    decimal sold = sales.Where(s => (s.Plant ?? "") == p && (s.CategoryName ?? "") == cat).Sum(s => s.WeightSoldKg);
+
+                    sum.Cell(r, 1).Value = p;
+                    sum.Cell(r, 2).Value = cat;
+                    sum.Cell(r, 3).Value = catBins.Count;
+                    sum.Cell(r, 4).Value = (double)weighed;
+                    sum.Cell(r, 5).Value = (double)sold;
+                    sum.Cell(r, 6).Value = (double)(weighed - sold);
+                    if (onHand.TryGetValue((p, cat), out var oh)) sum.Cell(r, 7).Value = (double)oh;
+                    r++;
+                }
+                if (r > sumHeaderRow + 1)
+                {
+                    sum.Cell(r, 1).Value = "TOTAL";
+                    sum.Cell(r, 3).Value = bins.Count;
+                    sum.Cell(r, 4).Value = (double)bins.Sum(b => b.NetWeightKg);
+                    sum.Cell(r, 5).Value = (double)sales.Sum(s => s.WeightSoldKg);
+                    sum.Cell(r, 6).Value = (double)(bins.Sum(b => b.NetWeightKg) - sales.Sum(s => s.WeightSoldKg));
+                    sum.Row(r).Style.Font.Bold = true;
+                    sum.Range(r, 1, r, sumHeaders.Length).Style.Border.TopBorder = XLBorderStyleValues.Thin;
+                }
+                sum.Columns(4, 7).Style.NumberFormat.Format = "#,##0.000";
+                sum.Columns().AdjustToContents();
+
+                // ── Sheet 2: Bin recordings ──────────────────────────────
+                var ws = workbook.Worksheets.Add("Bin Recordings");
+                var binHeaders = new[] { "WeightId", "Recorded At", "Plant", "Group", "Category", "Bin #",
+                                         "Gross (kg)", "Tare (kg)", "Net (kg)", "Recorded By", "Description" };
+                WriteHeader(ws, 1, binHeaders);
+                r = 2;
+                foreach (var b in bins)
+                {
+                    ws.Cell(r, 1).Value = b.WeightId;
+                    ws.Cell(r, 2).Value = b.CreatedAt;
+                    ws.Cell(r, 3).Value = b.Plant ?? "";
+                    ws.Cell(r, 4).Value = b.ParentCategory ?? "";
+                    ws.Cell(r, 5).Value = b.CategoryName ?? "";
+                    ws.Cell(r, 6).Value = b.BinNumber ?? "";
+                    if (b.GrossWeightKg.HasValue) ws.Cell(r, 7).Value = (double)b.GrossWeightKg.Value;
+                    if (b.TareWeightKg.HasValue) ws.Cell(r, 8).Value = (double)b.TareWeightKg.Value;
+                    ws.Cell(r, 9).Value = (double)b.NetWeightKg;
+                    ws.Cell(r, 10).Value = b.CreatedBy ?? "";
+                    ws.Cell(r, 11).Value = b.Description ?? "";
+                    r++;
+                }
+                ws.Column(2).Style.DateFormat.Format = "yyyy-mm-dd hh:mm";
+                ws.Columns(7, 9).Style.NumberFormat.Format = "#,##0.000";
+                if (bins.Count > 0) ws.Range(1, 1, r - 1, binHeaders.Length).SetAutoFilter();
+                ws.Columns().AdjustToContents();
+                ws.Column(11).Width = Math.Min(ws.Column(11).Width, 60);
+
+                // ── Sheet 3: Sales ───────────────────────────────────────
+                var ss = workbook.Worksheets.Add("Sales");
+                var saleHeaders = new[] { "Sale Date", "Plant", "Category", "Weight Sold (kg)", "Buyer", "Reference", "Notes", "Recorded By", "Recorded At" };
+                WriteHeader(ss, 1, saleHeaders);
+                r = 2;
+                foreach (var s in sales)
+                {
+                    ss.Cell(r, 1).Value = s.SaleDate;
+                    ss.Cell(r, 2).Value = s.Plant ?? "";
+                    ss.Cell(r, 3).Value = s.CategoryName ?? "";
+                    ss.Cell(r, 4).Value = (double)s.WeightSoldKg;
+                    ss.Cell(r, 5).Value = s.Buyer ?? "";
+                    ss.Cell(r, 6).Value = s.Reference ?? "";
+                    ss.Cell(r, 7).Value = s.Notes ?? "";
+                    ss.Cell(r, 8).Value = s.CreatedBy ?? "";
+                    if (s.CreatedAt.HasValue) ss.Cell(r, 9).Value = s.CreatedAt.Value;
+                    r++;
+                }
+                ss.Column(1).Style.DateFormat.Format = "yyyy-mm-dd";
+                ss.Column(9).Style.DateFormat.Format = "yyyy-mm-dd hh:mm";
+                ss.Column(4).Style.NumberFormat.Format = "#,##0.000";
+                if (sales.Count > 0) ss.Range(1, 1, r - 1, saleHeaders.Length).SetAutoFilter();
+                ss.Columns().AdjustToContents();
+
+                using var stream = new MemoryStream();
+                workbook.SaveAs(stream);
+
+                var fileName = $"BinWeights_{Safe(plantFilter ?? "AllPlants")}_{start:yyyyMMdd}_{end.AddDays(-1):yyyyMMdd}.xlsx";
+                return File(stream.ToArray(),
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Bin weight export failed");
+                TempData["ErrorMessage"] = "Bin weight export failed: " + ex.Message;
+                return RedirectBack();
+            }
+        }
+
+        private static void WriteHeader(IXLWorksheet ws, int row, string[] headers)
+        {
+            for (int i = 0; i < headers.Length; i++)
+            {
+                var cell = ws.Cell(row, i + 1);
+                cell.Value = headers[i];
+                cell.Style.Fill.BackgroundColor = XLColor.FromHtml("#1a1a2e");
+                cell.Style.Font.FontColor = XLColor.White;
+                cell.Style.Font.Bold = true;
+            }
+        }
+
+        // Return to the page the export was launched from (Analytics or Weight Management)
+        private IActionResult RedirectBack()
+        {
+            var referer = Request.Headers["Referer"].ToString();
+            if (Uri.TryCreate(referer, UriKind.Absolute, out var uri))
+            {
+                var local = uri.PathAndQuery;
+                if (Url.IsLocalUrl(local)) return LocalRedirect(local);
+            }
+            return RedirectToAction("Index", "Analytics");
+        }
+
+        // ══════════════════════════════════════════════════════════════════
         //  PDF EXPORT — returns styled HTML (print-ready)
         // ══════════════════════════════════════════════════════════════════
         [HttpPost]
@@ -879,6 +1103,34 @@ WHERE CreatedAt >= @Start AND CreatedAt < @End
             public string? Description { get; set; }
             public string? ModifiedBy { get; set; }
             public DateTime? ModifiedAt { get; set; }
+        }
+
+        private sealed class BinWeightRow
+        {
+            public int WeightId { get; set; }
+            public DateTime CreatedAt { get; set; }
+            public string? Plant { get; set; }
+            public string? CategoryName { get; set; }
+            public string? ParentCategory { get; set; }
+            public string? BinNumber { get; set; }
+            public decimal? GrossWeightKg { get; set; }
+            public decimal? TareWeightKg { get; set; }
+            public decimal NetWeightKg { get; set; }
+            public string? CreatedBy { get; set; }
+            public string? Description { get; set; }
+        }
+
+        private sealed class BinSaleRow
+        {
+            public DateTime SaleDate { get; set; }
+            public string? Plant { get; set; }
+            public string? CategoryName { get; set; }
+            public decimal WeightSoldKg { get; set; }
+            public string? Buyer { get; set; }
+            public string? Reference { get; set; }
+            public string? Notes { get; set; }
+            public string? CreatedBy { get; set; }
+            public DateTime? CreatedAt { get; set; }
         }
 
         private async Task<IEnumerable<WeightExportRow>> FetchWeightRows(

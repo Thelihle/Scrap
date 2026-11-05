@@ -170,7 +170,8 @@ public class SecureAuthService : IAuthService
         return Task.FromResult(user.UserType?.ToLower() switch
         {
             "operator" => "/Operator/Index",
-            "teamleader" or "groupleader" or "manager" or "seniormanager" or "admin"
+            "admin" => "/ScrapApproval/AdminWeightDashboard",
+            "teamleader" or "groupleader" or "manager" or "seniormanager"
                 => "/ScrapApproval/Dashboard",
             _ => "/Account/Login"
         });

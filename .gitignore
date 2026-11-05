@@ -21,9 +21,6 @@ logs/
 appsettings*.json
 !appsettings.example.json
 
-# Local repair backup of the old .git folder (Nov 2026)
-.git.broken-*/
-
 # OS files
 Thumbs.db
 Desktop.ini

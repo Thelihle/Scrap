@@ -584,6 +584,10 @@ namespace SCP_Control.Controllers
                 var userRole = User.Claims
                     .FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value?.ToLower();
 
+                if (userRole == "admin")
+                {
+                    return RedirectToAction("AdminWeightDashboard", "ScrapApproval");
+                }
                 if (IsManagementRole(userRole))
                 {
                     return RedirectToAction("Dashboard", "ScrapApproval");
@@ -634,6 +638,7 @@ namespace SCP_Control.Controllers
             return userRole?.ToLower() switch
             {
                 "operator" => RedirectToAction("Index", "Operator"),
+                "admin" => RedirectToAction("AdminWeightDashboard", "ScrapApproval"),
                 var type when new[] { "teamleader", "groupleader", "manager", "seniormanager", "admin" }
                     .Contains(type) => RedirectToAction("Dashboard", "ScrapApproval"),
                 _ => RedirectToAction("Login", "Account")
@@ -710,6 +715,7 @@ namespace SCP_Control.Controllers
             return userType?.ToLower() switch
             {
                 "operator" => "/Operator/Index",
+                "admin" => "/ScrapApproval/AdminWeightDashboard",
                 var type when new[] { "teamleader", "groupleader", "manager", "seniormanager", "admin" }
                     .Contains(type) => "/ScrapApproval/Dashboard",
                 _ => "/Account/Login"
@@ -786,6 +792,7 @@ namespace SCP_Control.Controllers
             return user.UserType?.ToLower() switch
             {
                 "operator" => "/Operator/Index",
+                "admin" => "/ScrapApproval/AdminWeightDashboard",
                 var type when new[] { "teamleader", "groupleader", "manager", "seniormanager", "admin" }
                     .Contains(type) => "/ScrapApproval/Dashboard",
                 _ => "/Account/Login"
@@ -1073,6 +1080,7 @@ WHERE ClockNumber = @Identifier OR UserName = @Identifier";
             return Task.FromResult(user.UserType?.ToLower() switch
             {
                 "operator" => "/Operator/Index",
+                "admin" => "/ScrapApproval/AdminWeightDashboard",
                 var type when new[] { "teamleader", "groupleader", "manager", "seniormanager", "admin" }
                     .Contains(type) => "/ScrapApproval/Dashboard",
                 _ => "/Account/Login"
@@ -1247,6 +1255,7 @@ WHERE ClockNumber = @Identifier OR UserName = @Identifier";
             string redirectUrl = userRole switch
             {
                 "operator" => "/Operator/Index",
+                "admin" => "/ScrapApproval/AdminWeightDashboard",
                 var type when new[] { "teamleader", "groupleader", "manager", "seniormanager", "admin" }
                     .Contains(type) => "/ScrapApproval/Dashboard",
                 _ => "/Account/Login"
@@ -1706,7 +1715,8 @@ WHERE ClockNumber = @Identifier OR UserName = @Identifier";
                     : (user.UserType ?? "").ToLower().Trim() switch
                     {
                         "operator" or "engineer" => "/Operator/Index",
-                        "teamleader" or "groupleader" or "manager" or "seniormanager" or "admin"
+                        "admin" => "/ScrapApproval/AdminWeightDashboard",
+                        "teamleader" or "groupleader" or "manager" or "seniormanager"
                         or "engineering teamleader" or "engineering groupleader"
                         or "engineering manager" or "engineering seniormanager" or "engineering admin"
                             => "/ScrapApproval/Dashboard",
@@ -1858,7 +1868,8 @@ WHERE ClockNumber = @Identifier OR UserName = @Identifier";
                 string redirectUrl = user.UserType?.ToLower().Trim() switch
                 {
                     "operator" or "engineer" => "/Operator/Index",
-                    "teamleader" or "groupleader" or "manager" or "seniormanager" or "admin"
+                    "admin" => "/ScrapApproval/AdminWeightDashboard",
+                    "teamleader" or "groupleader" or "manager" or "seniormanager"
                     or "engineering teamleader" or "engineering groupleader"
                     or "engineering manager" or "engineering seniormanager" or "engineering admin"
                         => "/ScrapApproval/Dashboard",
@@ -2083,6 +2094,7 @@ WHERE ClockNumber = @Identifier OR UserName = @Identifier";
                     : user.UserType?.ToLower() switch
                     {
                         "operator" => "/Operator/Index",
+                        "admin" => "/ScrapApproval/AdminWeightDashboard",
                         var type when new[] { "teamleader", "groupleader", "manager", "seniormanager", "admin" }.Contains(type)
                             => "/ScrapApproval/Dashboard",
                         _ => "/Account/Login"
@@ -2782,6 +2794,7 @@ ORDER BY RequestDate DESC";
             return userType?.ToLower() switch
             {
                 "operator" => "/Operator/Index",
+                "admin" => "/ScrapApproval/AdminWeightDashboard",
                 var type when new[] { "teamleader", "groupleader", "manager", "seniormanager", "admin" }
                     .Contains(type) => "/ScrapApproval/Dashboard",
                 _ => "/Account/Login"
@@ -3159,7 +3172,8 @@ ORDER BY RequestDate DESC";
             return userType switch
             {
                 "operator" or "engineer" => "/Operator/Index",
-                "teamleader" or "groupleader" or "manager" or "seniormanager" or "admin"
+                "admin" => "/ScrapApproval/AdminWeightDashboard",
+                "teamleader" or "groupleader" or "manager" or "seniormanager"
                 or "engineering teamleader" or "engineering groupleader"
                 or "engineering manager" or "engineering seniormanager" or "engineering admin"
                     => "/ScrapApproval/Dashboard",

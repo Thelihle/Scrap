@@ -111,58 +111,6 @@
             padding: 20px;
         }
 
-        .kpi-strip {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 14px;
-            margin-bottom: 20px;
-        }
-
-        .kpi-card {
-            background: #fff;
-            border-radius: 8px;
-            padding: 16px 18px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            border-left: 4px solid var(--primary);
-        }
-
-            .kpi-card.kpi-success {
-                border-left-color: var(--success);
-            }
-
-            .kpi-card.kpi-warning {
-                border-left-color: var(--warning);
-            }
-
-            .kpi-card.kpi-danger {
-                border-left-color: var(--danger);
-            }
-
-        .kpi-icon {
-            font-size: 26px;
-        }
-
-        .kpi-num {
-            font-size: 24px;
-            font-weight: 700;
-        }
-
-        .kpi-lbl {
-            font-size: 11px;
-            color: var(--muted);
-            text-transform: uppercase;
-            letter-spacing: .5px;
-        }
-
-        .panels {
-            display: grid;
-            grid-template-columns: 1fr 420px;
-            gap: 20px;
-            align-items: start;
-        }
-
         .card {
             background: #fff;
             border-radius: 8px;
@@ -184,67 +132,6 @@
 
         .card-body {
             padding: 16px 18px;
-        }
-
-        .tab-bar {
-            display: flex;
-            gap: 4px;
-            border-bottom: 1px solid var(--border);
-            padding: 0 18px;
-        }
-
-        .tab-btn {
-            background: none;
-            border: none;
-            padding: 12px 14px;
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--muted);
-            cursor: pointer;
-            border-bottom: 2px solid transparent;
-        }
-
-            .tab-btn.active {
-                color: var(--primary);
-                border-bottom-color: var(--primary);
-            }
-
-        .tab-panel {
-            display: none;
-            padding: 16px 18px;
-        }
-
-            .tab-panel.active {
-                display: block;
-            }
-
-        .badge {
-            display: inline-block;
-            padding: 2px 7px;
-            border-radius: 10px;
-            font-weight: 700;
-        }
-
-        .badge-warning {
-            background: rgba(240,173,78,.15);
-            color: #b9770e;
-        }
-
-        .badge-info {
-            background: rgba(66,139,202,.15);
-            color: var(--primary);
-        }
-
-        .badge-muted {
-            background: rgba(108,117,125,.12);
-            color: var(--muted);
-        }
-
-        .filter-row {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            margin-bottom: 14px;
         }
 
         .fld {
@@ -346,180 +233,6 @@
                 margin-bottom: 8px;
             }
 
-        #filterDept optgroup, #histDept optgroup {
-            font-weight: 700;
-            color: var(--primary);
-            background: var(--light);
-            text-transform: uppercase;
-            letter-spacing: .5px;
-            font-size: 11px;
-        }
-
-            #filterDept optgroup option, #histDept optgroup option {
-                font-weight: 500;
-                color: var(--dark);
-                background: #fff;
-                font-size: 13px;
-            }
-
-        .cat-strip {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 10px;
-            margin-bottom: 16px;
-        }
-
-        .cat-card {
-            background: #fff;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 12px 14px;
-            cursor: pointer;
-            transition: box-shadow .15s, transform .15s;
-        }
-
-            .cat-card:hover {
-                box-shadow: 0 4px 12px rgba(0,0,0,.08);
-                transform: translateY(-2px);
-            }
-
-        .cat-card-title {
-            font-weight: 700;
-            font-size: 13px;
-            color: var(--primary);
-            text-transform: uppercase;
-            letter-spacing: .5px;
-            margin-bottom: 6px;
-        }
-
-        .cat-card-row {
-            font-size: 12px;
-            color: var(--muted);
-        }
-
-        .cat-card-cost {
-            font-weight: 700;
-            font-size: 16px;
-            color: var(--success);
-            margin-top: 6px;
-        }
-
-        .right-panel {
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-        }
-
-        .step-card {
-            background: #fff;
-            border-radius: 8px;
-            overflow: hidden;
-        }
-
-        .step-head {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 12px 16px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .step-num {
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            background: var(--primary);
-            color: #fff;
-            font-size: 12px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .step-title {
-            font-weight: 700;
-            font-size: 13px;
-        }
-
-        .step-body {
-            padding: 14px 16px;
-        }
-
-        .sel-list {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            max-height: 220px;
-            overflow-y: auto;
-        }
-
-        .sel-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: var(--light);
-            border-radius: 6px;
-            padding: 6px 10px;
-            font-size: 12px;
-        }
-
-        .weight-summary {
-            background: rgba(66,139,202,.08);
-            border: 1px solid rgba(66,139,202,.25);
-            border-radius: 6px;
-            padding: 10px 12px;
-            font-size: 12px;
-            margin-bottom: 12px;
-        }
-
-        .weight-input-wrap {
-            position: relative;
-            margin-bottom: 12px;
-        }
-
-        .weight-input {
-            width: 100%;
-            padding: 10px 40px 10px 12px;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            font-size: 15px;
-        }
-
-        .weight-unit {
-            position: absolute;
-            right: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--muted);
-            font-size: 12px;
-        }
-
-        .desc-input {
-            width: 100%;
-            padding: 8px 10px;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            font-size: 13px;
-        }
-
-        .save-btn {
-            width: 100%;
-            background: var(--success);
-            color: #fff;
-            border: none;
-            border-radius: 6px;
-            padding: 12px;
-            font-size: 14px;
-            font-weight: 700;
-            cursor: pointer;
-        }
-
-            .save-btn:disabled {
-                opacity: .5;
-                cursor: not-allowed;
-            }
-
         .notif-container {
             position: fixed;
             top: 16px;
@@ -565,6 +278,114 @@
             font-weight: 700;
             color: var(--success);
         }
+
+        /* ── Bin-only page layout ── */
+        .plant-bar {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .plant-totals {
+            display: flex;
+            gap: 18px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+            .plant-totals b {
+                color: var(--dark);
+                font-size: 15px;
+            }
+
+        .bin-group {
+            margin-bottom: 18px;
+        }
+
+        .bin-group-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            padding-bottom: 4px;
+            border-bottom: 2px solid var(--primary);
+        }
+
+        .bin-cat {
+            min-width: 180px;
+            flex: 1;
+        }
+
+        .bin-cat-name {
+            padding: 8px 0;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .bin-row select.ctrl {
+            min-width: 170px;
+        }
+
+        .bin-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            align-items: start;
+        }
+
+        .sale-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+            .sale-row .ctrl, #saleCategory, #saleNotes {
+                min-width: 0;
+                width: 100%;
+            }
+
+        .sale-warning {
+            background: rgba(240,173,78,.15);
+            border: 1px solid var(--warning);
+            color: #8a5a00;
+            border-radius: 6px;
+            padding: 8px 10px;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+
+        .export-row {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .export-plant {
+            padding: 8px 0;
+            font-weight: 700;
+        }
+
+        .muted-note {
+            font-size: 12px;
+            font-weight: 400;
+            color: var(--muted);
+        }
+
+        .tbl .total-row td {
+            font-weight: 700;
+            border-top: 2px solid var(--dark);
+        }
+
+        @@media (max-width: 900px) {
+            .bin-grid {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
@@ -591,360 +412,127 @@
 
     <div class="page">
 
-        <div style="display:flex; justify-content:flex-end; align-items:center; gap:8px; margin-bottom:8px;">
-            <label for="statsDateInput" style="font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.5px;">
-                Weight for date:
-            </label>
-            <input type="date" class="ctrl" id="statsDateInput" style="max-width:160px; min-width:0;">
-            <button class="btn btn-outline btn-sm" id="statsDateTodayBtn">Today</button>
-        </div>
-
-        <div class="kpi-strip">
-            <div class="kpi-card">
-                <i class="bi bi-geo-alt kpi-icon" style="color:var(--primary)"></i>
-                <div><div class="kpi-num" id="kpiReady">—</div><div class="kpi-lbl">Locations Ready</div></div>
-            </div>
-            <div class="kpi-card kpi-success">
-                <i class="bi bi-check-circle kpi-icon" style="color:var(--success)"></i>
-                <div><div class="kpi-num" id="kpiApproved">—</div><div class="kpi-lbl">Approved Items</div></div>
-            </div>
-            <div class="kpi-card kpi-warning">
-                <i class="bi bi-scale kpi-icon" style="color:var(--warning)"></i>
-                <div><div class="kpi-num" id="kpiTodayKg">— kg</div><div class="kpi-lbl" id="kpiTodayLbl">Weight Today</div></div>
-            </div>
-            <div class="kpi-card kpi-danger">
-                <i class="bi bi-building kpi-icon" style="color:var(--danger)"></i>
-                <div><div class="kpi-num" id="kpiDepts">—</div><div class="kpi-lbl">Departments</div></div>
+        <!-- Plant selector -->
+        <div class="card" style="margin-bottom:16px;">
+            <div class="card-body plant-bar">
+                <div class="fld">
+                    <label for="binPlantSelect">Plant</label>
+                    <select class="ctrl" id="binPlantSelect" style="min-width:200px;">
+                        <option value="">Select Plant</option>
+                        <option value="Plant A">Plant A</option>
+                        <option value="Plant B">Plant B</option>
+                    </select>
+                </div>
+                <div class="plant-totals" id="plantTotals"></div>
             </div>
         </div>
 
-        <div class="panels">
+        <!-- Bulk bin recording -->
+        <div class="card" style="margin-bottom:16px;">
+            <div class="card-head">
+                <h2><i class="bi bi-boxes me-2"></i>Bulk Bin Recording</h2>
+            </div>
+            <div class="card-body">
+                <div id="binCategoriesContainer">
+                    <div class="empty-state"><i class="bi bi-building"></i><p>Select a plant to record bin weights.</p></div>
+                </div>
+            </div>
+        </div>
 
-            <!-- ══ LEFT ══ -->
-            <div class="left-panel">
-                <div class="card">
-                    <div class="card-head">
-                        <h2><i class="bi bi-table me-2"></i>Scrap Locations</h2>
-                        <button class="btn btn-outline btn-sm" id="refreshBtn"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
-                    </div>
-                    <div class="card-body" style="padding-bottom:0;">
-
-                        <div class="tab-bar">
-                            <button class="tab-btn" data-tab="ready">
-                                <i class="bi bi-boxes"></i> Bulk Bin Recording
-                            </button>
-                            <button class="tab-btn" data-tab="ready">
-                                <i class="bi bi-hourglass-split"></i> Pending Weigh
-                                <span id="tabReadyCount" class="badge badge-warning ms-1" style="font-size:10px;"></span>
-                            </button>
-                            <button class="tab-btn" data-tab="history">
-                                <i class="bi bi-clock-history"></i> Weight History
-                            </button>
-                            <button class="tab-btn" data-tab="family">
-                                <i class="bi bi-building-gear"></i> Family Weight
-                                <span id="tabFamilyCount" class="badge badge-info ms-1" style="font-size:10px;"></span>
-                            </button>
-                        </div>
-
-                        <!-- ── TAB: Pending Weigh ── -->
-                        <div class="tab-panel" id="tab-ready">
-                            <div class="cat-strip" id="catStrip"></div>
-
-                            <div class="filter-row">
-                                <div class="fld">
-                                    <label>Department</label>
-                                    <select class="ctrl" id="filterDept"><option value="">All Departments</option></select>
-                                </div>
-                                <div class="fld">
-                                    <label>Shift</label>
-                                    <select class="ctrl" id="filterShift">
-                                        <option value="">All Shifts</option>
-                                        <option>A</option>
-                                        <option>B</option>
-                                        <option>Straight</option>
-                                    </select>
-                                </div>
-                                <button class="btn btn-primary btn-sm" id="applyFilter" style="align-self:flex-end;"><i class="bi bi-filter"></i> Filter</button>
-                                <button class="btn btn-outline btn-sm" id="selectAllBtn" style="align-self:flex-end;"><i class="bi bi-check2-all"></i> Select All</button>
-                            </div>
-
-                            <div class="tbl-wrap">
-                                <table class="tbl" id="readyTable">
-                                    <thead>
-                                        <tr>
-                                            <th class="c" style="width:40px;"><input type="checkbox" id="cbSelectAll"></th>
-                                            <th>Department</th>
-                                            <th>Line / Area</th>
-                                            <th class="c">Shift</th>
-                                            <th class="r">Approved Items</th>
-                                            <th class="r">Weight Recorded</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="readyBody">
-                                        <tr class="loading-row"><td colspan="6"><div class="spinner"></div> Loading locations…</td></tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div id="readyEmpty" style="display:none;" class="empty-state">
-                                <i class="bi bi-check2-circle"></i>
-                                <p>All approved scrap has been weighed.</p>
-                            </div>
-                        </div>
-
-                        <!-- ── TAB: Weight History ── -->
-                        <div class="tab-panel" id="tab-history">
-                            <div class="filter-row">
-                                <div class="fld">
-                                    <label>Department</label>
-                                    <select class="ctrl" id="histDept"><option value="">All Departments</option></select>
-                                </div>
-                                <div class="fld">
-                                    <label>Days</label>
-                                    <select class="ctrl" id="histDays">
-                                        <option value="7">Last 7 days</option>
-                                        <option value="14">Last 14 days</option>
-                                        <option value="30" selected>Last 30 days</option>
-                                        <option value="90">Last 90 days</option>
-                                    </select>
-                                </div>
-                                <button class="btn btn-primary btn-sm" id="loadHistBtn" style="align-self:flex-end;"><i class="bi bi-search"></i> Load</button>
-                            </div>
-                            <div class="tbl-wrap">
-                                <table class="tbl" id="histTable">
-                                    <thead>
-                                        <tr>
-                                            <th>Department</th>
-                                            <th>Line / Area</th>
-                                            <th class="c">Shift</th>
-                                            <th class="r">Weight (kg)</th>
-                                            <th>Type</th>
-                                            <th>Recorded By</th>
-                                            <th>Date &amp; Time</th>
-                                            <th>Description</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="histBody">
-                                        <tr class="loading-row"><td colspan="8">Select filters and click Load</td></tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <!-- ── TAB: Family Weight ── -->
-                        <div class="tab-panel" id="tab-family">
-                            <div style="background:rgba(66,139,202,0.08); border:1px solid rgba(66,139,202,0.3); border-radius:6px; padding:12px 14px; margin-bottom:14px; font-size:12px; color:var(--dark);">
-                                <i class="bi bi-info-circle"></i>
-                                Compares weight already recorded by operators/team leaders per line against a single
-                                combined weight you record for the whole department. This creates a separate
-                                reconciliation record without touching individual line weighings.
-                            </div>
-
-                            <div class="card" style="margin-bottom:16px;">
-                                <div class="card-head"><h2><i class="bi bi-bar-chart-line me-2"></i>Line vs Family Weight by Department</h2></div>
-                                <div class="card-body">
-                                    <div style="position:relative; width:100%; height:320px;">
-                                        <canvas id="familyComparisonChart" style="width:100%; height:100%;"></canvas>
-                                    </div>
-                                    <div style="display:flex; gap:20px; justify-content:center; margin-top:10px; font-size:12px;">
-                                        <div style="display:flex;align-items:center;gap:6px;">
-                                            <span style="width:12px;height:12px;border-radius:3px;background:var(--primary);display:inline-block;"></span>
-                                            Line-Recorded Total
-                                        </div>
-                                        <div style="display:flex;align-items:center;gap:6px;">
-                                            <span style="width:12px;height:12px;border-radius:3px;background:var(--success);display:inline-block;"></span>
-                                            Admin Family Weight
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="tbl-wrap">
-                                <table class="tbl" id="familyTable">
-                                    <thead>
-                                        <tr>
-                                            <th>Department</th>
-                                            <th class="r">Approved Items</th>
-                                            <th class="r">Lines Reporting</th>
-                                            <th class="r">Line-Recorded Total</th>
-                                            <th>Admin Family Weight</th>
-                                            <th class="r">Variance</th>
-                                            <th>Last Recorded</th>
-                                            <th class="c">Save</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="familyBody">
-                                        <tr class="loading-row"><td colspan="8"><div class="spinner"></div> Loading departments…</td></tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <!-- ── TAB: Bulk Bin Recording ── -->
-                        <div class="tab-panel active" id="tab-bins">
-
-                            <div class="filter-row">
-                                <div class="fld">
-                                    <label>Plant</label>
-                                    <select class="ctrl" id="binPlantSelect">
-                                        <option value="">Select Plant</option>
-                                        <option value="Plant A">Plant A</option>
-                                        <option value="Plant B">Plant B</option>
-                                    </select>
-                                </div>
-                                <button class="btn btn-outline btn-sm" id="toggleBinDetailsBtn" style="align-self:flex-end; display:none;">
-                                    <i class="bi bi-sliders"></i> Show Details
-                                </button>
-                            </div>
-
-                            <div id="binCategoriesContainer"></div>
-
-                            <div id="binDetailsSection" style="display:none;">
-
-                                <div class="card" id="dailyWeightCard" style="margin-top:16px; display:none;">
-                                    <div class="card-head">
-                                        <h2><i class="bi bi-calendar-check me-2"></i>Daily Weight — <span id="dailyDateLabel"></span></h2>
-                                        <input type="date" class="ctrl" id="dailyDateInput" style="max-width:160px;">
-                                    </div>
-                                    <div class="card-body" id="dailyDeptRows"></div>
-                                </div>
-
-                                <div class="card" id="notesCard" style="margin-top:16px; display:none;">
-                                    <div class="card-head"><h2><i class="bi bi-pencil-square me-2"></i>Departments Not Using The System</h2></div>
-                                    <div class="card-body">
-                                        <textarea class="ctrl" id="notCompliantNotes" rows="3" style="width:100%;"
-                                                  placeholder="e.g. PRE-ASSEMBLY ISUZU still on paper forms as of today"></textarea>
-                                        <button class="btn btn-primary btn-sm" id="saveNoteBtn" style="margin-top:8px;"><i class="bi bi-save"></i> Save Note</button>
-                                    </div>
-                                </div>
-
-                                <div style="margin-top:16px;">
-                                    <button class="btn btn-outline btn-sm" id="viewDailyReportBtn"><i class="bi bi-file-earmark-text"></i> View / Print Daily Report</button>
-                                </div>
-
-                                <div class="card" style="margin-top:16px;">
-                                    <div class="card-head"><h2><i class="bi bi-cash-coin me-2"></i>On-Hand Balance</h2></div>
-                                    <div class="card-body">
-                                        <div class="tbl-wrap">
-                                            <table class="tbl" id="balanceTable">
-                                                <thead><tr><th>Category</th><th class="r">Weighed</th><th class="r">Sold</th><th class="r">On Hand</th></tr></thead>
-                                                <tbody id="balanceBody"><tr class="loading-row"><td colspan="4">Select a plant</td></tr></tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="card" style="margin-top:16px;">
-                                    <div class="card-head"><h2><i class="bi bi-receipt me-2"></i>Sales History</h2></div>
-                                    <div class="card-body">
-                                        <div class="tbl-wrap">
-                                            <table class="tbl" id="salesHistoryTable">
-                                                <thead><tr><th>Category</th><th class="r">Weight</th><th>Buyer</th><th>Reference</th><th>Date</th><th>Recorded By</th></tr></thead>
-                                                <tbody id="salesHistoryBody"><tr class="loading-row"><td colspan="6">Select a plant</td></tr></tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="card" style="margin-top:16px;">
-                                    <div class="card-head"><h2><i class="bi bi-clock-history me-2"></i>Bin Weighing History</h2></div>
-                                    <div class="card-body">
-                                        <div class="tbl-wrap">
-                                            <table class="tbl" id="binHistoryTable">
-                                                <thead>
-                                                    <tr><th>Category</th><th>Bin</th><th class="r">Gross</th><th class="r">Tare</th><th class="r">Net</th><th>Recorded By</th><th>Date</th></tr>
-                                                </thead>
-                                                <tbody id="binHistoryBody"><tr class="loading-row"><td colspan="7">Select a plant to see recent recordings</td></tr></tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-
-                            </div><!-- /binDetailsSection -->
-
-                            <div class="card" style="margin-top:16px;">
-                                <div class="card-head"><h2><i class="bi bi-truck me-2"></i>Record Sale</h2></div>
-                                <div class="card-body">
-                                    <div class="filter-row">
-                                        <div class="fld">
-                                            <label>Category</label>
-                                            <select class="ctrl" id="saleCategory"><option value="">Select Category</option></select>
-                                        </div>
-                                        <div class="fld">
-                                            <label>Weight Sold (kg)</label>
-                                            <input type="number" class="ctrl" id="saleWeight" step="0.01" min="0.01" placeholder="0.00" style="max-width:130px;">
-                                        </div>
-                                        <div class="fld">
-                                            <label>Buyer</label>
-                                            <input type="text" class="ctrl" id="saleBuyer" placeholder="Buyer name">
-                                        </div>
-                                        <div class="fld">
-                                            <label>Reference / Invoice #</label>
-                                            <input type="text" class="ctrl" id="saleReference" placeholder="Optional">
-                                        </div>
-                                        <div class="fld">
-                                            <label>Sale Date</label>
-                                            <input type="date" class="ctrl" id="saleDate">
-                                        </div>
-                                        <button class="btn btn-success btn-sm" id="saveSaleBtn" style="align-self:flex-end;"><i class="bi bi-save"></i> Record Sale</button>
-                                    </div>
-                                    <input type="text" class="ctrl" id="saleNotes" placeholder="Notes (optional)" style="width:100%;">
-                                </div>
-                            </div>
-                        </div>
-
-                    </div><!-- /card-body -->
-                </div><!-- /card -->
-            </div><!-- /left-panel -->
-            <!-- ══ RIGHT — bulk weigh panel ══ -->
-            <div class="right-panel">
-                <div class="step-card">
-                    <div class="step-head">
-                        <div class="step-num">1</div>
-                        <div class="step-title">Selected Locations</div>
-                        <button class="btn btn-outline btn-sm" id="clearSelBtn" style="margin-left:auto;" disabled><i class="bi bi-x"></i> Clear</button>
-                    </div>
-                    <div class="step-body">
-                        <div id="selEmpty" class="empty-state">
-                            <i class="bi bi-cursor-text"></i>
-                            <p>Tick locations from the table<br>to add them here</p>
-                        </div>
-                        <div id="selList" class="sel-list" style="display:none;"></div>
-                        <div id="selSummary" style="display:none; font-size:12px; color:var(--muted); padding-top:6px; border-top:1px solid var(--border);">
-                            <b id="selCount">0</b> locations &nbsp;·&nbsp; <b id="selItems">0</b> approved items
-                        </div>
+        <div class="bin-grid">
+            <!-- On-hand balance -->
+            <div class="card">
+                <div class="card-head"><h2><i class="bi bi-cash-coin me-2"></i>On-Hand Balance</h2></div>
+                <div class="card-body">
+                    <div class="tbl-wrap">
+                        <table class="tbl" id="balanceTable">
+                            <thead><tr><th>Category</th><th class="r">Weighed</th><th class="r">Sold</th><th class="r">On Hand</th></tr></thead>
+                            <tbody id="balanceBody"><tr class="loading-row"><td colspan="4">Select a plant</td></tr></tbody>
+                        </table>
                     </div>
                 </div>
+            </div>
 
-                <div class="step-card">
-                    <div class="step-head">
-                        <div class="step-num">2</div>
-                        <div class="step-title">Record Bulk Weight</div>
+            <!-- Record sale -->
+            <div class="card">
+                <div class="card-head"><h2><i class="bi bi-truck me-2"></i>Record Sale</h2></div>
+                <div class="card-body">
+                    <div class="fld" style="margin-bottom:10px;">
+                        <label for="saleCategory">Category</label>
+                        <select class="ctrl" id="saleCategory"><option value="">Select a plant first</option></select>
                     </div>
-                    <div class="step-body">
-                        <div id="weightSummaryBox" class="weight-summary" style="display:none;">
-                            Recording for <b id="wsSel">0</b> locations (<b id="wsItems">0</b> approved items)
+                    <div class="sale-row">
+                        <div class="fld">
+                            <label for="saleWeight">Weight Sold (kg)</label>
+                            <input type="number" class="ctrl" id="saleWeight" step="0.01" min="0.01" placeholder="0.00">
                         </div>
-                        <label style="display:block;">Total Weight (kg)</label>
-                        <div class="weight-input-wrap">
-                            <input type="number" class="weight-input" id="bulkKg" placeholder="0.00" step="0.01" min="0.01">
-                            <span class="weight-unit">kg</span>
-                        </div>
-                        <label style="display:block;">Description (optional)</label>
-                        <input type="text" class="desc-input" id="bulkDesc" placeholder="e.g. Morning batch, Friday weigh-out…" style="margin-bottom:14px;">
-                        <button class="save-btn" id="saveBulkBtn" disabled><i class="bi bi-save"></i> Save Weight Records</button>
-                        <div style="margin-top:10px; font-size:11px; color:var(--muted); text-align:center;">
-                            This will create a weight record for each selected location
+                        <div class="fld">
+                            <label for="saleDate">Sale Date</label>
+                            <input type="date" class="ctrl" id="saleDate">
                         </div>
                     </div>
+                    <div class="sale-row">
+                        <div class="fld">
+                            <label for="saleBuyer">Buyer</label>
+                            <input type="text" class="ctrl" id="saleBuyer" placeholder="Buyer name">
+                        </div>
+                        <div class="fld">
+                            <label for="saleReference">Reference / Invoice #</label>
+                            <input type="text" class="ctrl" id="saleReference" placeholder="Optional">
+                        </div>
+                    </div>
+                    <div class="fld" style="margin-bottom:10px;">
+                        <label for="saleNotes">Notes</label>
+                        <input type="text" class="ctrl" id="saleNotes" placeholder="Optional">
+                    </div>
+                    <div id="saleWarning" class="sale-warning" style="display:none;"></div>
+                    <button class="btn btn-success btn-sm" id="saveSaleBtn"><i class="bi bi-save"></i> Record Sale</button>
                 </div>
-            </div><!-- /right-panel -->
+            </div>
+        </div>
 
-        </div><!-- /panels -->
+        <!-- Sales history -->
+        <div class="card" style="margin-top:16px;">
+            <div class="card-head"><h2><i class="bi bi-receipt me-2"></i>Sales History <span class="muted-note">(last 90 days)</span></h2></div>
+            <div class="card-body">
+                <div class="tbl-wrap">
+                    <table class="tbl" id="salesHistoryTable">
+                        <thead><tr><th>Date</th><th>Category</th><th class="r">Weight</th><th>Buyer</th><th>Reference</th><th>Recorded By</th></tr></thead>
+                        <tbody id="salesHistoryBody"><tr class="loading-row"><td colspan="6">Select a plant</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Export -->
+        <div class="card" style="margin-top:16px;">
+            <div class="card-head"><h2><i class="bi bi-file-earmark-excel me-2"></i>Export Bin Weights &amp; Sales</h2></div>
+            <div class="card-body">
+                <form id="binExportForm" method="post" action="/Export/ExportBinWeightsToExcel" class="export-row">
+                    <input type="hidden" name="__RequestVerificationToken" id="binExportToken" />
+                    <input type="hidden" name="plant" id="binExportPlant" value="All Plants" />
+                    <div class="fld">
+                        <label for="binExportStart">From</label>
+                        <input type="date" class="ctrl" name="startDate" id="binExportStart">
+                    </div>
+                    <div class="fld">
+                        <label for="binExportEnd">To</label>
+                        <input type="date" class="ctrl" name="endDate" id="binExportEnd">
+                    </div>
+                    <div class="fld">
+                        <label>Plant</label>
+                        <div class="export-plant" id="binExportPlantLabel">All Plants</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-download"></i> Export to Excel</button>
+                </form>
+            </div>
+        </div>
+
     </div><!-- /page -->
 
     <script>
         // ═══════════════════════════════════════════════════════════
-        // SHARED HELPERS
+        // HELPERS
         // ═══════════════════════════════════════════════════════════
         function TOKEN() {
             return document.querySelector('input[name="__RequestVerificationToken"]').value;
@@ -955,10 +543,9 @@
                 return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
             });
         }
-        function formatDt(iso) {
-            if (!iso) return '—';
-            var d = new Date(iso);
-            return d.toLocaleDateString() + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        function kg(n) { return (Number(n) || 0).toFixed(2) + ' kg'; }
+        function localDateStr(d) {
+            return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
         }
         function notify(msg, type) {
             var el = document.createElement('div');
@@ -967,835 +554,304 @@
             document.getElementById('notifContainer').appendChild(el);
             setTimeout(function () { el.remove(); }, 4000);
         }
+        function currentPlant() { return document.getElementById('binPlantSelect').value; }
 
-        async function loadDashboardDepartments(selectId) {
-            var sel = document.getElementById(selectId);
-            if (!sel) return;
-            var firstOption = sel.querySelector('option') ? sel.querySelector('option').outerHTML : '<option value="">All Departments</option>';
-            sel.innerHTML = firstOption;
-
-            try {
-                var res = await fetch('/Account/GetDepartmentsDirect');
-                var data = await res.json();
-                if (!data.success) return;
-
-                var displayOrder = ['SCRAP CLERK', 'FINAL ASSEMBLY', 'PRE ASSEMBLY', 'REWORK', 'SUPPORT', 'OTHER'];
-                var grouped = {};
-                data.departments.forEach(function (d) {
-                    var cat = d.category || 'OTHER';
-                    (grouped[cat] = grouped[cat] || []).push(d);
-                });
-
-                displayOrder.forEach(function (cat) {
-                    var depts = grouped[cat];
-                    if (!depts || depts.length === 0) return;
-                    var optgroup = document.createElement('optgroup');
-                    optgroup.label = '── ' + cat + ' ──';
-                    depts.sort(function (a, b) { return a.name.localeCompare(b.name); }).forEach(function (d) {
-                        var opt = document.createElement('option');
-                        opt.value = d.name; opt.textContent = d.name;
-                        optgroup.appendChild(opt);
-                    });
-                    sel.appendChild(optgroup);
-                });
-            } catch (err) {
-                console.error('Error loading departments for', selectId, err);
-            }
-        }
+        var balances = [];
 
         // ═══════════════════════════════════════════════════════════
-        // KPI STRIP
+        // BULK BIN RECORDING
         // ═══════════════════════════════════════════════════════════
-        async function loadStats(dateStr) {
-            try {
-                var url = '/ScrapApproval/GetApprovalStatistics' + (dateStr ? ('?date=' + encodeURIComponent(dateStr)) : '');
-                var res = await fetch(url);
-                var data = await res.json();
-                if (!data.success) return;
-                document.getElementById('kpiReady').textContent = data.readyLocationsCount ?? '—';
-                document.getElementById('kpiApproved').textContent = data.approvedItemsCount ?? '—';
-                document.getElementById('kpiTodayKg').textContent = (data.totalWeightToday ?? 0).toFixed(1) + ' kg';
-
-                var todayStr = new Date().toISOString().slice(0, 10);
-                document.getElementById('kpiTodayLbl').textContent = (data.statsDate === todayStr) ? 'Weight Today' : ('Weight on ' + data.statsDate);
-
-                document.getElementById('kpiDepts').textContent = data.departmentsCount ?? '—';
-            } catch (err) {
-                console.error('Error loading KPI stats', err);
-            }
-        }
-
-        // ═══════════════════════════════════════════════════════════
-        // TAB: PENDING WEIGH
-        // ═══════════════════════════════════════════════════════════
-        var selectedLocations = [];
-        var costSummaryData = [];
-
-        async function loadCostSummary(shift) {
-            try {
-                var url = '/ScrapApproval/GetDepartmentCostSummary' + (shift ? ('?shift=' + encodeURIComponent(shift)) : '');
-                var res = await fetch(url);
-                var data = await res.json();
-                if (!data.success) return;
-                costSummaryData = data.data;
-                renderCategoryCards(costSummaryData);
-            } catch (err) {
-                console.error('Error loading cost summary', err);
-            }
-        }
-
-        function renderCategoryCards(rows) {
-            var displayOrder = ['FINAL ASSEMBLY', 'PRE ASSEMBLY', 'SUPPORT', 'REWORK', 'SCRAP CLERK', 'OTHER'];
-            var grouped = {};
-            rows.forEach(function (r) { (grouped[r.category] = grouped[r.category] || []).push(r); });
-
-            var strip = document.getElementById('catStrip');
-            strip.innerHTML = '';
-
-            displayOrder.forEach(function (cat) {
-                var depts = grouped[cat];
-                if (!depts || depts.length === 0) return;
-
-                var totalCost = depts.reduce(function (s, d) { return s + d.totalCost; }, 0);
-                var totalItems = depts.reduce(function (s, d) { return s + d.approvedItemCount; }, 0);
-                var totalKg = depts.reduce(function (s, d) { return s + d.weighedKg; }, 0);
-
-                var card = document.createElement('div');
-                card.className = 'cat-card';
-                card.innerHTML =
-                    '<div class="cat-card-title">' + escHtml(cat) + '</div>' +
-                    '<div class="cat-card-row">' + depts.length + ' departments</div>' +
-                    '<div class="cat-card-row">' + totalItems.toLocaleString() + ' items</div>' +
-                    '<div class="cat-card-row">' + totalKg.toFixed(1) + ' kg weighed</div>' +
-                    '<div class="cat-card-cost">R ' + totalCost.toLocaleString(undefined, { minimumFractionDigits: 2 }) + '</div>';
-                card.addEventListener('click', function () { filterDeptDropdownByCategory(cat); });
-                strip.appendChild(card);
-            });
-        }
-
-        function filterDeptDropdownByCategory(category) {
-            var sel = document.getElementById('filterDept');
-            var group = Array.from(sel.querySelectorAll('optgroup')).find(function (g) { return g.label.includes(category); });
-            if (group && group.querySelector('option')) {
-                sel.value = group.querySelector('option').value;
-                loadReadyLocations();
-            }
-        }
-
-        async function loadReadyLocations() {
-            var dept = document.getElementById('filterDept').value;
-            var shiftFilter = document.getElementById('filterShift').value;
-            var tbody = document.getElementById('readyBody');
-            tbody.innerHTML = '<tr class="loading-row"><td colspan="6"><div class="spinner"></div> Loading…</td></tr>';
-
-            try {
-                var params = new URLSearchParams();
-                if (dept) params.append('department', dept);
-
-                var res = await fetch('/ScrapApproval/GetLocationsWithApprovedScrap?' + params);
-                var data = await res.json();
-
-                tbody.innerHTML = '';
-                var rows = data.locations || [];
-                if (shiftFilter) rows = rows.filter(function (r) { return r.shift === shiftFilter; });
-
-                document.getElementById('tabReadyCount').textContent = rows.length;
-                document.getElementById('readyEmpty').style.display = rows.length ? 'none' : 'block';
-
-                rows.forEach(function (row) {
-                    var weightCell = row.lineWeightKg > 0
-                        ? (row.lineWeightKg.toFixed(1) + ' kg')
-                        : '<span style="color:var(--muted);">Not yet weighed</span>';
-
-                    var tr = document.createElement('tr');
-                    tr.innerHTML =
-                        '<td class="c"><input type="checkbox" class="loc-cb" data-dept="' + escHtml(row.department) +
-                        '" data-line="' + escHtml(row.line) + '" data-shift="' + escHtml(row.shift) +
-                        '" data-items="' + row.approvedItemCount + '"></td>' +
-                        '<td class="bold">' + escHtml(row.department) + '</td>' +
-                        '<td>' + escHtml(row.line) + '</td>' +
-                        '<td class="c"><span class="badge badge-info">' + escHtml(row.shift) + '</span></td>' +
-                        '<td class="r">' + row.approvedItemCount + '</td>' +
-                        '<td class="r bold">' + weightCell + '</td>';
-                    tbody.appendChild(tr);
-                });
-
-                document.querySelectorAll('.loc-cb').forEach(function (cb) { cb.addEventListener('change', updateSelection); });
-            } catch (err) {
-                tbody.innerHTML = '<tr class="loading-row"><td colspan="6" style="color:var(--danger);">Error loading locations</td></tr>';
-            }
-        }
-
-        function updateSelection() {
-            selectedLocations = Array.from(document.querySelectorAll('.loc-cb:checked')).map(function (cb) {
-                return { department: cb.dataset.dept, line: cb.dataset.line, shift: cb.dataset.shift, items: parseInt(cb.dataset.items) };
-            });
-
-            var empty = document.getElementById('selEmpty');
-            var list = document.getElementById('selList');
-            var summary = document.getElementById('selSummary');
-            var clearBtn = document.getElementById('clearSelBtn');
-            var saveBtn = document.getElementById('saveBulkBtn');
-            var summaryBox = document.getElementById('weightSummaryBox');
-
-            if (selectedLocations.length === 0) {
-                empty.style.display = 'block'; list.style.display = 'none'; summary.style.display = 'none';
-                clearBtn.disabled = true; saveBtn.disabled = true; summaryBox.style.display = 'none';
-                return;
-            }
-
-            empty.style.display = 'none'; list.style.display = 'flex'; summary.style.display = 'block';
-            clearBtn.disabled = false; summaryBox.style.display = 'block';
-
-            list.innerHTML = selectedLocations.map(function (l) {
-                return '<div class="sel-item"><span>' + escHtml(l.department) + ' · ' + escHtml(l.line) + ' (' + escHtml(l.shift) + ')</span><span>' + l.items + ' items</span></div>';
-            }).join('');
-
-            var totalItems = selectedLocations.reduce(function (s, l) { return s + l.items; }, 0);
-            document.getElementById('selCount').textContent = selectedLocations.length;
-            document.getElementById('selItems').textContent = totalItems;
-            document.getElementById('wsSel').textContent = selectedLocations.length;
-            document.getElementById('wsItems').textContent = totalItems;
-
-            var kg = parseFloat(document.getElementById('bulkKg').value);
-            saveBtn.disabled = !(kg > 0);
-        }
-
-        async function saveBulkWeight() {
-            var kg = parseFloat(document.getElementById('bulkKg').value);
-            if (!kg || kg <= 0 || selectedLocations.length === 0) { notify('Select locations and enter a weight', 'error'); return; }
-
-            var btn = document.getElementById('saveBulkBtn');
-            btn.disabled = true; btn.innerHTML = '<div class="spinner"></div> Saving…';
-
-            try {
-                var res = await fetch('/ScrapApproval/SaveBulkWeight', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': TOKEN() },
-                    body: JSON.stringify({
-                        Locations: selectedLocations.map(function (l) { return { Department: l.department, Line: l.line, Shift: l.shift }; }),
-                        Weight: kg,
-                        Description: document.getElementById('bulkDesc').value
-                    })
-                });
-                var data = await res.json();
-                if (data.success) {
-                    notify('✓ Weight records saved', 'success');
-                    document.getElementById('bulkKg').value = '';
-                    document.getElementById('bulkDesc').value = '';
-                    document.querySelectorAll('.loc-cb:checked').forEach(function (cb) { cb.checked = false; });
-                    updateSelection();
-                    loadReadyLocations();
-                    loadStats();
-                } else {
-                    notify(data.message || 'Save failed', 'error');
-                }
-            } catch (err) {
-                notify('Network error', 'error');
-            } finally {
-                btn.disabled = false; btn.innerHTML = '<i class="bi bi-save"></i> Save Weight Records';
-            }
-        }
-
-        // ═══════════════════════════════════════════════════════════
-        // TAB: WEIGHT HISTORY
-        // ═══════════════════════════════════════════════════════════
-        async function loadHistory() {
-            var dept = document.getElementById('histDept').value;
-            var days = document.getElementById('histDays').value;
-            var tbody = document.getElementById('histBody');
-            tbody.innerHTML = '<tr class="loading-row"><td colspan="8"><div class="spinner"></div> Loading…</td></tr>';
-
-            try {
-                var params = new URLSearchParams({ days: days });
-                if (dept) params.append('department', dept);
-
-                var res = await fetch('/ScrapApproval/GetWeightHistory?' + params);
-                var data = await res.json();
-                tbody.innerHTML = '';
-
-                var rows = data.data || [];
-                if (rows.length === 0) {
-                    tbody.innerHTML = '<tr class="loading-row"><td colspan="8">No records found for this filter.</td></tr>';
-                    return;
-                }
-
-                rows.forEach(function (r) {
-                    var tr = document.createElement('tr');
-                    tr.innerHTML =
-                        '<td>' + escHtml(r.department) + '</td><td>' + escHtml(r.line) + '</td>' +
-                        '<td class="c">' + escHtml(r.shift) + '</td><td class="r bold">' + parseFloat(r.weight).toFixed(2) + '</td>' +
-                        '<td>' + escHtml(r.weightType) + '</td><td>' + escHtml(r.createdBy) + '</td>' +
-                        '<td>' + formatDt(r.createdAt) + '</td><td>' + escHtml(r.description || '') + '</td>';
-                    tbody.appendChild(tr);
-                });
-            } catch (err) {
-                tbody.innerHTML = '<tr class="loading-row"><td colspan="8" style="color:var(--danger);">Error loading history</td></tr>';
-            }
-        }
-
-        // ═══════════════════════════════════════════════════════════
-        // TAB: FAMILY WEIGHT
-        // ═══════════════════════════════════════════════════════════
-        async function loadFamilyWeights() {
-            var tbody = document.getElementById('familyBody');
-            tbody.innerHTML = '<tr class="loading-row"><td colspan="8"><div class="spinner"></div> Loading…</td></tr>';
-
-            try {
-                var r = await fetch('/ScrapApproval/GetFamilyWeightSummary', { headers: { 'RequestVerificationToken': TOKEN() } });
-                var d = await r.json();
-                tbody.innerHTML = '';
-
-                if (!d.success || !d.data || d.data.length === 0) {
-                    tbody.innerHTML = '<tr class="loading-row"><td colspan="8">No departments with approved scrap found.</td></tr>';
-                    document.getElementById('tabFamilyCount').textContent = '0';
-                    return;
-                }
-
-                document.getElementById('tabFamilyCount').textContent = d.data.length;
-                drawFamilyComparisonChart(d.data);
-
-                d.data.forEach(function (row) {
-                    var tr = document.createElement('tr');
-                    var variance = row.varianceKg;
-                    var hasFamily = row.familyTotalKg > 0;
-                    var varColor = !hasFamily ? 'var(--muted)' : (Math.abs(variance) < 0.01 ? 'var(--success)' : (variance < 0 ? 'var(--danger)' : 'var(--warning)'));
-                    var varText = !hasFamily ? '—' : (variance > 0 ? '+' : '') + variance.toFixed(2) + ' kg';
-                    var lastRec = row.lastFamilyRecordedDate
-                        ? (formatDt(row.lastFamilyRecordedDate) + '<br><span style="font-size:10px;color:var(--muted);">by ' + escHtml(row.lastFamilyRecordedBy) + '</span>')
-                        : '<span class="badge badge-muted">Never</span>';
-
-                    tr.innerHTML =
-                        '<td class="bold">' + escHtml(row.department) + '</td>' +
-                        '<td class="r">' + row.approvedItemCount.toLocaleString() + '</td>' +
-                        '<td class="r">' + row.linesReporting + '</td>' +
-                        '<td class="r bold" style="color:var(--primary);">' + row.lineTotalKg.toFixed(2) + ' kg</td>' +
-                        '<td><div style="display:flex;align-items:center;gap:6px;"><input type="number" class="ctrl family-weight-input" placeholder="0.00" step="0.01" min="0.01" style="max-width:120px;"><span style="font-size:12px;color:var(--muted);">kg</span></div></td>' +
-                        '<td class="r bold" style="color:' + varColor + ';">' + varText + '</td>' +
-                        '<td style="font-size:12px;">' + lastRec + '</td>' +
-                        '<td class="c"><button class="btn btn-success btn-sm family-save-btn" disabled><i class="bi bi-save"></i> Save</button></td>';
-
-                    var input = tr.querySelector('.family-weight-input');
-                    var saveBtn = tr.querySelector('.family-save-btn');
-                    input.addEventListener('input', function () { saveBtn.disabled = !(parseFloat(input.value) > 0); });
-                    saveBtn.addEventListener('click', function () { saveFamilyWeight(row.department, input, saveBtn); });
-
-                    tbody.appendChild(tr);
-                });
-            } catch (e) {
-                tbody.innerHTML = '<tr class="loading-row"><td colspan="8" style="color:var(--danger);">Error: ' + e.message + '</td></tr>';
-            }
-        }
-
-        async function saveFamilyWeight(department, inputEl, btnEl) {
-            var weight = parseFloat(inputEl.value);
-            if (!weight || weight <= 0) { notify('Enter a valid weight', 'error'); return; }
-
-            var orig = btnEl.innerHTML;
-            btnEl.disabled = true; btnEl.innerHTML = '<div class="spinner"></div>';
-
-            try {
-                var r = await fetch('/ScrapApproval/SaveFamilyWeight', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': TOKEN() },
-                    body: JSON.stringify({ Department: department, Weight: weight, Description: '' })
-                });
-                var d = await r.json();
-                if (d.success) {
-                    notify('✓ ' + d.message, 'success');
-                    setTimeout(loadFamilyWeights, 500);
-                } else {
-                    notify(d.message || 'Save failed', 'error');
-                    btnEl.disabled = false; btnEl.innerHTML = orig;
-                }
-            } catch (e) {
-                notify('Network error: ' + e.message, 'error');
-                btnEl.disabled = false; btnEl.innerHTML = orig;
-            }
-        }
-
-        var familyChartData = [];
-        function drawFamilyComparisonChart(data) { familyChartData = data; renderFamilyChart(); }
-
-        function renderFamilyChart() {
-            var cv = document.getElementById('familyComparisonChart');
-            if (!cv) return;
-            var cx = cv.getContext('2d');
-            var data = familyChartData;
-
-            var labels = data.map(function (d) { return d.department; });
-            var lineVals = data.map(function (d) { return d.lineTotalKg; });
-            var famVals = data.map(function (d) { return d.familyTotalKg; });
-
-            var W = cv.clientWidth || cv.offsetWidth;
-            var H = cv.clientHeight || cv.offsetHeight;
-            if (!W || !H) return;
-
-            cv.width = W * devicePixelRatio; cv.height = H * devicePixelRatio;
-            cx.scale(devicePixelRatio, devicePixelRatio);
-            cx.clearRect(0, 0, W, H);
-
-            if (!labels.length || (lineVals.every(function (v) { return !v; }) && famVals.every(function (v) { return !v; }))) {
-                cx.fillStyle = '#6c757d'; cx.font = '13px Segoe UI'; cx.textAlign = 'center';
-                cx.fillText('No weight data available', W / 2, H / 2);
-                return;
-            }
-
-            var pad = { l: 55, r: 20, t: 20, b: 70 };
-            var cw = W - pad.l - pad.r, ch = H - pad.t - pad.b;
-            var maxVal = Math.max.apply(null, lineVals.concat(famVals, [1]));
-            var gridMax = Math.ceil(maxVal / 5) * 5 || 5;
-
-            for (var g = 0; g <= 5; g++) {
-                var gv = gridMax * g / 5, y = pad.t + ch - (g / 5) * ch;
-                cx.strokeStyle = '#e9ecef'; cx.lineWidth = 1;
-                cx.beginPath(); cx.moveTo(pad.l, y); cx.lineTo(pad.l + cw, y); cx.stroke();
-                cx.fillStyle = '#6c757d'; cx.font = '10px Segoe UI'; cx.textAlign = 'right';
-                cx.fillText(gv.toFixed(0), pad.l - 8, y + 4);
-            }
-
-            var groupGap = cw / labels.length;
-            var barW = Math.min(36, groupGap * 0.32), gap = 6;
-
-            labels.forEach(function (lbl, i) {
-                var groupX = pad.l + i * groupGap + groupGap / 2;
-                var lineH = (lineVals[i] / gridMax) * ch, famH = (famVals[i] / gridMax) * ch;
-                var lineX = groupX - barW - gap / 2, famX = groupX + gap / 2;
-
-                cx.fillStyle = '#428bca';
-                cx.beginPath(); cx.roundRect(lineX, pad.t + ch - lineH, barW, lineH, 3); cx.fill();
-
-                cx.fillStyle = '#28a745';
-                cx.beginPath(); cx.roundRect(famX, pad.t + ch - famH, barW, famH, 3); cx.fill();
-
-                cx.fillStyle = '#1a1a2e'; cx.font = 'bold 10px Segoe UI'; cx.textAlign = 'center';
-                if (lineVals[i] > 0) cx.fillText(lineVals[i].toFixed(1), lineX + barW / 2, pad.t + ch - lineH - 4);
-                if (famVals[i] > 0) cx.fillText(famVals[i].toFixed(1), famX + barW / 2, pad.t + ch - famH - 4);
-
-                cx.save();
-                cx.translate(groupX, H - pad.b + 8); cx.rotate(-Math.PI / 6);
-                cx.fillStyle = '#495057'; cx.font = '11px Segoe UI'; cx.textAlign = 'right';
-                var shortLbl = lbl.length > 16 ? lbl.slice(0, 15) + '…' : lbl;
-                cx.fillText(shortLbl, 0, 0);
-                cx.restore();
-            });
-        }
-
-        window.addEventListener('resize', function () {
-            var famTab = document.getElementById('tab-family');
-            if (famTab && famTab.classList.contains('active')) renderFamilyChart();
-        });
-
-        // ═══════════════════════════════════════════════════════════
-        // TAB: BULK BIN RECORDING
-        // ═══════════════════════════════════════════════════════════
-        var binConfigCache = {};
-
         function renderBinCategories(plant, data) {
             var container = document.getElementById('binCategoriesContainer');
             container.innerHTML = '';
 
+            if (!data.categories || data.categories.length === 0) {
+                container.innerHTML = '<div class="empty-state"><i class="bi bi-exclamation-circle"></i><p>No active scrap categories are configured for ' + escHtml(plant) + '.</p></div>';
+                return;
+            }
+
+            var bins = data.bins || [];
             var groups = {};
+            var order = [];
             data.categories.forEach(function (c) {
                 var key = c.parentCategory || c.categoryName;
-                (groups[key] = groups[key] || []).push(c);
+                if (!groups[key]) { groups[key] = []; order.push(key); }
+                groups[key].push(c);
             });
 
-            Object.keys(groups).forEach(function (groupName) {
-                var cats = groups[groupName];
-                var card = document.createElement('div');
-                card.className = 'card';
-                card.style.marginBottom = '12px';
+            order.forEach(function (groupName) {
+                var group = document.createElement('div');
+                group.className = 'bin-group';
+                group.innerHTML = '<div class="bin-group-title">' + escHtml(groupName) + '</div>';
 
-                var rowsHtml = '';
-                cats.forEach(function (c) {
-                    rowsHtml +=
-                        '<div class="bin-row">' +
-                        '<div class="fld" style="min-width:160px;"><label>' + escHtml(c.categoryName) + '</label></div>' +
-                        '<div class="fld"><label>Bin #</label><input type="number" class="ctrl bin-number-input" data-category="' + escHtml(c.categoryName) + '" min="1" step="1" placeholder="e.g. 3"></div>' +
-                        '<div class="fld"><label>Tare Weight (kg)</label><input type="number" class="ctrl tare-input" step="0.01" min="0" placeholder="0.00"></div>' +
-                        '<div class="fld"><label>Gross Weight (kg)</label><input type="number" class="ctrl gross-input" step="0.01" min="0.01" placeholder="0.00"></div>' +
-                        '<div class="fld"><label>Net (auto)</label><div class="net-display">—</div></div>' +
-                        '<button class="btn btn-success btn-sm save-bin-btn" disabled><i class="bi bi-save"></i> Save</button>' +
-                        '</div>';
+                groups[groupName].forEach(function (c) {
+                    var binField = bins.length
+                        ? '<select class="ctrl bin-select"><option value="">Select bin</option>' +
+                          bins.map(function (b) {
+                              return '<option value="' + b.binNumber + '" data-tare="' + b.tareWeightKg + '">Bin ' + b.binNumber + ' (' + Number(b.tareWeightKg).toFixed(2) + ' kg)</option>';
+                          }).join('') + '</select>'
+                        : '<input type="number" class="ctrl bin-select" min="1" step="1" placeholder="e.g. 3">';
+
+                    var row = document.createElement('div');
+                    row.className = 'bin-row';
+                    row.innerHTML =
+                        '<div class="fld bin-cat"><label>Category</label><div class="bin-cat-name">' + escHtml(c.categoryName) + '</div></div>' +
+                        '<div class="fld"><label>Bin</label>' + binField + '</div>' +
+                        '<div class="fld"><label>Tare (kg)</label><input type="number" class="ctrl tare-input" step="0.01" min="0" placeholder="0.00"></div>' +
+                        '<div class="fld"><label>Gross (kg)</label><input type="number" class="ctrl gross-input" step="0.01" min="0.01" placeholder="0.00"></div>' +
+                        '<div class="fld"><label>Net</label><div class="net-display">—</div></div>' +
+                        '<button class="btn btn-success btn-sm save-bin-btn" disabled><i class="bi bi-save"></i> Save</button>';
+                    group.appendChild(row);
+                    wireBinRow(row, c.categoryName);
                 });
 
-                card.innerHTML = '<div class="card-head"><h2>' + escHtml(groupName) + '</h2></div><div class="card-body">' + rowsHtml + '</div>';
-                container.appendChild(card);
+                container.appendChild(group);
             });
+        }
 
-            container.querySelectorAll('.bin-number-input').forEach(function (binInput) {
-                var row = binInput.closest('.bin-row');
-                var tare = row.querySelector('.tare-input');
-                var gross = row.querySelector('.gross-input');
-                var netDisplay = row.querySelector('.net-display');
-                var saveBtn = row.querySelector('.save-bin-btn');
+        function wireBinRow(row, categoryName) {
+            var binEl = row.querySelector('.bin-select');
+            var tare = row.querySelector('.tare-input');
+            var gross = row.querySelector('.gross-input');
+            var netDisplay = row.querySelector('.net-display');
+            var saveBtn = row.querySelector('.save-bin-btn');
 
-                function recalc() {
-                    var binNum = parseInt(binInput.value);
-                    var tareVal = parseFloat(tare.value);
-                    var grossVal = parseFloat(gross.value);
-                    if (binNum > 0 && tareVal >= 0 && grossVal > 0) {
-                        var net = grossVal - tareVal;
-                        netDisplay.textContent = net > 0 ? (net.toFixed(2) + ' kg') : 'Invalid';
-                        netDisplay.style.color = net > 0 ? 'var(--success)' : 'var(--danger)';
-                        saveBtn.disabled = net <= 0;
-                    } else {
-                        netDisplay.textContent = '—';
-                        saveBtn.disabled = true;
-                    }
+            function recalc() {
+                var binNum = parseInt(binEl.value);
+                var tareVal = parseFloat(tare.value);
+                var grossVal = parseFloat(gross.value);
+                if (binNum > 0 && tareVal >= 0 && grossVal > 0) {
+                    var net = grossVal - tareVal;
+                    netDisplay.textContent = net > 0 ? kg(net) : 'Gross must exceed tare';
+                    netDisplay.style.color = net > 0 ? 'var(--success)' : 'var(--danger)';
+                    saveBtn.disabled = net <= 0;
+                } else {
+                    netDisplay.textContent = '—';
+                    netDisplay.style.color = '';
+                    saveBtn.disabled = true;
                 }
+            }
 
-                binInput.addEventListener('input', recalc);
-                tare.addEventListener('input', recalc);
-                gross.addEventListener('input', recalc);
+            // Selecting a configured bin fills in its tare weight (still editable)
+            binEl.addEventListener('change', function () {
+                var opt = binEl.tagName === 'SELECT' ? binEl.selectedOptions[0] : null;
+                if (opt && opt.dataset.tare !== undefined) tare.value = Number(opt.dataset.tare).toFixed(2);
+                recalc();
+            });
+            [binEl, tare, gross].forEach(function (el) { el.addEventListener('input', recalc); });
 
-                saveBtn.addEventListener('click', async function () {
-                    var binNumber = parseInt(binInput.value);
-                    var tareVal = parseFloat(tare.value);
-                    var grossVal = parseFloat(gross.value);
-                    saveBtn.disabled = true; saveBtn.innerHTML = '<div class="spinner"></div>';
-
+            saveBtn.addEventListener('click', async function () {
+                var plant = currentPlant();
+                var payload = {
+                    Plant: plant,
+                    CategoryName: categoryName,
+                    BinNumber: parseInt(binEl.value),
+                    TareWeightKg: parseFloat(tare.value),
+                    GrossWeightKg: parseFloat(gross.value),
+                    Description: ''
+                };
+                saveBtn.disabled = true; saveBtn.innerHTML = '<div class="spinner"></div>';
+                try {
                     var res = await fetch('/ScrapApproval/SaveBinCategoryWeight', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': TOKEN() },
-                        body: JSON.stringify({
-                            Plant: document.getElementById('binPlantSelect').value,
-                            CategoryName: binInput.dataset.category,
-                            BinNumber: binNumber,
-                            TareWeightKg: tareVal,
-                            GrossWeightKg: grossVal,
-                            Description: ''
-                        })
+                        body: JSON.stringify(payload)
                     });
                     var result = await res.json();
                     if (result.success) {
                         notify('✓ ' + result.message, 'success');
-                        binInput.value = ''; tare.value = ''; gross.value = ''; netDisplay.textContent = '—';
-                        loadBinHistory(document.getElementById('binPlantSelect').value);
+                        binEl.value = ''; tare.value = ''; gross.value = '';
+                        recalc();
+                        loadBinSaleSummary(plant);
                     } else {
-                        notify(result.message, 'error');
+                        notify(result.message || 'Save failed', 'error');
+                        recalc();
                     }
-                    saveBtn.disabled = false; saveBtn.innerHTML = '<i class="bi bi-save"></i> Save';
-                });
+                } catch (err) {
+                    notify('Network error — the weight was not saved', 'error');
+                    recalc();
+                } finally {
+                    saveBtn.innerHTML = '<i class="bi bi-save"></i> Save';
+                }
             });
         }
 
-        async function loadBinHistory(plant) {
-            var tbody = document.getElementById('binHistoryBody');
-            tbody.innerHTML = '<tr class="loading-row"><td colspan="7"><div class="spinner"></div> Loading…</td></tr>';
-
-            var res = await fetch('/ScrapApproval/GetBinCategoryHistory?plant=' + encodeURIComponent(plant));
-            var data = await res.json();
-            tbody.innerHTML = '';
-
-            if (!data.success || !data.history || data.history.length === 0) {
-                tbody.innerHTML = '<tr class="loading-row"><td colspan="7">No recordings yet for this plant.</td></tr>';
-                return;
-            }
-
-            data.history.forEach(function (h) {
-                var tr = document.createElement('tr');
-                tr.innerHTML =
-                    '<td>' + escHtml(h.categoryName) + '</td>' +
-                    '<td>' + escHtml(h.binLabel || '—') + '</td>' +
-                    '<td class="r">' + parseFloat(h.grossWeightKg).toFixed(2) + ' kg</td>' +
-                    '<td class="r">' + parseFloat(h.tareWeightKg).toFixed(2) + ' kg</td>' +
-                    '<td class="r bold" style="color:var(--success);">' + parseFloat(h.netWeightKg).toFixed(2) + ' kg</td>' +
-                    '<td>' + escHtml(h.createdBy) + '</td>' +
-                    '<td>' + formatDt(h.createdAt) + '</td>';
-                tbody.appendChild(tr);
-            });
-        }
-
+        // ═══════════════════════════════════════════════════════════
+        // ON-HAND BALANCE + SALES
+        // ═══════════════════════════════════════════════════════════
         async function loadBinSaleSummary(plant) {
-            var saleDateInput = document.getElementById('saleDate');
-            if (!saleDateInput.value) saleDateInput.value = new Date().toISOString().slice(0, 10);
-
             var balBody = document.getElementById('balanceBody');
             var salesBody = document.getElementById('salesHistoryBody');
             balBody.innerHTML = '<tr class="loading-row"><td colspan="4"><div class="spinner"></div></td></tr>';
             salesBody.innerHTML = '<tr class="loading-row"><td colspan="6"><div class="spinner"></div></td></tr>';
 
-            var res = await fetch('/ScrapApproval/GetBinSaleSummary?plant=' + encodeURIComponent(plant));
-            var data = await res.json();
-            if (!data.success) {
-                balBody.innerHTML = '<tr class="loading-row"><td colspan="4" style="color:var(--danger);">' + escHtml(data.message) + '</td></tr>';
-                return;
+            try {
+                var res = await fetch('/ScrapApproval/GetBinSaleSummary?plant=' + encodeURIComponent(plant));
+                var data = await res.json();
+                if (plant !== currentPlant()) return;   // plant changed while loading
+
+                if (!data.success) {
+                    var msg = '<tr class="loading-row"><td colspan="6" style="color:var(--danger);">' + escHtml(data.message || 'Error loading') + '</td></tr>';
+                    balBody.innerHTML = msg; salesBody.innerHTML = msg;
+                    return;
+                }
+
+                balances = data.balances || [];
+                var tw = 0, ts = 0;
+                balBody.innerHTML = balances.length
+                    ? balances.map(function (b) {
+                        tw += b.totalWeighedKg; ts += b.totalSoldKg;
+                        var color = b.onHandKg < 0 ? 'var(--danger)' : (b.onHandKg > 0 ? 'var(--success)' : 'var(--muted)');
+                        return '<tr><td class="bold">' + escHtml(b.categoryName) + '</td>' +
+                            '<td class="r">' + kg(b.totalWeighedKg) + '</td>' +
+                            '<td class="r">' + kg(b.totalSoldKg) + '</td>' +
+                            '<td class="r bold" style="color:' + color + ';">' + kg(b.onHandKg) + '</td></tr>';
+                    }).join('') +
+                    '<tr class="total-row"><td>Total</td><td class="r">' + kg(tw) + '</td><td class="r">' + kg(ts) + '</td><td class="r">' + kg(tw - ts) + '</td></tr>'
+                    : '<tr class="loading-row"><td colspan="4">No categories for this plant yet.</td></tr>';
+
+                document.getElementById('plantTotals').innerHTML = balances.length
+                    ? '<span><b>' + kg(tw) + '</b> weighed</span><span><b>' + kg(ts) + '</b> sold</span><span><b>' + kg(tw - ts) + '</b> on hand</span>'
+                    : '';
+
+                var saleSel = document.getElementById('saleCategory');
+                var prev = saleSel.value;
+                saleSel.innerHTML = '<option value="">Select Category</option>' +
+                    balances.map(function (b) {
+                        return '<option value="' + escHtml(b.categoryName) + '">' + escHtml(b.categoryName) + ' — ' + kg(b.onHandKg) + ' on hand</option>';
+                    }).join('');
+                if (prev) saleSel.value = prev;
+                checkSaleAgainstOnHand();
+
+                var sales = data.sales || [];
+                salesBody.innerHTML = sales.length
+                    ? sales.map(function (s) {
+                        return '<tr><td>' + escHtml(s.saleDate) + '</td>' +
+                            '<td>' + escHtml(s.categoryName) + '</td>' +
+                            '<td class="r bold">' + kg(s.weightSoldKg) + '</td>' +
+                            '<td>' + escHtml(s.buyer) + '</td>' +
+                            '<td>' + escHtml(s.reference) + '</td>' +
+                            '<td>' + escHtml(s.createdBy) + '</td></tr>';
+                    }).join('')
+                    : '<tr class="loading-row"><td colspan="6">No sales in the last 90 days.</td></tr>';
+            } catch (err) {
+                var errRow = '<tr class="loading-row"><td colspan="6" style="color:var(--danger);">Error loading balances</td></tr>';
+                balBody.innerHTML = errRow; salesBody.innerHTML = errRow;
             }
+        }
 
-            balBody.innerHTML = data.balances.length
-                ? data.balances.map(function (b) {
-                    return '<tr><td class="bold">' + escHtml(b.categoryName) + '</td>' +
-                        '<td class="r">' + b.totalWeighedKg.toFixed(2) + ' kg</td>' +
-                        '<td class="r">' + b.totalSoldKg.toFixed(2) + ' kg</td>' +
-                        '<td class="r bold" style="color:' + (b.onHandKg > 0 ? 'var(--success)' : 'var(--muted)') + ';">' + b.onHandKg.toFixed(2) + ' kg</td></tr>';
-                }).join('')
-                : '<tr class="loading-row"><td colspan="4">No categories recorded for this plant yet.</td></tr>';
-
-            var saleCategorySelect = document.getElementById('saleCategory');
-            saleCategorySelect.innerHTML = '<option value="">Select Category</option>' +
-                data.balances.map(function (b) {
-                    return '<option value="' + escHtml(b.categoryName) + '">' + escHtml(b.categoryName) + ' (' + b.onHandKg.toFixed(2) + 'kg on hand)</option>';
-                }).join('');
-
-            salesBody.innerHTML = data.sales.length
-                ? data.sales.map(function (s) {
-                    return '<tr><td>' + escHtml(s.categoryName) + '</td>' +
-                        '<td class="r bold">' + s.weightSoldKg.toFixed(2) + ' kg</td>' +
-                        '<td>' + escHtml(s.buyer) + '</td>' +
-                        '<td>' + escHtml(s.reference) + '</td>' +
-                        '<td>' + new Date(s.saleDate).toLocaleDateString() + '</td>' +
-                        '<td>' + escHtml(s.createdBy) + '</td></tr>';
-                }).join('')
-                : '<tr class="loading-row"><td colspan="6">No sales recorded yet for this plant.</td></tr>';
+        // Warn (not block) when a sale is more than what's on hand
+        function checkSaleAgainstOnHand() {
+            var warn = document.getElementById('saleWarning');
+            var cat = document.getElementById('saleCategory').value;
+            var weight = parseFloat(document.getElementById('saleWeight').value);
+            var b = balances.find(function (x) { return x.categoryName === cat; });
+            if (b && weight > 0 && weight > b.onHandKg + 0.005) {
+                warn.textContent = 'This is more than the ' + kg(b.onHandKg) + ' on hand for ' + cat + '. Check the bin recordings before saving.';
+                warn.style.display = 'block';
+            } else {
+                warn.style.display = 'none';
+            }
         }
 
         async function saveBinSale() {
-            var plant = document.getElementById('binPlantSelect').value;
+            var plant = currentPlant();
             var category = document.getElementById('saleCategory').value;
             var weight = parseFloat(document.getElementById('saleWeight').value);
-            var buyer = document.getElementById('saleBuyer').value;
-            var reference = document.getElementById('saleReference').value;
             var saleDate = document.getElementById('saleDate').value;
-            var notes = document.getElementById('saleNotes').value;
 
             if (!plant) { notify('Select a plant first', 'error'); return; }
             if (!category) { notify('Select a category', 'error'); return; }
             if (!weight || weight <= 0) { notify('Enter a valid weight sold', 'error'); return; }
             if (!saleDate) { notify('Select a sale date', 'error'); return; }
 
-            var btn = document.getElementById('saveSaleBtn');
-            btn.disabled = true; btn.innerHTML = '<div class="spinner"></div>';
-
-            var res = await fetch('/ScrapApproval/SaveBinSale', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': TOKEN() },
-                body: JSON.stringify({ Plant: plant, CategoryName: category, WeightSoldKg: weight, Buyer: buyer, Reference: reference, SaleDate: saleDate, Notes: notes })
-            });
-            var result = await res.json();
-            if (result.success) {
-                notify('✓ ' + result.message, 'success');
-                document.getElementById('saleWeight').value = '';
-                document.getElementById('saleBuyer').value = '';
-                document.getElementById('saleReference').value = '';
-                document.getElementById('saleNotes').value = '';
-                loadBinSaleSummary(plant);
-            } else {
-                notify(result.message, 'error');
-            }
-            btn.disabled = false; btn.innerHTML = '<i class="bi bi-save"></i> Record Sale';
-        }
-
-        async function loadDailyWeightSection(plant) {
-            var date = document.getElementById('dailyDateInput').value;
-            document.getElementById('dailyDateLabel').textContent = date;
-
-            var res = await fetch('/ScrapApproval/GetPlantDailyConfig?plant=' + encodeURIComponent(plant) + '&date=' + date);
-            var data = await res.json();
-            if (!data.success) return;
-
-            document.getElementById('notCompliantNotes').value = data.existingNote || '';
-
-            var container = document.getElementById('dailyDeptRows');
-            container.innerHTML = '';
-
-            if (data.departments.length === 0) {
-                container.innerHTML = '<p style="color:var(--muted);">No departments configured for ' + escHtml(plant) + ' yet.</p>';
+            var b = balances.find(function (x) { return x.categoryName === category; });
+            if (b && weight > b.onHandKg + 0.005 &&
+                !confirm('You are selling ' + kg(weight) + ' of ' + category + ' but only ' + kg(b.onHandKg) + ' is on hand.\n\nRecord the sale anyway?')) {
                 return;
             }
 
-            data.departments.forEach(function (d) {
-                var row = document.createElement('div');
-                row.style.cssText = 'display:flex;gap:10px;align-items:flex-end;padding:8px 0;border-bottom:1px solid var(--border);';
-                row.innerHTML =
-                    '<div class="fld" style="min-width:200px;"><label>' + escHtml(d.departmentName) + '</label></div>' +
-                    '<div class="fld"><input type="number" class="ctrl daily-weight-input" step="0.01" min="0.01" value="' + (d.existingWeight ?? '') + '" placeholder="0.00" style="max-width:130px;"></div>' +
-                    '<button class="btn btn-success btn-sm daily-save-btn"><i class="bi bi-save"></i> Save</button>';
-
-                var input = row.querySelector('.daily-weight-input');
-                var btn = row.querySelector('.daily-save-btn');
-                btn.addEventListener('click', async function () {
-                    var weight = parseFloat(input.value);
-                    if (!weight || weight <= 0) { notify('Enter a valid weight', 'error'); return; }
-                    btn.disabled = true; btn.innerHTML = '<div class="spinner"></div>';
-                    var r = await fetch('/ScrapApproval/SaveDailyDepartmentWeight', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': TOKEN() },
-                        body: JSON.stringify({ Plant: plant, Department: d.departmentName, Date: date, Weight: weight })
-                    });
-                    var result = await r.json();
-                    notify(result.success ? ('✓ ' + result.message) : result.message, result.success ? 'success' : 'error');
-                    btn.disabled = false; btn.innerHTML = '<i class="bi bi-save"></i> Save';
+            var btn = document.getElementById('saveSaleBtn');
+            btn.disabled = true; btn.innerHTML = '<div class="spinner"></div>';
+            try {
+                var res = await fetch('/ScrapApproval/SaveBinSale', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': TOKEN() },
+                    body: JSON.stringify({
+                        Plant: plant, CategoryName: category, WeightSoldKg: weight,
+                        Buyer: document.getElementById('saleBuyer').value,
+                        Reference: document.getElementById('saleReference').value,
+                        SaleDate: saleDate,
+                        Notes: document.getElementById('saleNotes').value
+                    })
                 });
-                container.appendChild(row);
-            });
+                var result = await res.json();
+                if (result.success) {
+                    notify('✓ ' + result.message, 'success');
+                    ['saleWeight', 'saleBuyer', 'saleReference', 'saleNotes'].forEach(function (id) { document.getElementById(id).value = ''; });
+                    loadBinSaleSummary(plant);
+                } else {
+                    notify(result.message || 'Save failed', 'error');
+                }
+            } catch (err) {
+                notify('Network error — the sale was not saved', 'error');
+            } finally {
+                btn.disabled = false; btn.innerHTML = '<i class="bi bi-save"></i> Record Sale';
+            }
         }
 
-        async function saveDailyNote() {
-            var plant = document.getElementById('binPlantSelect').value;
-            var date = document.getElementById('dailyDateInput').value;
-            var notes = document.getElementById('notCompliantNotes').value;
+        // ═══════════════════════════════════════════════════════════
+        // PLANT CHANGE + INIT
+        // ═══════════════════════════════════════════════════════════
+        async function onPlantChange() {
+            var plant = currentPlant();
+            var container = document.getElementById('binCategoriesContainer');
 
-            var res = await fetch('/ScrapApproval/SaveDailyReportNote', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'RequestVerificationToken': TOKEN() },
-                body: JSON.stringify({ Plant: plant, Date: date, Notes: notes })
-            });
-            var result = await res.json();
-            notify(result.success ? '✓ Note saved' : result.message, result.success ? 'success' : 'error');
-        }
+            document.getElementById('binExportPlant').value = plant || 'All Plants';
+            document.getElementById('binExportPlantLabel').textContent = plant || 'All Plants';
+            document.getElementById('plantTotals').innerHTML = '';
+            balances = [];
 
-        async function viewDailyReport() {
-            var plant = document.getElementById('binPlantSelect').value;
-            var date = document.getElementById('dailyDateInput').value;
-            if (!plant) { notify('Select a plant first', 'error'); return; }
+            if (!plant) {
+                container.innerHTML = '<div class="empty-state"><i class="bi bi-building"></i><p>Select a plant to record bin weights.</p></div>';
+                document.getElementById('balanceBody').innerHTML = '<tr class="loading-row"><td colspan="4">Select a plant</td></tr>';
+                document.getElementById('salesHistoryBody').innerHTML = '<tr class="loading-row"><td colspan="6">Select a plant</td></tr>';
+                document.getElementById('saleCategory').innerHTML = '<option value="">Select a plant first</option>';
+                return;
+            }
 
-            var res = await fetch('/ScrapApproval/GetDailyReport?plant=' + encodeURIComponent(plant) + '&date=' + date);
-            var data = await res.json();
-            if (!data.success) { notify(data.message, 'error'); return; }
-
-            var rows = data.weights.map(function (w) {
-                return '<tr><td>' + escHtml(w.department) + '</td><td style="text-align:right;">' + w.weightKg.toFixed(2) + ' kg</td>' +
-                    '<td>' + escHtml(w.recordedBy) + '</td><td>' + formatDt(w.recordedAt) + '</td></tr>';
-            }).join('');
-
-            var noteBlock = data.note
-                ? ('<div class="note"><b>Departments not using the system:</b><br>' + escHtml(data.note) + '<br><small>— ' + escHtml(data.noteRecordedBy) + '</small></div>')
-                : '';
-
-        var reportHtml = '<html><head><title>Daily Report — ' + escHtml(plant) + ' — ' + date + '</title>' +
-            '<style>body{font-family:Segoe UI,sans-serif;padding:30px;color:#1a1a2e;}' +
-            'h1{font-size:20px;} table{width:100%;border-collapse:collapse;margin-top:16px;}' +
-            'th,td{padding:8px 10px;border-bottom:1px solid #dfe3e8;text-align:left;}' +
-            'th{background:#1a1a2e;color:#fff;}' +
-            '.total{font-weight:700;font-size:16px;margin-top:12px;}' +
-            '.note{margin-top:20px;padding:12px;background:#fff3cd;border:1px solid #ffc107;border-radius:6px;}' +
-            '</style></head><body>' +
-            '<h1>HESTO Harnesses — Daily Scrap Weight Report</h1>' +
-            '<p><b>' + escHtml(plant) + '</b> — ' + date + '</p>' +
-            '<table><thead><tr><th>Department</th><th style="text-align:right;">Weight</th><th>Recorded By</th><th>Time</th></tr></thead>' +
-            '<tbody>' + (rows || '<tr><td colspan="4">No weights recorded for this date.</td></tr>') + '</tbody></table>' +
-            '<div class="total">Total: ' + data.totalKg.toFixed(2) + ' kg</div>' +
-            noteBlock +
-            '</bod' + 'y></htm' + 'l>';   // ✅ split so no naive text scanner matches the literal closing tags
-
-            var win = window.open('', '_blank');
-            win.document.write(reportHtml);
-            win.document.close();
-            win.print();
-        }
-
-        function initBinTab() {
-            document.getElementById('binPlantSelect').addEventListener('change', async function () {
-                var plant = this.value;
-                var container = document.getElementById('binCategoriesContainer');
-                container.innerHTML = '';
-
-                document.getElementById('dailyWeightCard').style.display = plant ? 'block' : 'none';
-                document.getElementById('notesCard').style.display = plant ? 'block' : 'none';
-                document.getElementById('toggleBinDetailsBtn').style.display = plant ? 'inline-flex' : 'none';
-
-                if (!plant) return;
-
-                container.innerHTML = '<div class="loading-row"><div class="spinner"></div> Loading categories…</div>';
-
+            container.innerHTML = '<div class="loading-row"><div class="spinner"></div> Loading categories…</div>';
+            try {
                 var res = await fetch('/ScrapApproval/GetBinRecordingConfig?plant=' + encodeURIComponent(plant));
                 var data = await res.json();
-                if (!data.success) { container.innerHTML = '<div style="color:var(--danger);">' + escHtml(data.message) + '</div>'; return; }
-
-                binConfigCache[plant] = data;
-                renderBinCategories(plant, data);
-                loadBinHistory(plant);
-                loadBinSaleSummary(plant);
-
-                if (!document.getElementById('dailyDateInput').value) {
-                    document.getElementById('dailyDateInput').value = new Date().toISOString().slice(0, 10);
+                if (plant !== currentPlant()) return;
+                if (!data.success) {
+                    container.innerHTML = '<div style="color:var(--danger);">' + escHtml(data.message) + '</div>';
+                } else {
+                    renderBinCategories(plant, data);
                 }
-                loadDailyWeightSection(plant);
-            });
-
-            document.getElementById('dailyDateInput').addEventListener('change', function () {
-                var plant = document.getElementById('binPlantSelect').value;
-                if (plant) loadDailyWeightSection(plant);
-            });
-
-                    document.getElementById('toggleBinDetailsBtn').addEventListener('click', function () {
-            var section = document.getElementById('binDetailsSection');
-            var showing = section.style.display !== 'none';
-            section.style.display = showing ? 'none' : 'block';
-            this.innerHTML = showing
-                ? '<i class="bi bi-sliders"></i> Show Details'
-                : '<i class="bi bi-sliders"></i> Hide Details';
-        });
-
-            document.getElementById('saveNoteBtn').addEventListener('click', saveDailyNote);
-            document.getElementById('viewDailyReportBtn').addEventListener('click', viewDailyReport);
-            document.getElementById('saveSaleBtn').addEventListener('click', saveBinSale);
-        }
-
-        // ═══════════════════════════════════════════════════════════
-        // TABS + INIT
-        // ═══════════════════════════════════════════════════════════
-        function initTabs() {
-            document.querySelectorAll('.tab-btn').forEach(function (btn) {
-                btn.addEventListener('click', function () {
-                    document.querySelectorAll('.tab-btn').forEach(function (b) { b.classList.remove('active'); });
-                    document.querySelectorAll('.tab-panel').forEach(function (p) { p.classList.remove('active'); });
-                    btn.classList.add('active');
-                    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
-
-                    if (btn.dataset.tab === 'family') loadFamilyWeights();
-                });
-            });
-        }
-
-        function initEvents() {
-            document.getElementById('refreshBtn').addEventListener('click', function () {
-                loadStats(); loadReadyLocations(); loadCostSummary();
-            });
-            document.getElementById('applyFilter').addEventListener('click', function () {
-                loadCostSummary(document.getElementById('filterShift').value);
-                loadReadyLocations();
-            });
-            document.getElementById('selectAllBtn').addEventListener('click', function () {
-                document.querySelectorAll('.loc-cb').forEach(function (cb) { cb.checked = true; });
-                updateSelection();
-            });
-            document.getElementById('cbSelectAll').addEventListener('change', function () {
-                var checked = this.checked;
-                document.querySelectorAll('.loc-cb').forEach(function (cb) { cb.checked = checked; });
-                updateSelection();
-            });
-            document.getElementById('clearSelBtn').addEventListener('click', function () {
-                document.querySelectorAll('.loc-cb').forEach(function (cb) { cb.checked = false; });
-                document.getElementById('cbSelectAll').checked = false;
-                updateSelection();
-            });
-            document.getElementById('statsDateInput').addEventListener('change', function () {
-            loadStats(this.value);
-            });
-        document.getElementById('statsDateTodayBtn').addEventListener('click', function () {
-            var today = new Date().toISOString().slice(0, 10);
-            document.getElementById('statsDateInput').value = today;
-            loadStats(today);
-        });
-
-            document.getElementById('bulkKg').addEventListener('input', updateSelection);
-            document.getElementById('saveBulkBtn').addEventListener('click', saveBulkWeight);
-            document.getElementById('loadHistBtn').addEventListener('click', loadHistory);
+            } catch (err) {
+                container.innerHTML = '<div style="color:var(--danger);">Error loading categories</div>';
+            }
+            loadBinSaleSummary(plant);
         }
 
         document.addEventListener('DOMContentLoaded', function () {
-            document.getElementById('statsDateInput').value = new Date().toISOString().slice(0, 10);
-            loadStats(document.getElementById('statsDateInput').value); loadReadyLocations(); loadCostSummary();
-            loadCostSummary();
-            loadReadyLocations();
-            loadDashboardDepartments('filterDept');
-            loadDashboardDepartments('histDept');
-            initTabs();
-            initEvents();
-            initBinTab();
+            var today = new Date();
+            var monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+            document.getElementById('saleDate').value = localDateStr(today);
+            document.getElementById('saleDate').max = localDateStr(today);
+            document.getElementById('binExportStart').value = localDateStr(monthStart);
+            document.getElementById('binExportEnd').value = localDateStr(today);
+
+            document.getElementById('binPlantSelect').addEventListener('change', onPlantChange);
+            document.getElementById('saveSaleBtn').addEventListener('click', saveBinSale);
+            document.getElementById('saleCategory').addEventListener('change', checkSaleAgainstOnHand);
+            document.getElementById('saleWeight').addEventListener('input', checkSaleAgainstOnHand);
+
+            document.getElementById('binExportForm').addEventListener('submit', function () {
+                document.getElementById('binExportToken').value = TOKEN();
+            });
         });
     </script>
 </body>

@@ -297,6 +297,10 @@
             content: "⚖️";
         }
 
+        .icon-bin::before {
+            content: "🗑️";
+        }
+
         /* Form Elements */
         .form-row {
             margin-bottom: 20px;
@@ -690,6 +694,11 @@
                                 <span class="icon-weight"></span> Export Weight Report (Excel)
                                 <span class="admin-badge">ADMIN</span>
                             </button>
+
+                            <button type="button" id="binWeightExportBtn" class="charts-btn">
+                                <span class="icon-bin"></span> Export Bin Weights &amp; Sales (Excel)
+                                <span class="admin-badge">ADMIN</span>
+                            </button>
                         }
 
                         <input type="hidden" id="exportAllData" name="exportAllData" value="false" />
@@ -769,6 +778,20 @@
                     const exportForm = document.getElementById('exportForm');
                     if (exportForm) {
                         exportForm.action = '/Export/ExportWeightToExcel';
+                        exportForm.submit();
+                        if (reportModal) reportModal.style.display = 'none';
+                    }
+                });
+            }
+
+            // Bin weights: uses the date range only (all plants); department/line/shift don't apply
+            const binWeightExportBtn = document.getElementById('binWeightExportBtn');
+            if (binWeightExportBtn) {
+                binWeightExportBtn.addEventListener('click', function () {
+                    showLoadingIndicator('Bin Weights Excel');
+                    const exportForm = document.getElementById('exportForm');
+                    if (exportForm) {
+                        exportForm.action = '/Export/ExportBinWeightsToExcel';
                         exportForm.submit();
                         if (reportModal) reportModal.style.display = 'none';
                     }

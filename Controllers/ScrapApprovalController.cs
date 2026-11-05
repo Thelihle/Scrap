@@ -2409,17 +2409,39 @@ public class ScrapApprovalController : Controller
                     message = $"Net weight must be greater than zero — gross ({request.GrossWeightKg}kg) is not more than the entered tare weight ({request.TareWeightKg}kg)"
                 });
 
+            if (request.Plant != "Plant A" && request.Plant != "Plant B")
+                return Json(new { success = false, message = "Invalid plant" });
+
             using var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
             await connection.OpenAsync();
 
+            // Category must be an active category for this plant
+            var categoryExists = await connection.ExecuteScalarAsync<int>(@"
+        SELECT COUNT(*) FROM [IntegrationCompanyB].[dbo].[scpScrapCategory]
+        WHERE Plant = @Plant AND CategoryName = @CategoryName AND IsActive = 1",
+                new { request.Plant, request.CategoryName });
+
+            if (categoryExists == 0)
+                return Json(new { success = false, message = $"'{request.CategoryName}' is not an active category for {request.Plant}" });
+
+            // If bins are configured for this plant, the bin must be one of them
+            var configuredBins = (await connection.QueryAsync<int>(@"
+        SELECT BinNumber FROM [IntegrationCompanyB].[dbo].[scpBin]
+        WHERE Plant = @Plant AND IsActive = 1",
+                new { request.Plant })).ToList();
+
+            if (configuredBins.Count > 0 && !configuredBins.Contains(request.BinNumber))
+                return Json(new { success = false, message = $"Bin {request.BinNumber} is not an active bin for {request.Plant}" });
+
+            // Uses the same ID sequence as operator weighings (MAX+1 here could collide with it)
             const string insertSql = @"
         INSERT INTO [IntegrationCompanyB].[dbo].[scpWeightHistory]
         (WeightId, Department, Line, Shift, Weight, Description, CreatedAt, CreatedBy, ModifiedAt, ModifiedBy,
-         IsBulkWeighing, Plant, CategoryName, GrossWeightKg, TareWeightKg)
+         IsBulkWeighing, Plant, CategoryName, BinNumber, GrossWeightKg, TareWeightKg)
         VALUES
-        ((SELECT ISNULL(MAX(WeightId),0)+1 FROM [IntegrationCompanyB].[dbo].[scpWeightHistory]),
-         @Department, @Line, 'BULK-BIN', @Weight, @Description, GETUTCDATE(), @CreatedBy, GETUTCDATE(), @CreatedBy,
-         1, @Plant, @CategoryName, @GrossWeightKg, @TareWeightKg)";
+        (NEXT VALUE FOR [IntegrationCompanyB].[dbo].[seq_WeightHistoryId],
+         @Department, @Line, 'BULK-BIN', @Weight, @Description, GETDATE(), @CreatedBy, GETDATE(), @CreatedBy,
+         1, @Plant, @CategoryName, @BinNumber, @GrossWeightKg, @TareWeightKg)";
 
             await connection.ExecuteAsync(insertSql, new
             {
@@ -2432,9 +2454,13 @@ public class ScrapApprovalController : Controller
                 CreatedBy = user.ClockNumber,
                 Plant = request.Plant,
                 CategoryName = request.CategoryName,
+                BinNumber = request.BinNumber,
                 GrossWeightKg = request.GrossWeightKg,
                 TareWeightKg = request.TareWeightKg
             });
+
+            _logger.LogInformation("⚖️ Bin weight saved: {Plant} / {Category} / Bin {Bin} — {Net}kg net by {User}",
+                request.Plant, request.CategoryName, request.BinNumber, net, user.ClockNumber);
 
             return Json(new
             {
@@ -2549,8 +2575,9 @@ ORDER BY CreatedAt DESC",
                         // Insert weight record for this location
                         const string insertQuery = @"
                         INSERT INTO [IntegrationCompanyB].[dbo].[scpWeightHistory]
-                        (Department, Line, Shift, Weight, Description, CreatedAt, CreatedBy, ModifiedAt, ModifiedBy, SecurityStamp, IsBulkWeighing)
-                        VALUES (@Department, @Line, @Shift, @Weight, @Description, @CreatedAt, @CreatedBy, @ModifiedAt, @ModifiedBy, @SecurityStamp, 1)";
+                        (WeightId, Department, Line, Shift, Weight, Description, CreatedAt, CreatedBy, ModifiedAt, ModifiedBy, SecurityStamp, IsBulkWeighing)
+                        VALUES (NEXT VALUE FOR [IntegrationCompanyB].[dbo].[seq_WeightHistoryId],
+                                @Department, @Line, @Shift, @Weight, @Description, @CreatedAt, @CreatedBy, @ModifiedAt, @ModifiedBy, @SecurityStamp, 1)";
 
                         await connection.ExecuteAsync(
                             insertQuery,
@@ -2635,8 +2662,14 @@ ORDER BY CreatedAt DESC",
                 || request.WeightSoldKg <= 0)
                 return Json(new { success = false, message = "Plant, category, and a weight sold greater than zero are required" });
 
+            if (request.Plant != "Plant A" && request.Plant != "Plant B")
+                return Json(new { success = false, message = "Invalid plant" });
+
             if (!DateTime.TryParse(request.SaleDate, out var saleDate))
                 return Json(new { success = false, message = "Invalid sale date" });
+
+            if (saleDate.Date > DateTime.Today)
+                return Json(new { success = false, message = "Sale date cannot be in the future" });
 
             using var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
             await connection.OpenAsync();
@@ -2645,7 +2678,7 @@ ORDER BY CreatedAt DESC",
         INSERT INTO [IntegrationCompanyB].[dbo].[scpBinSale]
         (Plant, CategoryName, WeightSoldKg, Buyer, Reference, SaleDate, Notes, CreatedBy, CreatedAt)
         VALUES
-        (@Plant, @CategoryName, @WeightSoldKg, @Buyer, @Reference, @SaleDate, @Notes, @CreatedBy, GETUTCDATE())";
+        (@Plant, @CategoryName, @WeightSoldKg, @Buyer, @Reference, @SaleDate, @Notes, @CreatedBy, GETDATE())";
 
             await connection.ExecuteAsync(insertSql, new
             {
@@ -2673,8 +2706,9 @@ ORDER BY CreatedAt DESC",
         }
     }
 
+    // On-hand balance per category (all-time weighed − sold) and the plant's recent sales.
     [HttpGet]
-    public async Task<IActionResult> GetBinSaleSummary(string plant, string date)
+    public async Task<IActionResult> GetBinSaleSummary(string plant, int salesDays = 90)
     {
         try
         {
@@ -2682,23 +2716,72 @@ ORDER BY CreatedAt DESC",
             if (!CanUserViewAllData(user.UserType))
                 return Json(new { success = false, message = "Access denied" });
 
-            if (!DateTime.TryParse(date, out var recordDate))
-                return Json(new { success = false, message = "Invalid date" });
+            if (plant != "Plant A" && plant != "Plant B")
+                return Json(new { success = false, message = "Invalid plant" });
+
+            salesDays = Math.Clamp(salesDays, 1, 366);
 
             using var connection = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
 
-            var sales = await connection.QueryAsync(@"
-                SELECT CategoryName, SUM(WeightSoldKg) AS TotalWeight
-                FROM scpBinSale
-                WHERE Plant = @Plant AND CAST(SaleDate AS DATE) = @RecordDate
-                GROUP BY CategoryName",
-                new { Plant = plant, RecordDate = recordDate.Date });
+            var balancesRaw = await connection.QueryAsync(@"
+WITH cats AS (
+    SELECT CategoryName, MIN(DisplayOrder) AS SortOrder
+    FROM (
+        SELECT CategoryName, DisplayOrder FROM [IntegrationCompanyB].[dbo].[scpScrapCategory]
+        WHERE Plant = @Plant AND IsActive = 1
+        UNION ALL
+        SELECT CategoryName, 9999 FROM [IntegrationCompanyB].[dbo].[scpWeightHistory]
+        WHERE Plant = @Plant AND Shift = 'BULK-BIN' AND CategoryName IS NOT NULL
+        UNION ALL
+        SELECT CategoryName, 9999 FROM [IntegrationCompanyB].[dbo].[scpBinSale]
+        WHERE Plant = @Plant
+    ) x
+    GROUP BY CategoryName
+)
+SELECT c.CategoryName,
+       ISNULL((SELECT SUM(CAST(w.Weight AS decimal(18,3)))
+               FROM [IntegrationCompanyB].[dbo].[scpWeightHistory] w
+               WHERE w.Plant = @Plant AND w.Shift = 'BULK-BIN' AND w.CategoryName = c.CategoryName), 0) AS TotalWeighedKg,
+       ISNULL((SELECT SUM(CAST(s.WeightSoldKg AS decimal(18,3)))
+               FROM [IntegrationCompanyB].[dbo].[scpBinSale] s
+               WHERE s.Plant = @Plant AND s.CategoryName = c.CategoryName), 0) AS TotalSoldKg
+FROM cats c
+ORDER BY c.SortOrder, c.CategoryName",
+                new { Plant = plant });
 
-            return Json(new
+            var balances = balancesRaw.Select(b =>
             {
-                success = true,
-                sales
-            });
+                decimal weighed = (decimal)b.TotalWeighedKg;
+                decimal sold = (decimal)b.TotalSoldKg;
+                return new
+                {
+                    categoryName = (string)b.CategoryName,
+                    totalWeighedKg = weighed,
+                    totalSoldKg = sold,
+                    onHandKg = weighed - sold
+                };
+            }).ToList();
+
+            var salesRaw = await connection.QueryAsync(@"
+SELECT TOP 100 CategoryName, CAST(WeightSoldKg AS decimal(18,3)) AS WeightSoldKg,
+       Buyer, Reference, SaleDate, Notes, CreatedBy
+FROM [IntegrationCompanyB].[dbo].[scpBinSale]
+WHERE Plant = @Plant AND SaleDate >= DATEADD(DAY, -@Days, CAST(GETDATE() AS date))
+ORDER BY SaleDate DESC, CreatedAt DESC",
+                new { Plant = plant, Days = salesDays });
+
+            var sales = salesRaw.Select(s => new
+            {
+                categoryName = (string)s.CategoryName,
+                weightSoldKg = (decimal)s.WeightSoldKg,
+                buyer = (string?)s.Buyer ?? "",
+                reference = (string?)s.Reference ?? "",
+                saleDate = ((DateTime)s.SaleDate).ToString("yyyy-MM-dd"),
+                notes = (string?)s.Notes ?? "",
+                createdBy = (string?)s.CreatedBy ?? ""
+            }).ToList();
+
+            return Json(new { success = true, balances, sales });
         }
         catch (Exception ex)
         {
@@ -2793,7 +2876,7 @@ ORDER BY CreatedAt DESC",
             (WeightId, Department, Line, Shift, Weight, Description, CreatedAt, CreatedBy, ModifiedAt, ModifiedBy,
              IsBulkWeighing, Plant, RecordDate)
             VALUES
-            ((SELECT ISNULL(MAX(WeightId),0)+1 FROM [IntegrationCompanyB].[dbo].[scpWeightHistory]),
+            (NEXT VALUE FOR [IntegrationCompanyB].[dbo].[seq_WeightHistoryId],
              @Department, 'DAILY-TOTAL', 'DAILY', @Weight, @Description, GETUTCDATE(), @CreatedBy, GETUTCDATE(), @CreatedBy,
              1, @Plant, @RecordDate)";
 
@@ -3196,7 +3279,7 @@ ORDER BY CreatedAt DESC",
     INSERT INTO [IntegrationCompanyB].[dbo].[scpWeightHistory]
     (WeightId, Department, Line, Shift, Weight, Description, CreatedAt, CreatedBy, ModifiedAt, ModifiedBy, IsBulkWeighing)
     VALUES (
-        (SELECT ISNULL(MAX(WeightId), 0) + 1 FROM [IntegrationCompanyB].[dbo].[scpWeightHistory]),
+        NEXT VALUE FOR [IntegrationCompanyB].[dbo].[seq_WeightHistoryId],
         @Department, @Line, @Shift, @Weight, @Description, GETUTCDATE(), @CreatedBy, GETUTCDATE(), @ModifiedBy, 0
     )";
 
@@ -3275,13 +3358,10 @@ ORDER BY CreatedAt DESC",
             // Insert bulk weight with GUID SecurityStamp
             const string insertQuery = @"
             INSERT INTO [IntegrationCompanyB].[dbo].[scpWeightHistory]
-            (Department, Line, Shift, Weight, Description, CreatedAt, CreatedBy, ModifiedAt, ModifiedBy, SecurityStamp, IsBulkWeighing)
-            VALUES (@Department, @Line, @Shift, @Weight, @Description, GETUTCDATE(), @CreatedBy, GETUTCDATE(), @ModifiedBy, NEWID(), 1);
-            
-            SELECT SCOPE_IDENTITY() as WeightId, 
-                   SecurityStamp 
-            FROM [IntegrationCompanyB].[dbo].[scpWeightHistory] 
-            WHERE WeightId = SCOPE_IDENTITY();";
+            (WeightId, Department, Line, Shift, Weight, Description, CreatedAt, CreatedBy, ModifiedAt, ModifiedBy, SecurityStamp, IsBulkWeighing)
+            OUTPUT INSERTED.WeightId, INSERTED.SecurityStamp
+            VALUES (NEXT VALUE FOR [IntegrationCompanyB].[dbo].[seq_WeightHistoryId],
+                    @Department, @Line, @Shift, @Weight, @Description, GETUTCDATE(), @CreatedBy, GETUTCDATE(), @ModifiedBy, NEWID(), 1);";
 
             var result = await connection.QuerySingleAsync(insertQuery, new
             {
