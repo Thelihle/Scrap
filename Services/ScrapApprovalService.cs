@@ -254,9 +254,9 @@ namespace SCP_Control.Services
 
                 scrap.Status = isApproved ? "Approved" : "Rejected";
                 scrap.ApprovedBy = approverClockNumber;
-                scrap.ApprovalDate = DateTime.UtcNow;
+                scrap.ApprovalDate = DateTime.Now;
                 scrap.ApprovalReason = reason;
-                scrap.ModifiedAt = DateTime.UtcNow;
+                scrap.ModifiedAt = DateTime.Now;
                 scrap.ModifiedBy = approverClockNumber;
 
                 await _context.SaveChangesAsync();
@@ -288,9 +288,9 @@ namespace SCP_Control.Services
                 {
                     scrap.Status = isApproved ? "Approved" : "Rejected";
                     scrap.ApprovedBy = approverClockNumber;
-                    scrap.ApprovalDate = DateTime.UtcNow;
+                    scrap.ApprovalDate = DateTime.Now;
                     scrap.ApprovalReason = reason;
-                    scrap.ModifiedAt = DateTime.UtcNow;
+                    scrap.ModifiedAt = DateTime.Now;
                     scrap.ModifiedBy = approverClockNumber;
                 }
 
@@ -388,9 +388,9 @@ namespace SCP_Control.Services
 
                 scrap.FirstApprovalStatus = isApproved ? "Approved" : "Rejected";
                 scrap.FirstApprovalBy = approverClockNumber;
-                scrap.FirstApprovalDate = DateTime.UtcNow;
+                scrap.FirstApprovalDate = DateTime.Now;
                 scrap.FirstApprovalReason = reason;
-                scrap.ModifiedAt = DateTime.UtcNow;
+                scrap.ModifiedAt = DateTime.Now;
                 scrap.ModifiedBy = approverClockNumber;
 
                 await _context.SaveChangesAsync();

@@ -569,7 +569,7 @@ public class ScrapApprovalController : Controller
             try
             {
                 int processedCount = 0;
-                var currentTime = DateTime.UtcNow;
+                var currentTime = DateTime.Now;
 
                 foreach (var scrapId in request.ScrapIds)
                 {
@@ -4123,7 +4123,7 @@ ORDER BY SaleDate DESC, CreatedAt DESC",
     private async Task<bool> AutoFixInconsistentApprovalData(ScrapData item)
     {
         bool wasFixed = false;
-        var currentTime = DateTime.UtcNow;
+        var currentTime = DateTime.Now;
 
         try
         {
@@ -4303,7 +4303,7 @@ ORDER BY SaleDate DESC, CreatedAt DESC",
             }
             if (days > 0)
             {
-                sb.Append(" AND s.CreatedAt >= DATEADD(day, @NegDays, GETUTCDATE())");
+                sb.Append(" AND s.CreatedAt >= DATEADD(day, @NegDays, GETDATE())");
                 parameters.Add("NegDays", -days);
             }
 
@@ -4323,7 +4323,7 @@ ORDER BY SaleDate DESC, CreatedAt DESC",
                 line = (string)(item.Line ?? ""),
                 shift = (string)(item.Shift ?? ""),
                 submissionDate = (DateTime?)(item.SubmissionDate),
-                createdAt = (DateTime)(item.CreatedAt ?? DateTime.UtcNow),
+                createdAt = (DateTime)(item.CreatedAt ?? DateTime.Now),
                 status = (string)(item.Status ?? "Pending TL"),
                 currentApprovalLevel = (int?)(item.CurrentApprovalLevel ?? 1),
                 materialCost = (decimal)(item.MaterialCost ?? 0m),
@@ -4395,7 +4395,7 @@ ORDER BY SaleDate DESC, CreatedAt DESC",
             {
                 int processedCount = 0;
                 int autoFixedCount = 0;
-                var currentTime = DateTime.UtcNow;
+                var currentTime = DateTime.Now;
                 var failedItems = new List<string>();
 
                 foreach (var scrapId in request.ScrapIds)
@@ -4580,7 +4580,7 @@ ORDER BY SaleDate DESC, CreatedAt DESC",
                 return Json(new { success = false, message = "No matching scrap items found" });
             }
 
-            var now = DateTime.UtcNow;
+            var now = DateTime.Now;
             int updatedCount = 0;
 
             foreach (var scrap in scrapItems)

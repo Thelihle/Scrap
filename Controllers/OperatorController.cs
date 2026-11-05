@@ -1769,12 +1769,12 @@ namespace SCP_Control.Controllers
                 Status = "Pending TL", // UPDATED: Changed from "Pending" to "Pending TL"
                 FirstApprovalStatus = "Pending TL", // UPDATED: Add this field
                 CurrentApprovalLevel = 1, // UPDATED: Start at Team Leader level
-                SubmissionDate = DateTime.UtcNow,
+                SubmissionDate = DateTime.Now,
                 Department = entry.Department ?? string.Empty,
                 Line = entry.Line ?? string.Empty,
                 Shift = entry.Shift ?? string.Empty,
                 CreatedBy = clockNumber,
-                CreatedAt = DateTime.UtcNow,
+                CreatedAt = DateTime.Now,
             };
         }
 

@@ -56,7 +56,7 @@
         public string ApproverPassword { get; set; } = string.Empty;
         public bool IsApproved { get; set; }
         public string? RejectionReason { get; set; }
-        public DateTime ApprovalDate { get; set; } = DateTime.UtcNow;
+        public DateTime ApprovalDate { get; set; } = DateTime.Now;
     }
 
     public class BulkApprovalModel
